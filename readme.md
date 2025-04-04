@@ -37,8 +37,17 @@ O objetivo principal da solução proposta é criar um sistema integrado de gest
 
 4. **Instalar Dependências do Composer**
 
-   Utilize o Sail para instalar as dependências do Composer:
+   Instale as dependencias do composer
+   ```
+    composer install
+   ```
 
+   Configure um alias para poder utilizar o comando sail sem o caminho todo
+    ```
+    alias sail='sh $([ -f sail ] && echo sail || echo vendor/bin/sail)'
+    ```
+
+   Utilize o Sail para instalar as dependências do Composer:
    ```bash
    ./vendor/bin/sail composer install
    ```
@@ -46,7 +55,7 @@ O objetivo principal da solução proposta é criar um sistema integrado de gest
 5. **Gerar a Chave da Aplicação**
 
    ```bash
-   ./vendor/bin/sail artisan key:generate
+   sail artisan key:generate
    ```
 
 6. **Executar Migrações e Seeders (Opcional)**
@@ -54,7 +63,7 @@ O objetivo principal da solução proposta é criar um sistema integrado de gest
    Se o projeto utilizar banco de dados e houver migrações e seeders configurados, execute:
 
    ```bash
-   ./vendor/bin/sail artisan migrate --seed
+   sail artisan migrate --seed
    ```
 
 ## Inicialização do Ambiente de Desenvolvimento
@@ -62,13 +71,13 @@ O objetivo principal da solução proposta é criar um sistema integrado de gest
 Para iniciar o ambiente de desenvolvimento, execute:
 
 ```bash
-./vendor/bin/sail up
+sail up
 ```
 
 Este comando iniciará os containers Docker em modo interativo. Para rodar os containers em segundo plano (modo "detached"), utilize:
 
 ```bash
-./vendor/bin/sail up -d
+sail up -d
 ```
 
 Após iniciar os containers, a aplicação estará acessível em `http://localhost`.
@@ -80,7 +89,7 @@ Após iniciar os containers, a aplicação estará acessível em `http://localho
   Para acessar o terminal dentro do container da aplicação:
 
   ```bash
-  ./vendor/bin/sail shell
+  sail shell
   ```
 
 - **Executar Comandos Artisan**
@@ -88,7 +97,7 @@ Após iniciar os containers, a aplicação estará acessível em `http://localho
   Para executar comandos Artisan, prefixe-os com `sail`:
 
   ```bash
-  ./vendor/bin/sail artisan comando
+  sail artisan comando
   ```
 
 - **Executar Comandos do Composer**
@@ -96,7 +105,7 @@ Após iniciar os containers, a aplicação estará acessível em `http://localho
   Similarmente, para comandos do Composer:
 
   ```bash
-  ./vendor/bin/sail composer comando
+  sail composer comando
   ```
 
 - **Parar os Containers**
@@ -104,7 +113,7 @@ Após iniciar os containers, a aplicação estará acessível em `http://localho
   Para parar os containers em execução:
 
   ```bash
-  ./vendor/bin/sail down
+  sail down
   ```
 
 ## Considerações Finais
