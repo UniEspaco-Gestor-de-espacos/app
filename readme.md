@@ -116,12 +116,3 @@ Após iniciar os containers, a aplicação estará acessível em `http://localho
   sail down
   ```
 
-## Considerações Finais
-
-Para mais informações sobre o Laravel Sail e suas funcionalidades, consulte a [documentação oficial](https://laravel.com/docs/12.x/sail).
-
-Se encontrar problemas ou tiver dúvidas durante a configuração ou uso do projeto, sinta-se à vontade para abrir uma issue neste repositório.
-
----
-
-*Este README foi elaborado para auxiliar na configuração e uso deste projeto Laravel 12 com Sail. Certifique-se de adaptar os comandos e informações conforme as especificidades do seu projeto.* 
