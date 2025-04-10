@@ -17,6 +17,10 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('telefone');
+            $table->string('profilePic');
+            $table->enum('tipoUsuario', ['Setor', 'Professor', 'Aluno', 'Externo'])->default('Externo');
+            $table->foreignId('setorId')->constrained('setor');
             $table->rememberToken();
             $table->timestamps();
         });
