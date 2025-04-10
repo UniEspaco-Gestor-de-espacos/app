@@ -65,7 +65,7 @@ O objetivo principal da solução proposta é criar um sistema integrado de gest
 
 7. **Executar Migrações e Seeders**
 
-    Se o projeto utilizar banco de dados e houver migrações e seeders configurados, execute:
+    OBS.: AGUARDE O SERVIDOR MYSQL INICIAR POR COMPLETO PARA PODER RODAR O COMANDO "MIGRATE" CASO CONTRARIO VAI DAR ERRO.
 
     ```bash
     sail artisan migrate --seed
