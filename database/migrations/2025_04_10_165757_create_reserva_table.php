@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('idSolicitante')->constrained('users');
             $table->string('titulo');
             $table->text('descricao');
-            $table->enum('situacao', ['Em_analise', 'Deferida', 'Indeferida']);
+            $table->enum('situacao', ['Em_analise', 'Deferida', 'Indeferida'])->default('Em_analise');;
             $table->dateTime('dataInicio');
             $table->dateTime('dataFinal');
             $table->text('observacao')->nullable();
