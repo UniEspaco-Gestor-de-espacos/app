@@ -18,7 +18,8 @@ class DatabaseSeeder extends Seeder
         UserSeeder::class,
         EspacoSeeder::class,
         AgendaTurnoSeeder::class,
-        HorarioSeeder::class
+        HorarioSeeder::class,
+        ReservaSeeder::class
        ]);
         
     }
