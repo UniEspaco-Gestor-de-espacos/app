@@ -1,9 +1,9 @@
 # Uniespaço
 
 O objetivo principal da solução proposta é criar um sistema integrado de gestão de espaços físicos que centralize as reservas, facilite a manutenção e melhore o acompanhamento do uso dos espaços na UESB. Este sistema deverá:
-    ● Centralizar o processo de reservas. Unificar a reserva de todos os tipos de espaços (salas de aula, anfiteatros, etc.) em uma única plataforma, tornando o processo mais transparente, acessível e eficiente. 
-    ● Facilitar a manutenção. Prover um canal único para que usuários possam reportar problemas, garantindo que as solicitações sejam encaminhadas diretamente ao setor competente e monitoradas até sua resolução. 
-    ● Acompanhar o uso dos espaços. Implementar mecanismos para monitorar o uso real dos espaços, permitindo identificar ociosidade, reservas indevidas e problemas na organização, e tomar ações corretivas de forma proativa.
+● Centralizar o processo de reservas. Unificar a reserva de todos os tipos de espaços (salas de aula, anfiteatros, etc.) em uma única plataforma, tornando o processo mais transparente, acessível e eficiente.
+● Facilitar a manutenção. Prover um canal único para que usuários possam reportar problemas, garantindo que as solicitações sejam encaminhadas diretamente ao setor competente e monitoradas até sua resolução.
+● Acompanhar o uso dos espaços. Implementar mecanismos para monitorar o uso real dos espaços, permitindo identificar ociosidade, reservas indevidas e problemas na organização, e tomar ações corretivas de forma proativa.
 
 ## Pré-requisitos
 
@@ -15,104 +15,82 @@ O objetivo principal da solução proposta é criar um sistema integrado de gest
 
 1. **Clonar o Repositório**
 
-   Clone este repositório para sua máquina local:
+    Clone este repositório para sua máquina local:
 
-   ```bash
-   git clone https://github.com/UniEspaco-Gestor-de-espacos/app
-   ```
+    ```bash
+    git clone https://github.com/UniEspaco-Gestor-de-espacos/app
+    ```
 
 2. **Navegar para o Diretório do Projeto**
 
-   ```bash
-   cd app
-   ```
+    ```bash
+    cd app
+    ```
 
 3. **Copiar o Arquivo `.env`**
 
-   Crie uma cópia do arquivo de exemplo `.env`:
+    Crie uma cópia do arquivo de exemplo `.env`:
 
-   ```bash
-   cp .env.example .env
-   ```
+    ```bash
+    cp .env.example .env
+    ```
 
 4. **Instalar Dependências do Composer**
 
-   Instale as dependencias do composer
-   ```
-    composer install
-   ```
+    Instale as dependencias do composer
 
-   Configure um alias para poder utilizar o comando sail sem o caminho todo
+    ```
+     composer install
+    ```
+
+    Configure um alias para poder utilizar o comando sail sem o caminho todo
+
     ```
     alias sail='sh $([ -f sail ] && echo sail || echo vendor/bin/sail)'
     ```
 
-   Utilize o Sail para instalar as dependências do Composer:
-   ```bash
-   ./vendor/bin/sail composer install
-   ```
+5. **Inicialização do Ambiente de Desenvolvimento**
 
-5. **Gerar a Chave da Aplicação**
+    Para iniciar o ambiente de desenvolvimento, execute:
 
-   ```bash
-   sail artisan key:generate
-   ```
+    ```bash
+    sail up -d
+    ```
 
-6. **Executar Migrações e Seeders (Opcional)**
+6. **Gerar a Chave da Aplicação**
 
-   Se o projeto utilizar banco de dados e houver migrações e seeders configurados, execute:
+    ```bash
+    sail artisan key:generate
+    ```
 
-   ```bash
-   sail artisan migrate --seed
-   ```
+7. **Executar Migrações e Seeders**
 
-## Inicialização do Ambiente de Desenvolvimento
+    Se o projeto utilizar banco de dados e houver migrações e seeders configurados, execute:
 
-Para iniciar o ambiente de desenvolvimento, execute:
+    ```bash
+    sail artisan migrate --seed
+    ```
 
-```bash
-sail up
-```
+8. **Instalar Dependências do Vite**
 
-Este comando iniciará os containers Docker em modo interativo. Para rodar os containers em segundo plano (modo "detached"), utilize:
+    Instale as dependencias do Vite
 
-```bash
-sail up -d
-```
+    ```
+     npm install && npm run build
+    ```
 
-Após iniciar os containers, a aplicação estará acessível em `http://localhost`.
-
-## Comandos Úteis
-
-- **Acessar o Container de Aplicação**
-
-  Para acessar o terminal dentro do container da aplicação:
-
-  ```bash
-  sail shell
-  ```
-
-- **Executar Comandos Artisan**
-
-  Para executar comandos Artisan, prefixe-os com `sail`:
-
-  ```bash
-  sail artisan comando
-  ```
-
-- **Executar Comandos do Composer**
-
-  Similarmente, para comandos do Composer:
-
-  ```bash
-  sail composer comando
-  ```
+Após rodar os comandos, a aplicação estará acessível em `http://localhost`.
 
 - **Parar os Containers**
 
-  Para parar os containers em execução:
+    Para parar os containers em execução:
 
-  ```bash
-  sail down
-  ```
+    ```bash
+    sail stop
+    ```
 
+- **Observações**
+  O Sail deu erros ao inicializar o mysql, pois ele não setou o DB_HOST no mysql no arquivo docker-compose.yml
+    ```
+    MYSQL_ROOT_HOST: '${DB_HOST}'
+    ```
