@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('telefone');
             $table->string('profilePic');
             $table->enum('tipoUsuario', ['Setor', 'Professor', 'Aluno', 'Externo'])->default('Externo');
-            $table->foreignId('setorId')->constrained('setor');
+            $table->foreignId('setorId')->constrained('setors');
             $table->rememberToken();
             $table->timestamps();
         });

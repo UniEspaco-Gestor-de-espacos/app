@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('reserva_horario', function (Blueprint $table) {
-            $table->foreignId('idReserva')->constrained('reserva');
-            $table->foreignId('idHorario')->constrained('horario');
+            $table->foreignId('idReserva')->constrained('reservas');
+            $table->foreignId('idHorario')->constrained('horarios');
             $table->primary(['idReserva', 'idHorario']);
         });
     }
