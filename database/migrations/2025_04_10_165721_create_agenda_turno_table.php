@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->enum('turno', ['Manha', 'Tarde', 'Noite']);
             $table->foreignId('espacoId')->constrained('espaco');
-            $table->foreignId('gestorId')->constrained('usuario');
+            $table->foreignId('gestorId')->constrained('users');
             $table->timestamps();
         });
     }

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('reserva', function (Blueprint $table) {
             $table->id();
             $table->foreignId('idEspaco')->constrained('espaco');
-            $table->foreignId('idSolicitante')->constrained('usuario');
+            $table->foreignId('idSolicitante')->constrained('users');
             $table->string('titulo');
             $table->text('descricao');
             $table->enum('situacao', ['Em_analise', 'Deferida', 'Indeferida']);
