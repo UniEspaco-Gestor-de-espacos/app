@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('agenda_turno', function (Blueprint $table) {
+        Schema::create('agenda_turnos', function (Blueprint $table) {
             $table->id();
             $table->enum('turno', ['Manha', 'Tarde', 'Noite']);
             $table->foreignId('espacoId')->constrained('espacos');
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('agenda_turno');
+        Schema::dropIfExists('agenda_turnos');
     }
 };

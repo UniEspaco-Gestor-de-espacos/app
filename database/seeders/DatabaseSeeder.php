@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         SetorSeeder::class,
         UserSeeder::class,
         EspacoSeeder::class,
+        AgendaTurnoSeeder::class
        ]);
         
     }
