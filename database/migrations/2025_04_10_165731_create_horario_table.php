@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('horario', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('agendaId')->constrained('agenda_turno');
+            $table->time('horarioInicio');
+            $table->time('horarioFim');
+            $table->date('data');
+            $table->unique(['agendaId', 'horarioInicio', 'data']);
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('horario');
+    }
+};
