@@ -19,11 +19,11 @@ class ReservaFactory extends Factory
     public function definition(): array
     {
         return [
-            'idEspaco' => Espaco::pluck('id')->random(),
-            'idSolicitante' => User::pluck('id')->random(),
+            'espaco_id' => Espaco::pluck('id')->random(),
+            'user_id' => User::pluck('id')->random(),
             'titulo'=> fake()->word(),
             'descricao' => fake()->text(),
-            'dataInicio' => now(),
+            'dataInicial' => now(),
             'dataFinal' => now()->addWeek()
         ];
     }

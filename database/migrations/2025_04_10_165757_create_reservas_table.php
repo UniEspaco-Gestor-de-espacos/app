@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('reservas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('idEspaco')->constrained('espacos');
-            $table->foreignId('idSolicitante')->constrained('users');
+            $table->foreignId('espaco_id')->constrained('espacos');
+            $table->foreignId('user_id')->constrained('users');
             $table->string('titulo');
             $table->text('descricao');
-            $table->enum('situacao', ['Em_analise', 'Deferida', 'Indeferida'])->default('Em_analise');;
-            $table->dateTime('dataInicio');
+            $table->enum('situacao', ['em_analise', 'deferida', 'indeferida'])->default('em_analise');;
+            $table->dateTime('dataInicial');
             $table->dateTime('dataFinal');
             $table->text('observacao')->nullable();
             $table->timestamps();

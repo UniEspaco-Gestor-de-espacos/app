@@ -18,9 +18,10 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('telefone');
-            $table->string('profilePic');
-            $table->enum('tipoUsuario', ['Setor', 'Professor', 'Aluno', 'Externo'])->default('Externo');
-            $table->foreignId('setorId')->constrained('setors');
+            $table->string('profile_pic');
+            $table->enum('tipo_usuario', ['setor', 'professor', 'aluno', 'externo'])->default('externo');
+            $table->boolean('is_gestor')->default(false);
+            $table->foreignId('setor_id')->constrained('setors');
             $table->rememberToken();
             $table->timestamps();
         });

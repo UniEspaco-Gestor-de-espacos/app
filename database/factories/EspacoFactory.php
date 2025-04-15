@@ -20,9 +20,10 @@ class EspacoFactory extends Factory
             'campus' => fake()->word(),
             'modulo'=> fake()->word(),
             'andar' => fake()->randomDigitNotNull(),
-            'numero'=> fake()->randomDigitNotNull(),
+            'nome'=> fake()->randomDigitNotNull(),
             'capacidadePessoas' => fake()->randomDigitNotNull(),
             'acessibilidade' => False,
+            'descricao' => fake()->text(),
             'created_at'=>now(),
             'updated_at'=>now()
         ];

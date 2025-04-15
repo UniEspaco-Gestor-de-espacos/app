@@ -16,9 +16,10 @@ return new class extends Migration
             $table->string('campus');
             $table->string('modulo');
             $table->string('andar');
-            $table->string('numero');
+            $table->string('nome');
             $table->integer('capacidadePessoas');
             $table->boolean('acessibilidade');
+            $table->string('descricao');
             $table->timestamps();
         });
     }

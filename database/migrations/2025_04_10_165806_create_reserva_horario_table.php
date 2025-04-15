@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('reserva_horario', function (Blueprint $table) {
-            $table->foreignId('idReserva')->constrained('reservas');
-            $table->foreignId('idHorario')->constrained('horarios');
-            $table->primary(['idReserva', 'idHorario']);
+            $table->foreignId('reserva_id')->constrained('reservas');
+            $table->foreignId('horario_id')->constrained('horarios');
+            $table->primary(['reserva_id', 'horario_id']);
         });
     }
 

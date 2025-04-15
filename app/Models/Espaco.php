@@ -14,9 +14,10 @@ class Espaco extends Model
         'campus',
         'modulo',
         'andar',
-        'numero',
+        'nome',
         'capacidadePessoas',
-        'acessibilidade'
+        'acessibilidade',
+        'descricao'
     ];
 
 }

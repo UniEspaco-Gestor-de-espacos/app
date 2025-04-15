@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Models\Setor;
+use App\Enums\TipoUsuario\TipoUsuarioEnum;
+
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
  */
@@ -27,11 +29,12 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'profilePic'=> fake()->name(),
+            'profile_pic'=> fake()->name(),
             'telefone'=>fake()->name(),
             'password' => static::$password ??= Hash::make('password'),
-            'setorId' => Setor::pluck('id')->random(),
+            'setor_id' => Setor::pluck('id')->random(),
             'remember_token' => Str::random(10),
+            'tipo_usuario'=>fake()->randomElement(array_column(TipoUsuarioEnum::cases(),'value'))
         ];
     }
 
