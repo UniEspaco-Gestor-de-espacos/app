@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('agenda_turno', function (Blueprint $table) {
+        Schema::create('agenda_turnos', function (Blueprint $table) {
             $table->id();
-            $table->enum('turno', ['Manha', 'Tarde', 'Noite']);
-            $table->foreignId('espacoId')->constrained('espacos');
-            $table->foreignId('gestorId')->constrained('users');
+            $table->enum('turno', ['manha', 'tarde', 'noite']);
+            $table->foreignId('espaco_id')->constrained('espacos');
+            $table->foreignId('user_id')->constrained('users');
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('agenda_turno');
+        Schema::dropIfExists('agenda_turnos');
     }
 };
