@@ -22,7 +22,6 @@ class DatabaseSeeder extends Seeder
         AgendaTurnoSeeder::class,
         HorarioSeeder::class,
         ReservaSeeder::class,
-        ReservaHorarioSeeder::class
        ]);
         
     }

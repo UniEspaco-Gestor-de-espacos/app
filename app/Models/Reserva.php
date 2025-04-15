@@ -17,7 +17,7 @@ class Reserva extends Model
         'dataFinal',
     ];
 
-    public function horario(){
-        return $this->belongsToMany(Horario::class, 'reserva_horario', 'reserva_id', 'horario_id')->withoutTimestamps();
+    public function horarios(){
+        return $this->belongsToMany(Horario::class, 'reserva_horario')->withTimestamps();
     }
 }

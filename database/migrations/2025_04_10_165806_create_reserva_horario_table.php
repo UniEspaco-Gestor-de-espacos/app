@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('reserva_horario', function (Blueprint $table) {
             $table->foreignId('reserva_id')->constrained('reservas');
             $table->foreignId('horario_id')->constrained('horarios');
+            $table->timestamps();
             $table->primary(['reserva_id', 'horario_id']);
         });
     }
