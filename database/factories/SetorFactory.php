@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Enums\Campus\CampusEnum;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Setor>
@@ -18,7 +19,8 @@ class SetorFactory extends Factory
     {
         return [
             'nome' => fake()->name(),
-            'sigla'=>fake()->word()
+            'sigla'=>fake()->word(),
+            'campus'=> fake()->randomElement(array_column(CampusEnum::cases(),'value'))
         ];
     }
 }
