@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm,usePage } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
@@ -17,6 +17,9 @@ type RegisterForm = {
 };
 
 export default function Register() {
+
+    const { props } = usePage();
+    const setores = props.setores;
     const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
         name: '',
         email: '',
@@ -34,6 +37,13 @@ export default function Register() {
     return (
         <AuthLayout title="Create an account" description="Enter your details below to create your account">
             <Head title="Register" />
+            {setores.map((setor) => (
+                            <div key={setor.id} className="rounded-2xl border bg-white p-5 shadow-md transition-shadow duration-300 hover:shadow-lg">
+                                <div className="mb-2 text-sm text-gray-500">ID: {setor.id}</div>
+                                <h2 className="mb-2 text-xl font-semibold text-gray-800">{setor.nome}</h2>
+                                <p className="text-sm text-gray-600">{setor.campus}</p>
+                            </div>
+                        ))}
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Espaco;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class EspacoController extends Controller
 {
@@ -11,8 +12,9 @@ class EspacoController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
-        //
+    {   
+        $espacos = Espaco::all();
+        return Inertia::render('espacos/index', compact('espacos'));
     }
 
     /**
@@ -36,7 +38,7 @@ class EspacoController extends Controller
      */
     public function show(Espaco $espaco)
     {
-        //
+        return Inertia::render('espacos/visualizar_espaco', compact('espaco'));
     }
 
     /**

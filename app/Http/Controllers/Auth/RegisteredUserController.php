@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
-
+use App\Models\Setor;
 class RegisteredUserController extends Controller
 {
     /**
@@ -20,7 +20,8 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('auth/register');
+        $setores = Setor::all();
+        return Inertia::render('auth/register',compact('setores'));
     }
 
     /**
@@ -40,6 +41,9 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'telefone' =>'73001211212', // Vai sair
+            'profile_pic' => 'aushaushuahsas', // temporario
+            'setor_id' => Setor::pluck('id')->random() // so pra testes
         ]);
 
         event(new Registered($user));
