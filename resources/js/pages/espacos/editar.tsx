@@ -25,7 +25,7 @@ export default function EditarEspaco() {
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        put('/espacos'); // ou sua rota exata para store
+        put(route('espacos.update', espaco.id)); // ou sua rota exata para store
     };
 
     return (

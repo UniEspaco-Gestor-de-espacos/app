@@ -52,3 +52,14 @@ export interface Espaco {
     acessibilidade: boolean;
     descricao: string;
 }
+
+export interface FlashMessages {
+    success?: string;
+    error?: string;
+    info?: string;
+    warning?: string;
+}
+
+export interface CustomPageProps extends PageProps {
+    flash: FlashMessages;
+}

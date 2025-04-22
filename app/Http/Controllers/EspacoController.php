@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Espaco;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Inertia\Inertia;
+use Illuminate\Database\QueryException;
+
 
 class EspacoController extends Controller
 {
@@ -66,7 +69,16 @@ class EspacoController extends Controller
      */
     public function update(Request $request, Espaco $espaco)
     {
-        try{
+        $messages = [
+            'campus.required' => 'O campo campus é obrigatório.',
+            'modulo.required' => 'O campo módulo é obrigatório.',
+            'andar.required' => 'O campo andar é obrigatório.',
+            'nome.required' => 'O nome é obrigatório.',
+            'capacidadePessoas.required' => 'A capacidade de pessoas é obrigatória.',
+            'acessibilidade.required' => 'O campo acessibilidade é obrigatório.',
+            'descricao.required' => 'A descrição é obrigatória.',
+        ];
+        try {
             $espaco->update($request->validate([
                 'campus' => 'required',
                 'modulo' => 'required',
@@ -75,12 +87,16 @@ class EspacoController extends Controller
                 'capacidadePessoas' => 'required',
                 'acessibilidade' => 'required',
                 'descricao' => 'required'
-            ]));
-            return redirect()->back()->with('success', 'Usuário atualizado com sucesso!');
-        }catch(){
-
+            ], $messages));
+            return redirect()->route('espacos.index')->with('success', 'Usuário atualizado com sucesso!');
+        } catch (QueryException $e) {
+            // Aqui você captura erros específicos do banco de dados
+            // Exemplo: erro de chave estrangeira, erro de duplicidade, etc.
+            return redirect()->back()->with('error', 'Erro ao salvar no banco de dados: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            // Captura erros gerais
+            return redirect()->back()->with('error', 'Ocorreu um erro inesperado: ' . $e->getMessage());
         }
-        
     }
 
     /**
