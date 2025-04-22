@@ -1,20 +1,37 @@
-import { Head, useForm } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
-import { FormEventHandler } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
+import { Instituicao, Setor, Unidade } from '@/types';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import { LoaderCircle } from 'lucide-react';
+import { FormEventHandler, useEffect, useState } from 'react';
 export default function Register() {
+    const { props } = usePage<{ instituicaos: Instituicao[]; unidades: Unidade[]; setores: Setor[] }>();
+    const instituicaos = props.instituicaos;
+    const [instituicaoId, setInstituicaoId] = useState<string>();
+    const [unidades, setUnidades] = useState<Unidade[]>([]);
+    const [unidadeId, setUnidadeId] = useState<string>();
+    const [setores, setSetores] = useState<Setor[]>([]);
+    const [setorId, setSetorId] = useState<string>();
+    useEffect(() => {
+        const listUnidades = props.unidades.filter((unidade) => unidade.instituicao_id == instituicaoId);
+        setUnidades(listUnidades);
+    }, [instituicaoId]);
+
+    useEffect(() => {
+        const listSetores = props.setores.filter((setor) => setor.unidade_id == unidadeId);
+        setSetores(listSetores);
+    }, [unidadeId]);
+
     const { data, setData, post, processing, errors, reset } = useForm({
-        first_name: '',
-        last_name: '',
+        name: '',
         email: '',
         phone: '',
         password: '',
         password_confirmation: '',
         campus: '',
+        setor_id: '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -26,7 +43,7 @@ export default function Register() {
 
     return (
         <>
-            <Head title="Register" />
+            <Head title="Cadastro usuário" />
             <div className="flex min-h-screen">
                 {/* Lado esquerdo */}
                 <div className="flex w-1/2 items-center justify-center overflow-hidden rounded-l-xl bg-blue-100">
@@ -42,25 +59,9 @@ export default function Register() {
                     <form onSubmit={submit} className="space-y-6">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="first_name">Primeiro nome:</Label>
-                                <Input
-                                    id="first_name"
-                                    value={data.first_name}
-                                    onChange={(e) => setData('first_name', e.target.value)}
-                                    placeholder="Digite seu nome."
-                                />
-                                <InputError message={errors.first_name} />
-                            </div>
-
-                            <div>
-                                <Label htmlFor="last_name">Sobrenome:</Label>
-                                <Input
-                                    id="last_name"
-                                    value={data.last_name}
-                                    onChange={(e) => setData('last_name', e.target.value)}
-                                    placeholder="Digite seu nome."
-                                />
-                                <InputError message={errors.last_name} />
+                                <Label htmlFor="name">Nome completo:</Label>
+                                <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder="Digite seu nome" />
+                                <InputError message={errors.name} />
                             </div>
 
                             <div>
@@ -70,7 +71,7 @@ export default function Register() {
                                     type="email"
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
-                                    placeholder="info@xyz.com"
+                                    placeholder="email@example.com"
                                 />
                                 <InputError message={errors.email} />
                             </div>
@@ -85,7 +86,54 @@ export default function Register() {
                                 />
                                 <InputError message={errors.phone} />
                             </div>
-
+                            <div>
+                                <Label htmlFor="instituicao">Instituição:</Label>
+                                <select
+                                    name="instituicao"
+                                    id="instituicao"
+                                    onChange={(e) => {
+                                        setInstituicaoId(e.target.value);
+                                    }}
+                                >
+                                    <option value="null"> Selecionar </option>
+                                    {instituicaos.map((instituicao: Instituicao) => (
+                                        <option value={instituicao.id}>{instituicao.sigla}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <Label htmlFor="unidade">Unidade:</Label>
+                                <select
+                                    name="unidade"
+                                    id="unidade"
+                                    onChange={(e) => {
+                                        setUnidadeId(e.target.value);
+                                    }}
+                                >
+                                    <option value="null"> Selecionar </option>
+                                    {unidades.map((unidade: Unidade) => (
+                                        <option value={unidade.id}>{unidade.sigla}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <Label htmlFor="setor">Setor:</Label>
+                                <select
+                                    name="setor"
+                                    id="setor"
+                                    onChange={(e) => {
+                                        setSetorId(e.target.value);
+                                    }}
+                                >
+                                    <option value="null"> Selecionar </option>
+                                    {setores.map((setor: Setor) => (
+                                        <option value={setor.id}>
+                                            <Input type='hidden' id='setor_id'/>
+                                            {setor.sigla}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                             <div>
                                 <Label htmlFor="password">Senha:</Label>
                                 <Input
