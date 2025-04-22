@@ -41,8 +41,8 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            // 'telefone' =>'73001211212', // Vai sair
-            // 'profile_pic' => 'aushaushuahsas', // temporario
+            'telefone' =>'73001211212', // Vai sair
+            'profile_pic' => 'aushaushuahsas', // temporario
             // 'setor_id' => Setor::pluck('id')->random() // so pra testes
         ]);
 

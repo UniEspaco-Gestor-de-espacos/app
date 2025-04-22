@@ -1,7 +1,8 @@
 //import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import { Espaco, type BreadcrumbItem } from '@/types';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -11,6 +12,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function EditarEspaco() {
+    const [showModal, setShowModal] = useState(false);
+    const [espacoParaExcluir, setEspacoparaExcluir] = useState<Espaco | null>();
     const { props } = usePage<{ espaco: Espaco }>();
     const espaco = props.espaco;
     const { data, setData, put, processing, errors } = useForm({
@@ -23,6 +26,22 @@ export default function EditarEspaco() {
         descricao: espaco.descricao,
     });
 
+    const confirmDestroy = (espaco: Espaco) => {
+        setEspacoparaExcluir(espaco);
+        setShowModal(true);
+    };
+
+    const submitDestroy = () => {
+        if (!espacoParaExcluir) return;
+
+        router.delete(`/espacos/${espacoParaExcluir.id}`, {
+            onSuccess: () => {
+                setShowModal(false);
+                setEspacoparaExcluir(null);
+            },
+        });
+    };
+
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         put(route('espacos.update', espaco.id)); // ou sua rota exata para store
@@ -31,9 +50,10 @@ export default function EditarEspaco() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Espacos" />
-            {/*<div className="mx-auto max-w-2xl space-y-4 rounded-xl bg-white p-4 shadow">*/}
             <h2 className="text-2xl font-bold text-gray-800">Cadastrar Espaço</h2>
-
+            <button onClick={() => confirmDestroy(espaco)} className="text-red-500 hover:underline">
+                                    Deletar
+                                </button>
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Campus */}
                 <div>
@@ -105,10 +125,26 @@ export default function EditarEspaco() {
                 </div>
 
                 <button type="submit" disabled={processing} className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-                    Cadastrar
+                    Atualizar
                 </button>
             </form>
-            {/* </div> */}
+            {showModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
+                    <div className="rounded-2xl border bg-white p-6 text-center shadow-lg transition-shadow duration-300">
+                        <p>
+                            Tem certeza que deseja excluir o espaço <strong>{espacoParaExcluir?.nome}</strong>?
+                        </p>
+                        <div className="mt-4 flex justify-center gap-4">
+                            <button onClick={submitDestroy} className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600">
+                                Sim, excluir
+                            </button>
+                            <button onClick={() => setShowModal(false)} className="rounded bg-gray-300 px-4 py-2 hover:bg-gray-400">
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}{' '}
         </AppLayout>
     );
 }

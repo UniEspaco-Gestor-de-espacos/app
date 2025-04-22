@@ -109,7 +109,7 @@ class EspacoController extends Controller
             return redirect()->back()->with('error', 'Erro ao salvar no banco de dados: ' . $e->getMessage());
         } catch (Exception $e) {
             // Captura erros gerais
-            return redirect()->back()->with('error', 'Ocorreu um erro inesperado: ' . $e->getMessage());
+            return redirect()->back()->with('warning', 'Ocorreu um erro inesperado: ' . $e->getMessage());
         }
     }
 
@@ -118,6 +118,12 @@ class EspacoController extends Controller
      */
     public function destroy(Espaco $espaco)
     {
-        //
+        try {
+            $espaco->delete();
+            return redirect()->route('espacos.index')->with('success', 'Espaço excluído com sucesso!');
+        } catch (Exception $error) {
+            dd($error->getMessage());
+            return redirect()->back()->with('error', 'Erro ao excluir, favor tentar novamente');
+        }
     }
 }
