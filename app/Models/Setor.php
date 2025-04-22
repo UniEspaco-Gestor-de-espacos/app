@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Unidade;
 
 class Setor extends Model
 {
@@ -12,11 +13,18 @@ class Setor extends Model
 
     protected $fillable = [
         'nome',
-        'sigla'
+        'sigla',
+        'unidade_id'
     ];
 
 
-    public function users(){
+    public function users()
+    {
         return $this->hasMany(User::class);
+    }
+
+    public function unidade()
+    {
+        return $this->belongsTo(Unidade::class);
     }
 }

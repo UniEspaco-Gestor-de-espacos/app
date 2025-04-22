@@ -11,18 +11,19 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      */
-    
+
 
     public function run(): void
     {
-       $this->call([
-        SetorSeeder::class,
-        UserSeeder::class,
-        EspacoSeeder::class,
-        AgendaTurnoSeeder::class,
-        HorarioSeeder::class,
-        ReservaSeeder::class,
-       ]);
-        
+        $this->call([
+            EspacoSeeder::class,
+            InstituicaoSeeder::class,
+            UnidadeSeeder::class,
+            SetorSeeder::class,
+            UserSeeder::class,
+            AgendaTurnoSeeder::class,
+            HorarioSeeder::class,
+            ReservaSeeder::class,
+        ]);
     }
 }
