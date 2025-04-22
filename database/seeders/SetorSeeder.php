@@ -11,6 +11,7 @@ class SetorSeeder extends Seeder
     /**
      * Run the database seeds.
      */
+
     public function run(): void
     {
         //fk_unidade_instituicao -> 1(JQ), 2(VCA), 3(ITA)

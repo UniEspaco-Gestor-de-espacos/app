@@ -24,7 +24,7 @@ class User extends Authenticatable
         'password',
         'telefone',
         'profile_pic',
-        'setor_id' // testes
+        'setor_id' 
     ];
 
     /**
@@ -49,7 +49,7 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    public function setors(){
-        return $this->hasOne(Setor::class);
+    public function setor(){
+        return $this->belongsTo(Setor::class);
     }
 }
