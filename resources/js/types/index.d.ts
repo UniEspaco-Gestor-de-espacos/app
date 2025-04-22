@@ -41,3 +41,25 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+export interface Espaco {
+    id: number;
+    campus: string;
+    modulo: string;
+    andar: string;
+    nome: string;
+    capacidadePessoas: number;
+    acessibilidade: boolean;
+    descricao: string;
+}
+
+export interface FlashMessages {
+    success?: string;
+    error?: string;
+    info?: string;
+    warning?: string;
+}
+
+export interface CustomPageProps extends PageProps {
+    flash: FlashMessages;
+}

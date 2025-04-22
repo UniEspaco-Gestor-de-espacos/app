@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('profile_pic');
             $table->enum('tipo_usuario', ['setor', 'professor', 'aluno', 'externo'])->default('externo');
             $table->boolean('is_gestor')->default(false);
-            $table->foreignId('setor_id')->constrained('setors');
+            $table->foreignId('setor_id')->nullable()->constrained('setors'); // Usuario pode não ser vinculado a um setor ao ser criado
             $table->rememberToken();
             $table->timestamps();
         });

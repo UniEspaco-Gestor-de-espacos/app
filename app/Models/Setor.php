@@ -14,4 +14,9 @@ class Setor extends Model
         'nome',
         'sigla'
     ];
+
+
+    public function users(){
+        return $this->hasMany(User::class);
+    }
 }
