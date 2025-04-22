@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Espaco;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
 use Inertia\Inertia;
 
 class EspacoController extends Controller
@@ -12,7 +13,7 @@ class EspacoController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {   
+    {
         $espacos = Espaco::all();
         return Inertia::render('espacos/index', compact('espacos'));
     }
@@ -22,7 +23,7 @@ class EspacoController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('espacos/cadastrar');
     }
 
     /**
@@ -30,7 +31,18 @@ class EspacoController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        Espaco::create($request->validate([
+            'campus' => 'required',
+            'modulo' => 'required',
+            'andar' => 'required',
+            'nome' => 'required',
+            'capacidadePessoas' => 'required',
+            'acessibilidade' => 'required',
+            'descricao' => 'required',
+
+        ]));
+
+        return Route::redirect('espacos');
     }
 
     /**
@@ -46,7 +58,7 @@ class EspacoController extends Controller
      */
     public function edit(Espaco $espaco)
     {
-        //
+        return Inertia::render('espacos/editar', compact('espaco'));
     }
 
     /**
@@ -54,7 +66,21 @@ class EspacoController extends Controller
      */
     public function update(Request $request, Espaco $espaco)
     {
-        //
+        try{
+            $espaco->update($request->validate([
+                'campus' => 'required',
+                'modulo' => 'required',
+                'andar' => 'required',
+                'nome' => 'required',
+                'capacidadePessoas' => 'required',
+                'acessibilidade' => 'required',
+                'descricao' => 'required'
+            ]));
+            return redirect()->back()->with('success', 'Usuário atualizado com sucesso!');
+        }catch(){
+
+        }
+        
     }
 
     /**

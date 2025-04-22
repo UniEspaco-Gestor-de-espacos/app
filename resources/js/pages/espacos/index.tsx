@@ -1,12 +1,12 @@
 //import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import { Espaco, type BreadcrumbItem } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Espacos',
-        href: '/espacos',
+        title: 'Editar espaco',
+        href: '/editar-espaco',
     },
 ];
 
@@ -27,6 +27,9 @@ export default function Espacos() {
                                 <div className="mb-2 text-sm text-gray-500">ID: {espaco.id}</div>
                                 <h2 className="mb-2 text-xl font-semibold text-gray-800">{espaco.nome}</h2>
                                 <p className="text-sm text-gray-600">{espaco.descricao}</p>
+                                <button type="button" onClick={() => router.visit(`espacos/${espaco.id}/edit`)}>
+                                    Editar
+                                </button>
                             </div>
                         ))}
                     </div>
