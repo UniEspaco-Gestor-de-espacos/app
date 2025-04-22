@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('horarios', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('agenda_id')->constrained('agenda_turnos');
+            $table->foreignId('agenda_id')->constrained('agenda_turnos')->onDelete('cascade');
             $table->time('horarioInicio');
             $table->time('horarioFim');
             $table->enum('dia_semana', ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom']);

@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('agenda_turnos', function (Blueprint $table) {
             $table->id();
             $table->enum('turno', ['manha', 'tarde', 'noite']);
-            $table->foreignId('espaco_id')->constrained('espacos');
-            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('espaco_id')->constrained('espacos')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
         });
     }

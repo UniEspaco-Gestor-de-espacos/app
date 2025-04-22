@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('reservas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('espaco_id')->constrained('espacos');
-            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('espaco_id')->nullable()->constrained('espacos')->onDelete('set null');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('titulo');
             $table->text('descricao');
             $table->enum('situacao', ['em_analise', 'deferida', 'indeferida'])->default('em_analise');;
