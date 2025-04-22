@@ -79,7 +79,7 @@ export default function EditarEspaco() {
                     <input
                         type="number"
                         value={data.capacidadePessoas}
-                        onChange={(e) => setData('capacidadePessoas', e.target.value)}
+                        onChange={(e) => setData('capacidadePessoas', Number.parseInt(e.target.value))}
                         className="w-full rounded border p-2"
                     />
                     {errors.capacidadePessoas && <div className="text-sm text-red-500">{errors.capacidadePessoas}</div>}

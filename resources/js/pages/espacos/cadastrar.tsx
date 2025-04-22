@@ -17,7 +17,7 @@ export default function CadastrarEspaco() {
         andar: '',
         nome: '',
         capacidadePessoas: '',
-        acessibilidade: false,
+        acessibilidade: false as boolean,
         descricao: '',
     });
 

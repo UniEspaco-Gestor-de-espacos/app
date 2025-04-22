@@ -34,18 +34,32 @@ class EspacoController extends Controller
      */
     public function store(Request $request)
     {
-        Espaco::create($request->validate([
-            'campus' => 'required',
-            'modulo' => 'required',
-            'andar' => 'required',
-            'nome' => 'required',
-            'capacidadePessoas' => 'required',
-            'acessibilidade' => 'required',
-            'descricao' => 'required',
+        $messages = [
+            'campus.required' => 'O campo campus é obrigatório.',
+            'modulo.required' => 'O campo módulo é obrigatório.',
+            'andar.required' => 'O campo andar é obrigatório.',
+            'nome.required' => 'O nome é obrigatório.',
+            'capacidadePessoas.required' => 'A capacidade de pessoas é obrigatória.',
+            'acessibilidade.required' => 'O campo acessibilidade é obrigatório.',
+            'descricao.required' => 'A descrição é obrigatória.',
+        ];
+        try {
+            Espaco::create($request->validate([
+                'campus' => 'required',
+                'modulo' => 'required',
+                'andar' => 'required',
+                'nome' => 'required',
+                'capacidadePessoas' => 'required',
+                'acessibilidade' => 'required',
+                'descricao' => 'required',
 
-        ]));
-
-        return Route::redirect('espacos');
+            ], $messages)); // Valida se todos os campos foram preenchidos corretamente.
+            return redirect()->route('espacos.index')->with('success', 'Espaco cadastrado com sucesso!');
+        } catch (QueryException $e) { // Captura erro no banco de dados
+            return redirect()->back()->with('error', 'Erro ao salvar no banco de dados: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Ocorreu um erro inesperado: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -88,12 +102,12 @@ class EspacoController extends Controller
                 'acessibilidade' => 'required',
                 'descricao' => 'required'
             ], $messages));
-            return redirect()->route('espacos.index')->with('success', 'Usuário atualizado com sucesso!');
+            return redirect()->route('espacos.index')->with('success', 'Espaço atualizado com sucesso!');
         } catch (QueryException $e) {
             // Aqui você captura erros específicos do banco de dados
             // Exemplo: erro de chave estrangeira, erro de duplicidade, etc.
             return redirect()->back()->with('error', 'Erro ao salvar no banco de dados: ' . $e->getMessage());
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Captura erros gerais
             return redirect()->back()->with('error', 'Ocorreu um erro inesperado: ' . $e->getMessage());
         }
