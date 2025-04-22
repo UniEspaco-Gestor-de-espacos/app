@@ -6,8 +6,8 @@ import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Editar espaco',
-        href: '/editar-espaco',
+        title: 'Todos espaços',
+        href: '/espacos',
     },
 ];
 
@@ -42,10 +42,12 @@ export default function Espacos() {
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         {espacos.map((espaco) => (
-                            <div key={espaco.id} className="rounded-2xl border bg-white p-5 shadow-md transition-shadow duration-300 hover:shadow-lg">
-                                <div className="mb-2 text-sm text-gray-500">ID: {espaco.id}</div>
-                                <h2 className="mb-2 text-xl font-semibold text-gray-800">{espaco.nome}</h2>
-                                <p className="text-sm text-gray-600">{espaco.descricao}</p>
+                            <div className="rounded-2xl border bg-white p-5 shadow-md transition-shadow duration-300 hover:shadow-lg">
+                                <div onClick={() => router.visit(`/espacos/${espaco.id}`)} key={espaco.id}>
+                                    <div className="mb-2 text-sm text-gray-500">ID: {espaco.id}</div>
+                                    <h2 className="mb-2 text-xl font-semibold text-gray-800">{espaco.nome}</h2>
+                                    <p className="text-sm text-gray-600">{espaco.descricao}</p>
+                                </div>
                                 <button type="button" onClick={() => router.visit(`espacos/${espaco.id}/edit`)}>
                                     Editar
                                 </button>

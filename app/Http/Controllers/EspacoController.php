@@ -67,7 +67,7 @@ class EspacoController extends Controller
      */
     public function show(Espaco $espaco)
     {
-        return Inertia::render('espacos/visualizar_espaco', compact('espaco'));
+        return Inertia::render('espacos/visualizar', compact('espaco'));
     }
 
     /**
