@@ -89,51 +89,68 @@ export default function Register() {
                             <div>
                                 <Label htmlFor="instituicao">Instituição:</Label>
                                 <select
-                                    name="instituicao"
                                     id="instituicao"
+                                    value={instituicaoId || ''}
                                     onChange={(e) => {
-                                        setInstituicaoId(e.target.value);
+                                        const selected = e.target.value;
+                                        setInstituicaoId(selected);
+                                        setUnidadeId(''); // limpa unidade ao mudar instituição
+                                        setSetorId(''); // limpa setor ao mudar instituição
                                     }}
+                                    className="w-full rounded-md border border-gray-300 p-2"
                                 >
-                                    <option value="null"> Selecionar </option>
+                                    <option value="">Selecionar</option>
                                     {instituicaos.map((instituicao: Instituicao) => (
-                                        <option value={instituicao.id}>{instituicao.sigla}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <Label htmlFor="unidade">Unidade:</Label>
-                                <select
-                                    name="unidade"
-                                    id="unidade"
-                                    onChange={(e) => {
-                                        setUnidadeId(e.target.value);
-                                    }}
-                                >
-                                    <option value="null"> Selecionar </option>
-                                    {unidades.map((unidade: Unidade) => (
-                                        <option value={unidade.id}>{unidade.sigla}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <Label htmlFor="setor">Setor:</Label>
-                                <select
-                                    name="setor"
-                                    id="setor"
-                                    onChange={(e) => {
-                                        setSetorId(e.target.value);
-                                    }}
-                                >
-                                    <option value="null"> Selecionar </option>
-                                    {setores.map((setor: Setor) => (
-                                        <option value={setor.id}>
-                                            <Input type='hidden' id='setor_id'/>
-                                            {setor.sigla}
+                                        <option key={instituicao.id} value={instituicao.id}>
+                                            {instituicao.sigla}
                                         </option>
                                     ))}
                                 </select>
                             </div>
+
+                            <div>
+                                <Label htmlFor="unidade">Unidade:</Label>
+                                <select
+                                    id="unidade"
+                                    value={unidadeId || ''}
+                                    onChange={(e) => {
+                                        const selected = e.target.value;
+                                        setUnidadeId(selected);
+                                        setSetorId(''); // limpa setor ao mudar unidade
+                                    }}
+                                    className="w-full rounded-md border border-gray-300 p-2"
+                                >
+                                    <option value="">Selecionar</option>
+                                    {unidades.map((unidade: Unidade) => (
+                                        <option key={unidade.id} value={unidade.id}>
+                                            {unidade.sigla}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <Label htmlFor="setor">Setor:</Label>
+                                <select
+                                    id="setor"
+                                    value={setorId || ''}
+                                    onChange={(e) => {
+                                        const selected = e.target.value;
+                                        setSetorId(selected);
+                                        setData('setor_id', selected);
+                                    }}
+                                    className="w-full rounded-md border border-gray-300 p-2"
+                                >
+                                    <option value="">Selecionar</option>
+                                    {setores.map((setor: Setor) => (
+                                        <option key={setor.id} value={setor.id}>
+                                            {setor.sigla}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={errors.setor_id} />
+                            </div>
+
                             <div>
                                 <Label htmlFor="password">Senha:</Label>
                                 <Input
@@ -158,16 +175,7 @@ export default function Register() {
                                 <InputError message={errors.password_confirmation} />
                             </div>
 
-                            <div className="col-span-2">
-                                <Label htmlFor="campus">Nome do campus:</Label>
-                                <Input
-                                    id="campus"
-                                    value={data.campus}
-                                    onChange={(e) => setData('campus', e.target.value)}
-                                    placeholder="Digite o nome do campus."
-                                />
-                                <InputError message={errors.campus} />
-                            </div>
+                           
                         </div>
 
                         <Button type="submit" className="mt-4 w-full" disabled={processing}>
