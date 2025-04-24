@@ -46,12 +46,12 @@ export default function Register() {
             <Head title="Cadastro usuário" />
             <div className="flex min-h-screen">
                 {/* Lado esquerdo */}
-                <div className="flex w-1/2 items-center justify-center overflow-hidden rounded-l-xl bg-blue-100">
+                <div className="flex w-2/5 items-center justify-center overflow-hidden rounded-l-xl bg-blue-100">
                     <img src="/_img/sign_up.png" alt="Sign Up Illustration" className="max-h-[500px] w-auto object-contain" />
                 </div>
 
                 {/* Lado direito */}
-                <div className="flex w-1/2 flex-col justify-center space-y-8 p-12 pt-0 pb-0">
+                <div className="flex w-2/3 flex-col justify-center space-y-8 p-12 pt-0 pb-0">
                     <div className="mb-2 flex h-52 items-center justify-center">
                         <img src="/_img/Logo_uniEspaco.png" alt="Logo UniEspaço" className="max-h-full object-contain" />
                     </div>
@@ -174,12 +174,10 @@ export default function Register() {
                                 />
                                 <InputError message={errors.password_confirmation} />
                             </div>
-
-                           
                         </div>
 
-                        <Button type="submit" className="mt-4 w-full" disabled={processing}>
-                            {processing ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : 'Sign up'}
+                        <Button type="submit" className="mx-auto mt-4 block px-6 py-2" disabled={processing}>
+                            {processing ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : 'Cadastrar'}
                         </Button>
                     </form>
                 </div>
