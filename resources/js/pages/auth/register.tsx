@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Instituicao, Setor, Unidade } from '@/types';
-import { Head, useForm, usePage } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
+import { Head, useForm, usePage, Link } from '@inertiajs/react';
+import { LoaderCircle, ArrowLeft } from 'lucide-react';
 import { FormEventHandler, useEffect, useState } from 'react';
+
 export default function Register() {
     const { props } = usePage<{ instituicaos: Instituicao[]; unidades: Unidade[]; setores: Setor[] }>();
     const instituicaos = props.instituicaos;
@@ -14,6 +15,7 @@ export default function Register() {
     const [unidadeId, setUnidadeId] = useState<string>();
     const [setores, setSetores] = useState<Setor[]>([]);
     const [setorId, setSetorId] = useState<string>();
+
     useEffect(() => {
         const listUnidades = props.unidades.filter((unidade) => unidade.instituicao_id == instituicaoId);
         setUnidades(listUnidades);
@@ -86,6 +88,7 @@ export default function Register() {
                                 />
                                 <InputError message={errors.phone} />
                             </div>
+
                             <div>
                                 <Label htmlFor="instituicao">Instituição:</Label>
                                 <select
@@ -94,8 +97,8 @@ export default function Register() {
                                     onChange={(e) => {
                                         const selected = e.target.value;
                                         setInstituicaoId(selected);
-                                        setUnidadeId(''); // limpa unidade ao mudar instituição
-                                        setSetorId(''); // limpa setor ao mudar instituição
+                                        setUnidadeId('');
+                                        setSetorId('');
                                     }}
                                     className="w-full rounded-md border border-gray-300 p-2"
                                 >
@@ -116,7 +119,7 @@ export default function Register() {
                                     onChange={(e) => {
                                         const selected = e.target.value;
                                         setUnidadeId(selected);
-                                        setSetorId(''); // limpa setor ao mudar unidade
+                                        setSetorId('');
                                     }}
                                     className="w-full rounded-md border border-gray-300 p-2"
                                 >
@@ -176,9 +179,25 @@ export default function Register() {
                             </div>
                         </div>
 
-                        <Button type="submit" className="mx-auto mt-4 block px-6 py-2" disabled={processing}>
-                            {processing ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : 'Cadastrar'}
-                        </Button>
+                        <div className="flex flex-col items-center gap-4">
+                            <Button type="submit" className="w-full px-6 py-2" disabled={processing}>
+                                {processing ? (
+                                    <>
+                                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                                        Cadastrando...
+                                    </>
+                                ) : (
+                                    'Cadastrar'
+                                )}
+                            </Button>
+
+                            <Button variant="outline" className="w-full" asChild>
+                                <Link href={route('login')} className="flex items-center gap-2">
+                                    <ArrowLeft className="h-4 w-4" />
+                                    Voltar para o login
+                                </Link>
+                            </Button>
+                        </div>
                     </form>
                 </div>
             </div>
