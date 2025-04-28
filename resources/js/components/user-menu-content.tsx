@@ -26,10 +26,6 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                         <Settings className="mr-2" />
                         Configurações
                     </Link>
-                    <Link className="block w-full" href={route('profile.edit')} as="button" prefetch onClick={cleanup}>
-                        <Settings className="mr-2" />
-                        help
-                    </Link>
                 </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

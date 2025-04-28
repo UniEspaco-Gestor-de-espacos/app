@@ -37,8 +37,8 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     return (
         <>
             <Head title="Login" />
-            <div className="flex min-h-screen items-center justify-center bg-gray-900">
-                <div className="grid w-full max-w-6xl grid-cols-1 overflow-hidden rounded-xl bg-white shadow-2xl md:grid-cols-2">
+            <div className="bg-background flex min-h-screen items-center justify-center">
+                <div className="bg-card grid w-full max-w-6xl grid-cols-1 overflow-hidden rounded-xl shadow-2xl md:grid-cols-2">
                     {/* Lado esquerdo - Formulário */}
                     <div className="flex flex-col justify-center p-10">
                         <h1 className="mb-6 text-3xl font-bold">Login</h1>
@@ -84,7 +84,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                 <Label htmlFor="remember">Lembrar-me</Label>
                             </div>
 
-                            <Button type="submit" className="w-full bg-black text-white hover:bg-gray-800" disabled={processing}>
+                            <Button type="submit" className="w-full" disabled={processing}>
                                 {processing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : 'LOGIN'}
                             </Button>
 
@@ -98,7 +98,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                             <div className="text-center text-sm">
                                 Ainda não tem uma conta?{' '}
-                                <TextLink href={route('register')} className="text-pink-600">
+                                <TextLink href={route('register')} className="text-primary">
                                     Inscreva-se gratuitamente
                                 </TextLink>
                             </div>
