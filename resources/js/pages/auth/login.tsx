@@ -63,7 +63,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     <Label htmlFor="password">Password</Label>
                                     {canResetPassword && (
                                         <TextLink href={route('password.request')} className="text-sm">
-                                           Esqueceu a senha?
+                                            Esqueceu a senha?
                                         </TextLink>
                                     )}
                                 </div>
@@ -88,7 +88,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                 {processing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : 'LOGIN'}
                             </Button>
 
-                            <div className="text-center text-sm text-muted-foreground">ou continuar com</div>
+                            <div className="text-muted-foreground text-center text-sm">ou continuar com</div>
 
                             <div className="flex justify-center gap-4">
                                 <Button variant="outline" type="button">
@@ -112,8 +112,8 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         <img src="/_img/Logo_uniEspaco.png" alt="Logo UniEspaço" className="mx-auto mb-3 w-52" />
 
                         <div className="relative">
-                            <img src="/_img/ForCharacter.png" alt="Personagem" className="w-64 mb-2" />
-                            <img src="/_img/cactus.png" alt="Cacto" className="w-16 absolute right-0 bottom-0" />
+                            <img src="/_img/ForCharacter.png" alt="Personagem" className="mb-2 w-64" />
+                            <img src="/_img/cactus.png" alt="Cacto" className="absolute right-0 bottom-0 w-16" />
                         </div>
                     </div>
                 </div>
