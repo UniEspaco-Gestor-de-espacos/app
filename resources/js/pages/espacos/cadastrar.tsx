@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -28,11 +28,14 @@ export default function CadastrarEspaco() {
         e.preventDefault();
         post('/espacos');
     };
-    
+
+    const handleCancel = () => {
+        router.get('/espacos');
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Cadastrar Espaço" />
-            
             <div className="min-h-screen bg-gray-50 py-8">
                 <div className="mx-auto max-w-3xl">
                     <div className="mb-8 rounded-lg bg-white p-6 shadow-sm">
@@ -149,15 +152,15 @@ export default function CadastrarEspaco() {
                             <div className="flex justify-end space-x-3 border-t pt-6">
                                 <button
                                     type="button"
-                                    onClick={() => route('/espacos')}
-                                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    onClick={handleCancel}
+                                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${processing ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+                                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none ${processing ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}
                                 >
                                     {processing ? 'Cadastrando...' : 'Cadastrar Espaço'}
                                 </button>
