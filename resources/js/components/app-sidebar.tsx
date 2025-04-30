@@ -27,11 +27,11 @@ const mainNavItems: NavItem[] = [
         href: '/minhas-reservas',
         icon: BookOpen,
     },
-    {
+    /* {
         title: 'Solicitar Manutenção',
         href: '/manutencao',
         icon: Wrench,
-    },
+    }, */
     {
         title: 'Espaços Favoritos',
         href: '/favoritos',
