@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+/* import { Head } from '@inertiajs/react';
 
 import AppearanceTabs from '@/components/appearance-tabs';
 import HeadingSmall from '@/components/heading-small';
@@ -21,10 +21,11 @@ export default function Appearance() {
 
             <SettingsLayout>
                 <div className="space-y-6">
-                    <HeadingSmall title="Appearance settings" description="Update your account's appearance settings" />
+                    <HeadingSmall title="Appearance settings" description="Atualizar as configurações de aparência da sua conta" />
                     <AppearanceTabs />
                 </div>
             </SettingsLayout>
         </AppLayout>
     );
 }
+ */
