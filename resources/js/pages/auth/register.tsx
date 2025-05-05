@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Instituicao, Setor, Unidade } from '@/types';
-import { Head, useForm, usePage, Link } from '@inertiajs/react';
-import { LoaderCircle, ArrowLeft } from 'lucide-react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { ArrowLeft, LoaderCircle } from 'lucide-react';
 import { FormEventHandler, useEffect, useState } from 'react';
 
 export default function Register() {

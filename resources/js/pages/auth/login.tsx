@@ -90,12 +90,6 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                             <div className="text-muted-foreground text-center text-sm">ou continuar com</div>
 
-                            <div className="flex justify-center gap-4">
-                                <Button variant="outline" type="button">
-                                    <img src="/google-icon.svg" alt="Google" className="h-5 w-5" />
-                                </Button>
-                            </div>
-
                             <div className="text-center text-sm">
                                 Ainda não tem uma conta?{' '}
                                 <TextLink href={route('register')} className="text-primary">
