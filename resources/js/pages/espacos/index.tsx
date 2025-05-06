@@ -1,113 +1,362 @@
-import AppLayout from '@/layouts/app-layout';
-import { Espaco, type BreadcrumbItem } from '@/types';
-import { Head, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+'use client';
 
-const breadcrumbs: BreadcrumbItem[] = [
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AppLayout from '@/layouts/app-layout';
+import { Espaco, User } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
+import { Calendar, Edit, Home, Info, Projector, Search, Users, ShipWheelIcon as Wheelchair, Wifi, Wind } from 'lucide-react';
+import { useState } from 'react';
+import espacoImage from '@/assets/espaco.png';
+const breadcrumbs = [
     {
-        title: 'Todos espaços',
+        title: 'Espaços',
         href: '/espacos',
     },
 ];
 
-export default function Espacos() {
-    const [showModal, setShowModal] = useState(false);
-    const [espacoParaExcluir, setEspacoparaExcluir] = useState<Espaco | null>(null);
-    const { props } = usePage<{ espacos: Espaco[] }>();
-    const espacos = props.espacos;
+export default function EspacosPage() {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedSetor, setSelectedSetor] = useState('');
+    const [selectedCapacidade, setSelectedCapacidade] = useState('');
+    const [selectedDisponibilidade, setSelectedDisponibilidade] = useState('');
+    const [viewType, setViewType] = useState('cards');
+    const [selectedEspaco, setSelectedEspaco] = useState<Espaco | null>(null);
+    const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+    const { props } = usePage<{ espacos: Espaco[]; user: User }>();
+    const { espacos, user } = props;
+    const userType = user.tipo_usuario;
 
-    const confirmDestroy = (espaco: Espaco) => {
-        setEspacoparaExcluir(espaco);
-        setShowModal(true);
+    // Filtrar espaços com base nos critérios selecionados
+    const filteredespacos = espacos.filter((espaco) => {
+        /*const matchesSearch =
+            espaco.nome.toLowerCase().includes(searchTerm.toLowerCase()) || espaco.campus.toLowerCase().includes(searchTerm.toLowerCase()) || espaco.nome.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSetor = selectedSetor === '' || espaco.setor === selectedSetor;
+        const matchesCapacidade =
+            selectedCapacidade === '' ||
+            (selectedCapacidade === 'pequeno' && espaco.capacidade <= 30) ||
+            (selectedCapacidade === 'medio' && espaco.capacidade > 30 && espaco.capacidade <= 100) ||
+            (selectedCapacidade === 'grande' && espaco.capacidade > 100);
+        const matchesDisponibilidade =
+            selectedDisponibilidade === '' ||
+            (selectedDisponibilidade === 'disponivel' && espaco.disponivel) ||
+            (selectedDisponibilidade === 'indisponivel' && !espaco.disponivel);
+
+        return matchesSearch && matchesSetor && matchesCapacidade && matchesDisponibilidade;*/
+        return espaco;
+    });
+    // Função para renderizar ícones de recursos
+    const resourceIcon = {
+        projetor: <Projector className="h-4 w-4" />,
+        climatizacao: <Wind className="h-4 w-4" />,
+        wifi: <Wifi className="h-4 w-4" />,
+        acessibilidade: <Wheelchair className="h-4 w-4" />,
     };
 
-    const submitDestroy = () => {
-        if (!espacoParaExcluir) return;
+    // Função para mostrar detalhes do espaço
+    const handleShowDetails = (espaco: Espaco) => {
+        setSelectedEspaco(espaco);
+        setShowDetailsDialog(true);
+    };
 
-        router.delete(`/espacos/${espacoParaExcluir.id}`, {
-            onSuccess: () => {
-                setShowModal(false);
-                setEspacoparaExcluir(null);
-            },
-        });
+    // Função para solicitar reserva
+    const handleSolicitarReserva = (espacoId: string) => {
+        router.visit(`/espacos/reservar/${espacoId}`);
+    };
+
+    // Função para editar espaço
+    const handleEditarEspaco = (espacoId: string) => {
+        router.visit(`/espacos/editar/${espacoId}`);
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Espacos" />
-
-            <div className="min-h-screen bg-gray-50 p-6">
-                <div className="mx-auto max-w-6xl">
-                    <div className="mb-8 flex items-center justify-between">
-                        <h1 className="text-3xl font-bold text-gray-800">Espaços</h1>
-                        <button 
-                            onClick={() => router.visit('/espacos/create')}
-                            className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                        >
-                            Adicionar Espaço
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {espacos.map((espaco) => (
-                            <div 
-                                key={espaco.id}
-                                className="group relative rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md"
-                            >
-                                <div 
-                                    onClick={() => router.visit(`/espacos/${espaco.id}`)} 
-                                    className="cursor-pointer"
-                                >
-                                    <div className="mb-1 text-xs font-medium text-gray-500">ID: {espaco.id}</div>
-                                    <h2 className="mb-3 text-xl font-semibold text-gray-800">{espaco.nome}</h2>
-                                    <p className="text-sm text-gray-600 line-clamp-3">{espaco.descricao}</p>
-                                </div>
-                                
-                                <div className="mt-4 flex items-center justify-end space-x-3">
-                                    <button 
-                                        onClick={() => router.visit(`/espacos/${espaco.id}/edit`)}
-                                        className="rounded-lg bg-gray-100 px-3 py-1 text-sm text-gray-700 hover:bg-gray-200"
-                                    >
-                                        Editar
-                                    </button>
-                                    <button 
-                                        onClick={() => confirmDestroy(espaco)} 
-                                        className="rounded-lg bg-red-50 px-3 py-1 text-sm text-red-600 hover:bg-red-100"
-                                    >
-                                        Excluir
-                                    </button>
+            {/* Todo o conteúdo a partir dos filtros até o final em uma única div */}
+            <div className="m-8">
+                {/* Filtros e Busca */}
+                <Card className="mb-6">
+                    <CardContent className="pt-6">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                            <div className="sm:col-span-2">
+                                <div className="relative">
+                                    <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
+                                    <Input
+                                        placeholder="Buscar por nome ou localização..."
+                                        className="pl-8"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
 
-            {/* Modal de confirmação */}
-            {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-                    <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-                        <h3 className="mb-4 text-lg font-medium text-gray-900">Confirmar exclusão</h3>
-                        <p className="mb-6 text-gray-600">
-                            Tem certeza que deseja excluir permanentemente o espaço <strong className="font-semibold">{espacoParaExcluir?.nome}</strong>?
-                        </p>
-                        <div className="flex justify-end space-x-3">
-                            <button 
-                                onClick={() => setShowModal(false)} 
-                                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            >
-                                Cancelar
-                            </button>
-                            <button 
-                                onClick={submitDestroy} 
-                                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-                            >
-                                Confirmar Exclusão
-                            </button>
+                            <Select value={selectedSetor} onValueChange={setSelectedSetor}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Setor" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="todos">Todos os Setores</SelectItem>
+                                    <SelectItem value="Centro de Eventos">Centro de Eventos</SelectItem>
+                                    <SelectItem value="Departamento de Computação">Departamento de Computação</SelectItem>
+                                    <SelectItem value="Administração">Administração</SelectItem>
+                                    <SelectItem value="Graduação">Graduação</SelectItem>
+                                    <SelectItem value="Departamento de Química">Departamento de Química</SelectItem>
+                                </SelectContent>
+                            </Select>
+
+                            <Select value={selectedCapacidade} onValueChange={setSelectedCapacidade}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Capacidade" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="qualquer">Qualquer Capacidade</SelectItem>
+                                    <SelectItem value="pequeno">Pequeno (até 30)</SelectItem>
+                                    <SelectItem value="medio">Médio (31-100)</SelectItem>
+                                    <SelectItem value="grande">Grande (101+)</SelectItem>
+                                </SelectContent>
+                            </Select>
+
+                            <Select value={selectedDisponibilidade} onValueChange={setSelectedDisponibilidade}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Disponibilidade" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="todos">Todos</SelectItem>
+                                    <SelectItem value="disponivel">Disponível</SelectItem>
+                                    <SelectItem value="indisponivel">Indisponível</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
-                    </div>
-                </div>
-            )}
+                    </CardContent>
+                </Card>
+
+                {/* Alternador de visualização */}
+                <Tabs value={viewType} onValueChange={setViewType} className="mb-6">
+                    <TabsList>
+                        <TabsTrigger value="cards">Cards</TabsTrigger>
+                        <TabsTrigger value="table">Tabela</TabsTrigger>
+                    </TabsList>
+
+                    {/* Exibição dos espaços */}
+                    <TabsContent value="cards" className="mt-0">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+                            {filteredespacos.map((espaco) => (
+                                <Card key={espaco.id} className="overflow-hidden">
+                                    <CardHeader className="p-0">
+                                        <img src={espacoImage} alt={espaco.nome} className="h-40 w-full object-absolute" />
+                                    </CardHeader>
+                                    <CardContent className="pt-6">
+                                        <div className="mb-2 flex items-start justify-between">
+                                            <CardTitle className="text-xl">{espaco.nome}</CardTitle>
+                                            <Badge variant={espaco ? 'default' : 'destructive'}>{espaco ? 'Disponível' : 'Indisponível'}</Badge>
+                                        </div>
+
+                                        <div className="espaco-y-2 mt-4">
+                                            <div className="flex items-center gap-2">
+                                                <Users className="text-muted-foreground h-4 w-4" />
+                                                <span>Capacidade: {espaco.capacidadePessoas} pessoas</span>
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                <Home className="text-muted-foreground h-4 w-4" />
+                                                <span>
+                                                    {espaco.campus} / {espaco.modulo} / {espaco.nome}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-muted-foreground">Setor:</span>
+                                                <span>{espaco.id}</span>
+                                            </div>
+
+                                            <div className="mt-2 flex flex-wrap gap-2">
+                                                <Badge variant="outline" className="flex items-center gap-1">
+                                                    {resourceIcon['climatizacao']}
+                                                    <span className="sr-only">Ar</span>
+                                                </Badge>
+                                                {/*espaco.recursos.map((resource) => (
+                                                    <Badge key={resource} variant="outline" className="flex items-center gap-1">
+                                                        {renderResourceIcon(resource)}
+                                                        <span className="sr-only">{resource}</span>
+                                                    </Badge>
+                                                ))*/}
+                                            </div>
+                                        </div>
+                                    </CardContent>
+
+                                    <CardFooter className="flex flex-wrap gap-2 pt-0">
+                                        <Button variant="outline" size="sm" onClick={() => handleShowDetails(espaco)}>
+                                            <Info className="mr-2 h-4 w-4" />
+                                            Ver Detalhes
+                                        </Button>
+
+                                        {(userType === 'professor' || userType === 'setor') && espaco && (
+                                            <Button size="sm" onClick={() => handleSolicitarReserva(espaco.id.toString())}>
+                                                <Calendar className="mr-2 h-4 w-4" />
+                                                Solicitar Reserva
+                                            </Button>
+                                        )}
+
+                                        {(userType === 'setor' || userType === 'professor') && user.is_gestor && (
+                                            <Button variant="secondary" size="sm" onClick={() => handleEditarEspaco(espaco.id.toString())}>
+                                                <Edit className="mr-2 h-4 w-4" />
+                                                Editar Espaço
+                                            </Button>
+                                        )}
+                                    </CardFooter>
+                                </Card>
+                            ))}
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="table" className="mt-0">
+                        <div className="overflow-x-auto rounded-md border">
+                            <div className="relative w-full overflow-auto">
+                                <table className="w-full caption-bottom text-sm">
+                                    <thead>
+                                        <tr className="hover:bg-muted/50 border-b transition-colors">
+                                            <th className="h-12 px-4 text-left align-middle font-medium">Nome</th>
+                                            <th className="h-12 px-4 text-left align-middle font-medium">Capacidade</th>
+                                            <th className="h-12 px-4 text-left align-middle font-medium">Localização</th>
+                                            <th className="h-12 px-4 text-left align-middle font-medium">Setor</th>
+                                            <th className="h-12 px-4 text-left align-middle font-medium">Status</th>
+                                            <th className="h-12 px-4 text-left align-middle font-medium">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredespacos.map((espaco) => (
+                                            <tr key={espaco.id} className="hover:bg-muted/50 border-b transition-colors">
+                                                <td className="p-4 align-middle">{espaco.nome}</td>
+                                                <td className="p-4 align-middle">{espaco.capacidadePessoas}</td>
+                                                <td className="p-4 align-middle">
+                                                    {espaco.campus} | {espaco.modulo}
+                                                </td>
+                                                <td className="p-4 align-middle">{espaco.nome}</td>
+                                                <td className="p-4 align-middle">
+                                                    <Badge variant={espaco ? 'default' : 'destructive'}>
+                                                        {espaco ? 'Disponível' : 'Indisponível'}
+                                                    </Badge>
+                                                </td>
+                                                <td className="p-4 align-middle">
+                                                    <div className="flex gap-2">
+                                                        <Button variant="outline" size="sm" onClick={() => handleShowDetails(espaco)}>
+                                                            <Info className="h-4 w-4" />
+                                                            <span className="sr-only">Detalhes</span>
+                                                        </Button>
+
+                                                        {(userType === 'professor' || userType === 'setor') && espaco && (
+                                                            <Button size="sm" onClick={() => handleSolicitarReserva(espaco.id.toString())}>
+                                                                <Calendar className="h-4 w-4" />
+                                                                <span className="sr-only">Reservar</span>
+                                                            </Button>
+                                                        )}
+
+                                                        {(userType === 'setor' || userType === 'professor') && user.is_gestor && (
+                                                            <Button
+                                                                variant="secondary"
+                                                                size="sm"
+                                                                onClick={() => handleEditarEspaco(espaco.id.toString())}
+                                                            >
+                                                                <Edit className="h-4 w-4" />
+                                                                <span className="sr-only">Editar</span>
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </TabsContent>
+                </Tabs>
+
+                {/* Dialog de Detalhes */}
+                {selectedEspaco && (
+                    <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+                        <DialogContent className="sm:max-w-[600px]">
+                            <DialogHeader>
+                                <DialogTitle>{selectedEspaco.nome}</DialogTitle>
+                                <DialogDescription>Detalhes completos do espaço</DialogDescription>
+                            </DialogHeader>
+
+                            <div className="grid gap-4 py-4">
+                                <img src={espacoImage} alt={selectedEspaco.nome} className="h-36 w-full rounded-md object-cover sm:h-48" />
+
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <h4 className="mb-1 font-medium">Capacidade</h4>
+                                        <p>{selectedEspaco.capacidadePessoas} pessoas</p>
+                                    </div>
+
+                                    <div>
+                                        <h4 className="mb-1 font-medium">Status</h4>
+                                        <Badge variant={selectedEspaco ? 'default' : 'destructive'}>
+                                            {selectedEspaco ? 'Disponível' : 'Indisponível'}
+                                        </Badge>
+                                    </div>
+
+                                    <div>
+                                        <h4 className="mb-1 font-medium">Localização</h4>
+                                        <p>{selectedEspaco.campus}</p>
+                                    </div>
+
+                                    <div>
+                                        <h4 className="mb-1 font-medium">Nome</h4>
+                                        <p>{selectedEspaco.nome}</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 className="mb-1 font-medium">Equipamentos</h4>
+                                    <ul className="list-disc pl-5">
+                                        {/*{selectedespaco.equipamentos.map((equip, index) => (
+                                            <li key={index}>{equip}</li>
+                                        ))}*/}
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h4 className="mb-1 font-medium">Recursos</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {/*selectedespaco.recursos.map((resource) => (
+                                            <Badge key={resource} variant="outline" className="flex items-center gap-1">
+                                                {renderResourceIcon(resource)}
+                                                <span>{resource}</span>
+                                            </Badge>
+                                        ))*/}
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                <div className="flex justify-end gap-2">
+                                    {(userType === 'professor' || userType === 'setor') && selectedEspaco && (
+                                        <Button onClick={() => handleSolicitarReserva(selectedEspaco.id.toString())}>
+                                            <Calendar className="mr-2 h-4 w-4" />
+                                            Solicitar Reserva
+                                        </Button>
+                                    )}
+
+                                    {(userType === 'setor' || userType === 'professor') && user.is_gestor && (
+                                        <Button variant="secondary" onClick={() => handleEditarEspaco(selectedEspaco.id.toString())}>
+                                            <Edit className="mr-2 h-4 w-4" />
+                                            Editar Espaço
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                )}
+            </div>
         </AppLayout>
     );
 }

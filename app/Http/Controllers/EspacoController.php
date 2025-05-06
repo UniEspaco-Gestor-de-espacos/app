@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Inertia\Inertia;
 use Illuminate\Database\QueryException;
-
+use Illuminate\Support\Facades\Auth;
 
 class EspacoController extends Controller
 {
@@ -18,7 +18,8 @@ class EspacoController extends Controller
     public function index()
     {
         $espacos = Espaco::all();
-        return Inertia::render('espacos/index', compact('espacos'));
+        $user = Auth::user();
+        return Inertia::render('espacos/index', compact('espacos', 'user'));
     }
 
     /**
