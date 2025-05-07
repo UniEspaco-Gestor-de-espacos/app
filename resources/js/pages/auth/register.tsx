@@ -1,18 +1,18 @@
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Instituicao, Setor, Unidade } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, LoaderCircle } from 'lucide-react';
 import { FormEventHandler, useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function Register() {
     const { props } = usePage<{ instituicaos: Instituicao[]; unidades: Unidade[]; setores: Setor[] }>();
-    
+
     // Filtra apenas a UESB das instituições disponíveis
-    const instituicaoUESB = props.instituicaos.find(inst => inst.sigla === 'UESB');
+    const instituicaoUESB = props.instituicaos.find((inst) => inst.sigla === 'UESB');
     const [instituicaoId, setInstituicaoId] = useState<string>('');
     const [unidades, setUnidades] = useState<Unidade[]>([]);
     const [unidadeId, setUnidadeId] = useState<string>('');
@@ -22,7 +22,7 @@ export default function Register() {
     const [novaInstituicao, setNovaInstituicao] = useState({
         nome: '',
         unidade: '',
-        setor: ''
+        setor: '',
     });
 
     useEffect(() => {
@@ -57,14 +57,36 @@ export default function Register() {
         setor_id: '',
         instituicao_custom: '',
         unidade_custom: '',
-        setor_custom: ''
+        setor_custom: '',
     });
+
+    const formatPhoneNumber = (value: string) => {
+        // Remove tudo que não é dígito
+        const cleaned = value.replace(/\D/g, '');
+
+        // Limita a 11 dígitos (DDD + 9 dígitos)
+        const limited = cleaned.slice(0, 11);
+
+        // Aplica a formatação conforme o tamanho do número
+        if (limited.length <= 2) {
+            return `(${limited}`;
+        } else if (limited.length <= 7) {
+            return `(${limited.slice(0, 2)}) ${limited.slice(2)}`;
+        } else {
+            return `(${limited.slice(0, 2)}) ${limited.slice(2, 7)}-${limited.slice(7, 11)}`;
+        }
+    };
+
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const formatted = formatPhoneNumber(e.target.value);
+        setData('phone', formatted);
+    };
 
     const handleNovaInstituicaoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setNovaInstituicao(prev => ({
+        setNovaInstituicao((prev) => ({
             ...prev,
-            [name]: value
+            [name]: value,
         }));
     };
 
@@ -73,14 +95,14 @@ export default function Register() {
             ...data,
             instituicao_custom: novaInstituicao.nome,
             unidade_custom: novaInstituicao.unidade,
-            setor_custom: novaInstituicao.setor
+            setor_custom: novaInstituicao.setor,
         });
         setShowModal(false);
     };
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        
+
         if (instituicaoId === '') {
             alert('Por favor, selecione uma instituição');
             return;
@@ -97,7 +119,7 @@ export default function Register() {
                 return;
             }
         }
-        
+
         post(route('register'), {
             onFinish: () => reset('password', 'password_confirmation'),
         });
@@ -122,7 +144,13 @@ export default function Register() {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="name">Nome completo:</Label>
-                                <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder="Digite seu nome" required />
+                                <Input
+                                    id="name"
+                                    value={data.name}
+                                    onChange={(e) => setData('name', e.target.value)}
+                                    placeholder="Digite seu nome"
+                                    required
+                                />
                                 <InputError message={errors.name} />
                             </div>
 
@@ -144,9 +172,10 @@ export default function Register() {
                                 <Input
                                     id="phone"
                                     value={data.phone}
-                                    onChange={(e) => setData('phone', e.target.value)}
-                                    placeholder="+55 73 9999-9999"
+                                    onChange={handlePhoneChange}
+                                    placeholder="(73) 9999-9999"
                                     required
+                                    maxLength={15}
                                 />
                                 <InputError message={errors.phone} />
                             </div>
@@ -161,7 +190,7 @@ export default function Register() {
                                         setInstituicaoId(selected);
                                         setUnidadeId('');
                                         setSetorId('');
-                                        
+
                                         if (selected === 'outra') {
                                             setShowModal(true);
                                         }
@@ -176,7 +205,6 @@ export default function Register() {
                                         </option>
                                     )}
                                     <option value="outra">Outra instituição</option>
-                                    <option value="nenhuma">Nenhuma instituição</option>
                                 </select>
                             </div>
 
@@ -188,7 +216,7 @@ export default function Register() {
                                             <Input
                                                 id="unidade"
                                                 value={novaInstituicao.unidade}
-                                                onChange={(e) => setNovaInstituicao({...novaInstituicao, unidade: e.target.value})}
+                                                onChange={(e) => setNovaInstituicao({ ...novaInstituicao, unidade: e.target.value })}
                                                 placeholder="Digite a unidade"
                                                 required
                                             />
@@ -221,7 +249,7 @@ export default function Register() {
                                             <Input
                                                 id="setor"
                                                 value={novaInstituicao.setor}
-                                                onChange={(e) => setNovaInstituicao({...novaInstituicao, setor: e.target.value})}
+                                                onChange={(e) => setNovaInstituicao({ ...novaInstituicao, setor: e.target.value })}
                                                 placeholder="Digite o setor"
                                                 required
                                             />
@@ -345,9 +373,7 @@ export default function Register() {
                             <Button variant="outline" onClick={() => setShowModal(false)}>
                                 Cancelar
                             </Button>
-                            <Button onClick={submitNovaInstituicao}>
-                                Salvar
-                            </Button>
+                            <Button onClick={submitNovaInstituicao}>Salvar</Button>
                         </div>
                     </div>
                 </DialogContent>
