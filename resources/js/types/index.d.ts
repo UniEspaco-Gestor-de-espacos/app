@@ -53,13 +53,29 @@ export interface Espaco {
     descricao: string;
 }
 
+export interface Instituicao {
+    id: number;
+    nome: string;
+    sigla: string;
+}
+
+export interface Unidade {
+    id: number;
+    nome: string;
+    sigla: string;
+    instituicao_id: string;
+}
+
+export interface Setor {
+    id: number;
+    nome: string;
+    sigla: string;
+    unidade_id: string;
+}
+
 export interface FlashMessages {
     success?: string;
     error?: string;
     info?: string;
     warning?: string;
-}
-
-export interface CustomPageProps extends PageProps {
-    flash: FlashMessages;
 }

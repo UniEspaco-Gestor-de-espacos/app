@@ -12,7 +12,11 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\Instituicao;
+use App\Models\Unidade;
 use App\Models\Setor;
+
+
 class RegisteredUserController extends Controller
 {
     /**
@@ -20,8 +24,17 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
+        $instituicaos = Instituicao::all();
+        $unidades = Unidade::All();
         $setores = Setor::all();
-        return Inertia::render('auth/register',compact('setores'));
+        return Inertia::render(
+            'auth/register',
+            [
+                'instituicaos' => $instituicaos,
+                'unidades' => $unidades,
+                'setores' => $setores
+            ]
+        );
     }
 
     /**
@@ -33,7 +46,7 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -41,7 +54,7 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'telefone' =>'73001211212', // Vai sair
+            'telefone' => '73001211212', // Vai sair
             'profile_pic' => 'aushaushuahsas', // temporario
             // 'setor_id' => Setor::pluck('id')->random() // so pra testes
         ]);
