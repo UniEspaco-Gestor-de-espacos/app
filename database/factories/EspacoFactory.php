@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Modulo;
+use App\Models\Setor;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,9 +19,8 @@ class EspacoFactory extends Factory
     public function definition(): array
     {
         return [
-            'campus' => fake()->word(),
-            'modulo'=> fake()->word(),
-            'andar' => fake()->randomDigitNotNull(),
+            'setor_id' => Setor::pluck('id')->random(),
+            'modulo_id' => Modulo::pluck('id')->random(),
             'nome'=> fake()->randomDigitNotNull(),
             'capacidadePessoas' => fake()->randomDigitNotNull(),
             'acessibilidade' => False,

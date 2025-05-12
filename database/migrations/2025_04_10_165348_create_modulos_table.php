@@ -11,14 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('espacos', function (Blueprint $table) {
+        Schema::create('modulos', function (Blueprint $table) {
             $table->id();
             $table->string('nome');
-            $table->integer('capacidadePessoas');
-            $table->boolean('acessibilidade');
-            $table->string('descricao');
-            $table->foreignId('modulo_id')->constrained('modulos')->onDelete('cascade');
-            $table->foreignId('setor_id')->constrained('setors')->onDelete('cascade');
+            $table->string('andar');
+            $table->foreignId('unidade_id')->constrained('unidades')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('espacos');
+        Schema::dropIfExists('modulos');
     }
 };
