@@ -24,7 +24,7 @@ class User extends Authenticatable
         'password',
         'telefone',
         'profile_pic',
-        'setor_id' 
+        'setor_id'
     ];
 
     /**
@@ -49,7 +49,16 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    public function setor(){
+    public function setor()
+    {
         return $this->belongsTo(Setor::class);
+    }
+    public function agendaTurnos()
+    {
+        return $this->hasMany(AgendaTurno::class);
+    }
+    public function reservas()
+    {
+        return $this->hasMany(Reserva::class);
     }
 }

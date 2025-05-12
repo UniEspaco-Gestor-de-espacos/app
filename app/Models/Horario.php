@@ -14,7 +14,12 @@ class Horario extends Model
         'horarioFim'
     ];
 
-    public function reservas(){
+    public function reservas()
+    {
         return $this->belongsToMany(Reserva::class, 'reserva_horario')->withTimestamps();
+    }
+    public function agendaTurno()
+    {
+        return $this->belongsTo(AgendaTurno::class);
     }
 }

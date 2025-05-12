@@ -9,4 +9,13 @@ class AgendaTurno extends Model
 {
     /** @use HasFactory<\Database\Factories\AgendaTurnoFactory> */
     use HasFactory;
+
+    public function espaco()
+    {
+        return $this->belongsTo(Espaco::class);
+    }
+    public function horarios()
+    {
+        return $this->hasMany(Horario::class);
+    }
 }

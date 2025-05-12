@@ -11,13 +11,28 @@ class Espaco extends Model
     use HasFactory;
 
     protected $fillable = [
-        'campus',
         'modulo',
-        'andar',
         'nome',
         'capacidadePessoas',
         'acessibilidade',
-        'descricao'
+        'descricao',
+        'setor_id',
     ];
 
+    public function agendaTurnos()
+    {
+        return $this->hasMany(AgendaTurno::class);
+    }
+    public function setor()
+    {
+        return $this->belongsTo(Setor::class);
+    }
+    public function modulo()
+    {
+        return $this->belongsTo(Modulo::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
