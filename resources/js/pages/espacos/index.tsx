@@ -23,7 +23,7 @@ const breadcrumbs = [
 
 export default function EspacosPage() {
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedSetor, setSelectedSetor] = useState('');
+    const [selectedModulo, setSelectedModulo] = useState('');
     const [selectedCapacidade, setSelectedCapacidade] = useState('');
     const [selectedDisponibilidade, setSelectedDisponibilidade] = useState('');
     const [viewType, setViewType] = useState('cards');
@@ -31,14 +31,15 @@ export default function EspacosPage() {
     const [showDetailsDialog, setShowDetailsDialog] = useState(false);
     const { props } = usePage<{ espacos: Espaco[]; user: User; modulos: Modulo[]; setores: Setor[] }>();
     const { espacos, user, modulos, setores } = props;
+    console.log(modulos);
     const userType = user.tipo_usuario;
 
     // Filtrar espaços com base nos critérios selecionados
     const filteredespacos = espacos.filter((espaco) => {
         const modulosFiltrados = modulos.filter((modulo) => modulo.nome.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase()));
         const idModulosFiltrados = modulosFiltrados.map((modulo) => modulo.id);
-        const matchesSearch = espaco.nome.toLowerCase().includes(searchTerm.toLowerCase()) || idModulosFiltrados.includes(espaco.id);
-        const matchesSetor = selectedSetor == '' || selectedSetor == 'all' || espaco.setor_id == selectedSetor;
+        const matchesSearch = espaco.nome.toLowerCase().includes(searchTerm.toLowerCase()) || idModulosFiltrados.includes(espaco.modulo_id);
+        const matchModulo = selectedModulo == '' || selectedModulo == 'all' || espaco.modulo_id == selectedModulo;
         const matchesCapacidade =
             selectedCapacidade === '' ||
             (selectedCapacidade === 'pequeno' && espaco.capacidadePessoas <= 30) ||
@@ -49,7 +50,7 @@ export default function EspacosPage() {
             (selectedDisponibilidade === 'disponivel' && espaco.disponivel) ||
             (selectedDisponibilidade === 'indisponivel' && !espaco.disponivel);*/
 
-        return matchesSearch && matchesSetor && matchesCapacidade; // && matchesDisponibilidade;
+        return matchesSearch && matchModulo && matchesCapacidade; // && matchesDisponibilidade;
     });
     // Função para renderizar ícones de recursos
     const resourceIcon = {
@@ -96,14 +97,14 @@ export default function EspacosPage() {
                                 </div>
                             </div>
 
-                            <Select value={selectedSetor} onValueChange={setSelectedSetor}>
+                            <Select value={selectedModulo} onValueChange={setSelectedModulo}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Setor" />
+                                    <SelectValue placeholder="Modulo" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value={'all'}>Todos os Setores</SelectItem>
-                                    {setores.map((setor) => (
-                                        <SelectItem value={setor.id}>{setor.nome}</SelectItem>
+                                    <SelectItem value={'all'}>Todos os Modulos</SelectItem>
+                                    {modulos.map((modulo) => (
+                                        <SelectItem value={modulo.id}>{modulo.nome}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>

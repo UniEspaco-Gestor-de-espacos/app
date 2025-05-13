@@ -18,7 +18,6 @@ return new class extends Migration
             $table->boolean('acessibilidade');
             $table->string('descricao');
             $table->foreignId('modulo_id')->constrained('modulos')->onDelete('cascade');
-            $table->foreignId('setor_id')->constrained('setors')->onDelete('cascade');
             $table->timestamps();
         });
     }

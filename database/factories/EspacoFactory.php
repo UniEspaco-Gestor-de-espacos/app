@@ -19,7 +19,6 @@ class EspacoFactory extends Factory
     public function definition(): array
     {
         return [
-            'setor_id' => Setor::pluck('id')->random(),
             'modulo_id' => Modulo::pluck('id')->random(),
             'nome'=> fake()->randomDigitNotNull(),
             'capacidadePessoas' => fake()->randomDigitNotNull(),

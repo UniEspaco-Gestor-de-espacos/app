@@ -23,10 +23,6 @@ class Espaco extends Model
     {
         return $this->hasMany(AgendaTurno::class);
     }
-    public function setor()
-    {
-        return $this->belongsTo(Setor::class);
-    }
     public function modulo()
     {
         return $this->belongsTo(Modulo::class);

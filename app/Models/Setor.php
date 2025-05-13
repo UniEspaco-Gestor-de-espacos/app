@@ -27,8 +27,4 @@ class Setor extends Model
     {
         return $this->belongsTo(Unidade::class);
     }
-    public function espacos()
-    {
-        return $this->hasMany(Espaco::class);
-    }
 }
