@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Espaco;
+use App\Models\Modulo;
+use App\Models\Setor;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
@@ -19,7 +21,9 @@ class EspacoController extends Controller
     {
         $espacos = Espaco::all();
         $user = Auth::user();
-        return Inertia::render('espacos/index', compact('espacos', 'user'));
+        $modulos = Modulo::all();
+        $setores = Setor::all();
+        return Inertia::render('espacos/index', compact('espacos', 'user', 'modulos', 'setores'));
     }
 
     /**

@@ -32,7 +32,7 @@ export interface SharedData {
 }
 
 export interface User {
-    id: number;
+    id: string;
     name: string;
     email: string;
     email_verified_at: string | null;
@@ -47,33 +47,39 @@ export interface User {
 }
 export type TipoUsuario = 'setor' | 'professor' | 'aluno' | 'externo';
 export interface Espaco {
-    id: number;
-    campus: string;
-    modulo: string;
-    andar: string;
+    id: string;
+    modulo_id: string;
     nome: string;
     capacidadePessoas: number;
     acessibilidade: boolean;
     descricao: string;
+    setor_id: string;
 }
 
 export interface Instituicao {
-    id: number;
+    id: string;
     nome: string;
     sigla: string;
 }
 
 export interface Unidade {
-    id: number;
+    id: string;
     nome: string;
     sigla: string;
     instituicao_id: string;
 }
 
 export interface Setor {
-    id: number;
+    id: string;
     nome: string;
     sigla: string;
+    unidade_id: string;
+}
+
+export interface Modulo {
+    id: string;
+    nome: string;
+    andar: string;
     unidade_id: string;
 }
 

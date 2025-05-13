@@ -1,5 +1,6 @@
 'use client';
 
+import espacoImage from '@/assets/espaco.png';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,11 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { Espaco, User } from '@/types';
+import { Espaco, Modulo, Setor, User } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Calendar, Edit, Home, Info, Projector, Search, Users, ShipWheelIcon as Wheelchair, Wifi, Wind } from 'lucide-react';
 import { useState } from 'react';
-import espacoImage from '@/assets/espaco.png';
 const breadcrumbs = [
     {
         title: 'Espaços',
@@ -29,28 +29,50 @@ export default function EspacosPage() {
     const [viewType, setViewType] = useState('cards');
     const [selectedEspaco, setSelectedEspaco] = useState<Espaco | null>(null);
     const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-    const { props } = usePage<{ espacos: Espaco[]; user: User }>();
-    const { espacos, user } = props;
+    const { props } = usePage<{ espacos: Espaco[]; user: User; modulos: Modulo[]; setores: Setor[] }>();
+    const { espacos, user, modulos, setores } = props;
     const userType = user.tipo_usuario;
 
     // Filtrar espaços com base nos critérios selecionados
     const filteredespacos = espacos.filter((espaco) => {
-        /*const matchesSearch =
-            espaco.nome.toLowerCase().includes(searchTerm.toLowerCase()) || espaco.campus.toLowerCase().includes(searchTerm.toLowerCase()) || espaco.nome.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesSetor = selectedSetor === '' || espaco.setor === selectedSetor;
+        const modulosFiltrados = modulos.filter((modulo) => modulo.nome.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase()));
+        const idModulosFiltrados = modulosFiltrados.map((modulo) => modulo.id);
+        const matchesSearch = espaco.nome.toLowerCase().includes(searchTerm.toLowerCase()) || idModulosFiltrados.includes(espaco.id);
+        const matchesSetor = selectedSetor == '' || selectedSetor == 'all' || espaco.setor_id == selectedSetor;
         const matchesCapacidade =
             selectedCapacidade === '' ||
-            (selectedCapacidade === 'pequeno' && espaco.capacidade <= 30) ||
-            (selectedCapacidade === 'medio' && espaco.capacidade > 30 && espaco.capacidade <= 100) ||
-            (selectedCapacidade === 'grande' && espaco.capacidade > 100);
+            (selectedCapacidade === 'pequeno' && espaco.capacidadePessoas <= 30) ||
+            (selectedCapacidade === 'medio' && espaco.capacidadePessoas > 30 && espaco.capacidadePessoas <= 100) ||
+            (selectedCapacidade === 'grande' && espaco.capacidadePessoas > 100);
+        /*const matchesDisponibilidade =
+            selectedDisponibilidade === '' ||
+            (selectedDisponibilidade === 'disponivel' && espaco.disponivel) ||
+            (selectedDisponibilidade === 'indisponivel' && !espaco.disponivel);*/
+
+        return matchesSearch && matchesSetor && matchesCapacidade; // && matchesDisponibilidade;
+    });
+    /**    const filteredespacos = () => {
+        const modulosFiltrados = modulos.filter((modulo) => modulo.nome.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase()));
+        const idModulosFiltrados = modulosFiltrados.map((modulo) => modulo.id);
+        const matchesSearch =
+            espacos.filter((espaco) => espaco.nome.includes(searchTerm.toLowerCase())) ||
+            espacos.filter((espaco) => idModulosFiltrados.includes(espaco.id));
+
+        const matchesSetor = espacos.filter((espaco) => espaco.setor_id == selectedSetor);
+        const matchesCapacidade = (selectedCapacidade === "pequeno" && espacos.filter((espaco) => espaco.capacidadePessoas <= 30)) ||
+            (selectedCapacidade === "medio" && espacos.filter((espaco) => espaco.capacidadePessoas > 30 && espaco.capacidadePessoas <= 100)) ||
+            (selectedCapacidade === "grande") && espacos.filter((espaco) => espaco.capacidadePessoas > 100) ||
+            (selectedCapacidade ==="qualquer")
+
+
+
         const matchesDisponibilidade =
             selectedDisponibilidade === '' ||
             (selectedDisponibilidade === 'disponivel' && espaco.disponivel) ||
             (selectedDisponibilidade === 'indisponivel' && !espaco.disponivel);
 
-        return matchesSearch && matchesSetor && matchesCapacidade && matchesDisponibilidade;*/
-        return espaco;
-    });
+            return matchesSearch && matchesSetor && matchesCapacidade[selectedCapacidade]; // && matchesDisponibilidade
+        }; */
     // Função para renderizar ícones de recursos
     const resourceIcon = {
         projetor: <Projector className="h-4 w-4" />,
@@ -101,12 +123,10 @@ export default function EspacosPage() {
                                     <SelectValue placeholder="Setor" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="todos">Todos os Setores</SelectItem>
-                                    <SelectItem value="Centro de Eventos">Centro de Eventos</SelectItem>
-                                    <SelectItem value="Departamento de Computação">Departamento de Computação</SelectItem>
-                                    <SelectItem value="Administração">Administração</SelectItem>
-                                    <SelectItem value="Graduação">Graduação</SelectItem>
-                                    <SelectItem value="Departamento de Química">Departamento de Química</SelectItem>
+                                    <SelectItem value={'all'}>Todos os Setores</SelectItem>
+                                    {setores.map((setor) => (
+                                        <SelectItem value={setor.id}>{setor.nome}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
 
@@ -149,7 +169,7 @@ export default function EspacosPage() {
                             {filteredespacos.map((espaco) => (
                                 <Card key={espaco.id} className="overflow-hidden">
                                     <CardHeader className="p-0">
-                                        <img src={espacoImage} alt={espaco.nome} className="h-40 w-full object-absolute" />
+                                        <img src={espacoImage} alt={espaco.nome} className="object-absolute h-40 w-full" />
                                     </CardHeader>
                                     <CardContent className="pt-6">
                                         <div className="mb-2 flex items-start justify-between">
@@ -166,7 +186,7 @@ export default function EspacosPage() {
                                             <div className="flex items-center gap-2">
                                                 <Home className="text-muted-foreground h-4 w-4" />
                                                 <span>
-                                                    {espaco.campus} / {espaco.modulo} / {espaco.nome}
+                                                    {modulos.find((modulo) => modulo.id == espaco.modulo_id)?.nome} / {espaco.nome}
                                                 </span>
                                             </div>
 
@@ -234,10 +254,7 @@ export default function EspacosPage() {
                                             <tr key={espaco.id} className="hover:bg-muted/50 border-b transition-colors">
                                                 <td className="p-4 align-middle">{espaco.nome}</td>
                                                 <td className="p-4 align-middle">{espaco.capacidadePessoas}</td>
-                                                <td className="p-4 align-middle">
-                                                    {espaco.campus} | {espaco.modulo}
-                                                </td>
-                                                <td className="p-4 align-middle">{espaco.nome}</td>
+                                                <td className="p-4 align-middle">{modulos.find((modulo) => modulo.id == espaco.modulo_id)?.nome}</td>
                                                 <td className="p-4 align-middle">
                                                     <Badge variant={espaco ? 'default' : 'destructive'}>
                                                         {espaco ? 'Disponível' : 'Indisponível'}
@@ -305,11 +322,11 @@ export default function EspacosPage() {
 
                                     <div>
                                         <h4 className="mb-1 font-medium">Localização</h4>
-                                        <p>{selectedEspaco.campus}</p>
+                                        <p>{modulos.find((modulo) => modulo.id == selectedEspaco.modulo_id)?.nome}</p>
                                     </div>
 
                                     <div>
-                                        <h4 className="mb-1 font-medium">Nome</h4>
+                                        <h4 className="mb-1 font-medium">Nome / Numero</h4>
                                         <p>{selectedEspaco.nome}</p>
                                     </div>
                                 </div>
