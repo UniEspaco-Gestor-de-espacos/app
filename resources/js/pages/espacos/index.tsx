@@ -51,28 +51,6 @@ export default function EspacosPage() {
 
         return matchesSearch && matchesSetor && matchesCapacidade; // && matchesDisponibilidade;
     });
-    /**    const filteredespacos = () => {
-        const modulosFiltrados = modulos.filter((modulo) => modulo.nome.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase()));
-        const idModulosFiltrados = modulosFiltrados.map((modulo) => modulo.id);
-        const matchesSearch =
-            espacos.filter((espaco) => espaco.nome.includes(searchTerm.toLowerCase())) ||
-            espacos.filter((espaco) => idModulosFiltrados.includes(espaco.id));
-
-        const matchesSetor = espacos.filter((espaco) => espaco.setor_id == selectedSetor);
-        const matchesCapacidade = (selectedCapacidade === "pequeno" && espacos.filter((espaco) => espaco.capacidadePessoas <= 30)) ||
-            (selectedCapacidade === "medio" && espacos.filter((espaco) => espaco.capacidadePessoas > 30 && espaco.capacidadePessoas <= 100)) ||
-            (selectedCapacidade === "grande") && espacos.filter((espaco) => espaco.capacidadePessoas > 100) ||
-            (selectedCapacidade ==="qualquer")
-
-
-
-        const matchesDisponibilidade =
-            selectedDisponibilidade === '' ||
-            (selectedDisponibilidade === 'disponivel' && espaco.disponivel) ||
-            (selectedDisponibilidade === 'indisponivel' && !espaco.disponivel);
-
-            return matchesSearch && matchesSetor && matchesCapacidade[selectedCapacidade]; // && matchesDisponibilidade
-        }; */
     // Função para renderizar ícones de recursos
     const resourceIcon = {
         projetor: <Projector className="h-4 w-4" />,
@@ -173,7 +151,7 @@ export default function EspacosPage() {
                                     </CardHeader>
                                     <CardContent className="pt-6">
                                         <div className="mb-2 flex items-start justify-between">
-                                            <CardTitle className="text-xl">{espaco.nome}</CardTitle>
+                                            <CardTitle className="text-xl">Espaço: {espaco.nome}</CardTitle>
                                             <Badge variant={espaco ? 'default' : 'destructive'}>{espaco ? 'Disponível' : 'Indisponível'}</Badge>
                                         </div>
 
@@ -192,7 +170,7 @@ export default function EspacosPage() {
 
                                             <div className="flex items-center gap-2">
                                                 <span className="text-muted-foreground">Setor:</span>
-                                                <span>{espaco.id}</span>
+                                                <span>{setores.find((setor) => setor.id == espaco.setor_id)?.sigla}</span>
                                             </div>
 
                                             <div className="mt-2 flex flex-wrap gap-2">
@@ -245,7 +223,6 @@ export default function EspacosPage() {
                                             <th className="h-12 px-4 text-left align-middle font-medium">Capacidade</th>
                                             <th className="h-12 px-4 text-left align-middle font-medium">Localização</th>
                                             <th className="h-12 px-4 text-left align-middle font-medium">Setor</th>
-                                            <th className="h-12 px-4 text-left align-middle font-medium">Status</th>
                                             <th className="h-12 px-4 text-left align-middle font-medium">Ações</th>
                                         </tr>
                                     </thead>
@@ -257,20 +234,20 @@ export default function EspacosPage() {
                                                 <td className="p-4 align-middle">{modulos.find((modulo) => modulo.id == espaco.modulo_id)?.nome}</td>
                                                 <td className="p-4 align-middle">
                                                     <Badge variant={espaco ? 'default' : 'destructive'}>
-                                                        {espaco ? 'Disponível' : 'Indisponível'}
+                                                        {setores.find((setor) => setor.id == espaco.setor_id)?.nome}
                                                     </Badge>
                                                 </td>
                                                 <td className="p-4 align-middle">
                                                     <div className="flex gap-2">
                                                         <Button variant="outline" size="sm" onClick={() => handleShowDetails(espaco)}>
                                                             <Info className="h-4 w-4" />
-                                                            <span className="sr-only">Detalhes</span>
+                                                            Detalhes
                                                         </Button>
 
                                                         {(userType === 'professor' || userType === 'setor') && espaco && (
                                                             <Button size="sm" onClick={() => handleSolicitarReserva(espaco.id.toString())}>
                                                                 <Calendar className="h-4 w-4" />
-                                                                <span className="sr-only">Reservar</span>
+                                                                Reservar
                                                             </Button>
                                                         )}
 
@@ -281,7 +258,7 @@ export default function EspacosPage() {
                                                                 onClick={() => handleEditarEspaco(espaco.id.toString())}
                                                             >
                                                                 <Edit className="h-4 w-4" />
-                                                                <span className="sr-only">Editar</span>
+                                                                Editar
                                                             </Button>
                                                         )}
                                                     </div>
@@ -295,12 +272,14 @@ export default function EspacosPage() {
                     </TabsContent>
                 </Tabs>
 
-                {/* Dialog de Detalhes */}
+                {/* Modal de Detalhes */}
                 {selectedEspaco && (
                     <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
                         <DialogContent className="sm:max-w-[600px]">
                             <DialogHeader>
-                                <DialogTitle>{selectedEspaco.nome}</DialogTitle>
+                                <DialogTitle>
+                                    {selectedEspaco.nome} - {modulos.find((modulo) => modulo.id == selectedEspaco.modulo_id)?.nome}
+                                </DialogTitle>
                                 <DialogDescription>Detalhes completos do espaço</DialogDescription>
                             </DialogHeader>
 
@@ -311,13 +290,6 @@ export default function EspacosPage() {
                                     <div>
                                         <h4 className="mb-1 font-medium">Capacidade</h4>
                                         <p>{selectedEspaco.capacidadePessoas} pessoas</p>
-                                    </div>
-
-                                    <div>
-                                        <h4 className="mb-1 font-medium">Status</h4>
-                                        <Badge variant={selectedEspaco ? 'default' : 'destructive'}>
-                                            {selectedEspaco ? 'Disponível' : 'Indisponível'}
-                                        </Badge>
                                     </div>
 
                                     <div>
@@ -343,12 +315,10 @@ export default function EspacosPage() {
                                 <div>
                                     <h4 className="mb-1 font-medium">Recursos</h4>
                                     <div className="flex flex-wrap gap-2">
-                                        {/*selectedespaco.recursos.map((resource) => (
-                                            <Badge key={resource} variant="outline" className="flex items-center gap-1">
-                                                {renderResourceIcon(resource)}
-                                                <span>{resource}</span>
-                                            </Badge>
-                                        ))*/}
+                                        <Badge key={resourceIcon['acessibilidade'].key} variant="outline" className="flex items-center gap-1">
+                                            {resourceIcon['acessibilidade']}
+                                            <span>Acessibilidade</span>
+                                        </Badge>
                                     </div>
                                 </div>
 
