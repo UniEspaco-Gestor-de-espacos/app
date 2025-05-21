@@ -1,6 +1,8 @@
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Modulo, Unidade, type BreadcrumbItem } from '@/types';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -15,15 +17,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function CadastrarEspaco() {
     const { data, setData, post, processing, errors } = useForm({
-        campus: '',
         modulo: '',
-        andar: '',
         nome: '',
         capacidadePessoas: '',
         acessibilidade: false as boolean,
         descricao: '',
     });
-
+    const { props } = usePage<{ unidades: Unidade[]; modulos: Modulo[] }>();
+    const { unidades, modulos } = props;
+    const [selectedUnidade, setSelectedUnidade] = useState();
+    const [selectedModulo, setSelectedModulo] = useState();
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         post('/espacos');
@@ -51,14 +54,19 @@ export default function CadastrarEspaco() {
                                     <label className="mb-1 block text-sm font-medium text-gray-700">
                                         Campus <span className="text-red-500">*</span>
                                     </label>
-                                    <input
-                                        type="text"
-                                        value={data.campus}
-                                        onChange={(e) => setData('campus', e.target.value)}
-                                        className={`w-full rounded-lg border px-4 py-2 focus:border-blue-500 focus:ring-blue-500 ${errors.campus ? 'border-red-500' : 'border-gray-300'}`}
-                                        placeholder="Ex: Campus Central"
-                                    />
-                                    {errors.campus && <p className="mt-1 text-sm text-red-600">{errors.campus}</p>}
+                                    <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Modulo" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value={''}>Todos os Modulos</SelectItem>
+                                            {unidades.map((unidade) => (
+                                                <SelectItem value={unidade.id}>{unidade.nome}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+
+                                    {errors.modulo && <p className="mt-1 text-sm text-red-600">{errors.modulo}</p>}
                                 </div>
 
                                 {/* Módulo */}
@@ -79,7 +87,7 @@ export default function CadastrarEspaco() {
                                     <label className="mb-1 block text-sm font-medium text-gray-700">Andar</label>
                                     <input
                                         type="text"
-                                        value={data.andar}
+                                        value={selectedModulo.}
                                         onChange={(e) => setData('andar', e.target.value)}
                                         className={`w-full rounded-lg border px-4 py-2 focus:border-blue-500 focus:ring-blue-500 ${errors.andar ? 'border-red-500' : 'border-gray-300'}`}
                                         placeholder="Ex: Térreo, 1º Andar"

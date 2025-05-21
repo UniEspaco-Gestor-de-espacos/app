@@ -56,6 +56,12 @@ export interface Espaco {
     setor_id: string;
 }
 
+export interface AgendaTurno {
+    id: string;
+    espaco_id: string;
+    user_id: string;
+    turno: 'manha' | 'tarde' | 'noite';
+}
 export interface Instituicao {
     id: string;
     nome: string;

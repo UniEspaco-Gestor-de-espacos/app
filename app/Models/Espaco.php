@@ -16,7 +16,7 @@ class Espaco extends Model
         'capacidadePessoas',
         'acessibilidade',
         'descricao',
-        'setor_id',
+        'modulo_id'
     ];
 
     public function agendaTurnos()

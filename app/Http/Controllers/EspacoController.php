@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AgendaTurno;
 use App\Models\Espaco;
 use App\Models\Modulo;
 use App\Models\Setor;
+use App\Models\Unidade;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
@@ -31,7 +33,9 @@ class EspacoController extends Controller
      */
     public function create()
     {
-        return Inertia::render('espacos/cadastrar');
+        $unidades = Unidade::all();
+        $modulos = Modulo::all();
+        return Inertia::render('espacos/cadastrar', compact('unidades', 'modulos'));
     }
 
     /**
@@ -40,17 +44,15 @@ class EspacoController extends Controller
     public function store(Request $request)
     {
         $messages = [
-            'campus.required' => 'O campo campus é obrigatório.',
             'modulo.required' => 'O campo módulo é obrigatório.',
-            'andar.required' => 'O campo andar é obrigatório.',
             'nome.required' => 'O nome é obrigatório.',
             'capacidadePessoas.required' => 'A capacidade de pessoas é obrigatória.',
             'acessibilidade.required' => 'O campo acessibilidade é obrigatório.',
             'descricao.required' => 'A descrição é obrigatória.',
         ];
         try {
-            Espaco::create($request->validate([
-                'campus' => 'required',
+            // Criar agenda
+            $espaco = Espaco::create($request->validate([
                 'modulo' => 'required',
                 'andar' => 'required',
                 'nome' => 'required',
@@ -59,6 +61,10 @@ class EspacoController extends Controller
                 'descricao' => 'required',
 
             ], $messages)); // Valida se todos os campos foram preenchidos corretamente.
+            AgendaTurno::create(['turno' => 'manha', 'espaco_id' => $espaco->id]);
+            AgendaTurno::create(['turno' => 'tarde', 'espaco_id' => $espaco->id]);
+            AgendaTurno::create(['turno' => 'noite', 'espaco_id' => $espaco->id]);
+
             return redirect()->route('espacos.index')->with('success', 'Espaco cadastrado com sucesso!');
         } catch (QueryException $e) { // Captura erro no banco de dados
             return redirect()->back()->with('error', 'Erro ao salvar no banco de dados: ' . $e->getMessage());

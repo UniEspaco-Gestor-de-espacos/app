@@ -9,7 +9,11 @@ class AgendaTurno extends Model
 {
     /** @use HasFactory<\Database\Factories\AgendaTurnoFactory> */
     use HasFactory;
-
+    protected $fillable = [
+        'turno',
+        'espaco_id',
+        'user_id'
+    ];
     public function espaco()
     {
         return $this->belongsTo(Espaco::class);
