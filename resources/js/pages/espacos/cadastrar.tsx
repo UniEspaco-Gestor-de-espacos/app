@@ -25,8 +25,9 @@ export default function CadastrarEspaco() {
     });
     const { props } = usePage<{ unidades: Unidade[]; modulos: Modulo[] }>();
     const { unidades, modulos } = props;
-    const [selectedUnidade, setSelectedUnidade] = useState();
-    const [selectedModulo, setSelectedModulo] = useState();
+    const [selectedUnidade, setSelectedUnidade] = useState('');
+    const [selectedModulo, setSelectedModulo] = useState('');
+    let modulo;
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         post('/espacos');
@@ -72,13 +73,17 @@ export default function CadastrarEspaco() {
                                 {/* Módulo */}
                                 <div>
                                     <label className="mb-1 block text-sm font-medium text-gray-700">Módulo</label>
-                                    <input
-                                        type="text"
-                                        value={data.modulo}
-                                        onChange={(e) => setData('modulo', e.target.value)}
-                                        className={`w-full rounded-lg border px-4 py-2 focus:border-blue-500 focus:ring-blue-500 ${errors.modulo ? 'border-red-500' : 'border-gray-300'}`}
-                                        placeholder="Ex: Bloco A"
-                                    />
+                                    <Select value={selectedModulo} onValueChange={setSelectedModulo}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Modulo" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value={''}>Todos os Modulos</SelectItem>
+                                            {modulos.map((modulo) => (
+                                                <SelectItem value={modulo.id}>{modulo.nome}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     {errors.modulo && <p className="mt-1 text-sm text-red-600">{errors.modulo}</p>}
                                 </div>
 
@@ -87,8 +92,11 @@ export default function CadastrarEspaco() {
                                     <label className="mb-1 block text-sm font-medium text-gray-700">Andar</label>
                                     <input
                                         type="text"
-                                        value={selectedModulo.}
-                                        onChange={(e) => setData('andar', e.target.value)}
+                                        value={modulos.find((modulo) => modulo.id == selectedModulo)?.id}
+                                        onChange={(e) => {
+                                            let modulo = modulos.find((modulo) => modulo.id == selectedModulo);
+
+                                        }}
                                         className={`w-full rounded-lg border px-4 py-2 focus:border-blue-500 focus:ring-blue-500 ${errors.andar ? 'border-red-500' : 'border-gray-300'}`}
                                         placeholder="Ex: Térreo, 1º Andar"
                                     />
