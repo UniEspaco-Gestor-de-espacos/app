@@ -16,7 +16,17 @@ class Espaco extends Model
         'capacidadePessoas',
         'acessibilidade',
         'descricao',
+        'imagens',
         'modulo_id'
+    ];
+
+    /**
+     * Casting para array os urls das imagens
+     *
+     * @var array
+     */
+    protected $casts = [
+        'imagens' => 'array'
     ];
 
     public function agendaTurnos()

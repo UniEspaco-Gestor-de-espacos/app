@@ -15,8 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('nome');
             $table->integer('capacidadePessoas');
-            $table->boolean('acessibilidade');
             $table->string('descricao');
+            $table->json('imagens')->nullable();
+            $table->integer('main_image_index')->nullable();
             $table->foreignId('modulo_id')->constrained('modulos')->onDelete('cascade');
             $table->timestamps();
         });

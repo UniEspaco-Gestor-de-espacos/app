@@ -88,6 +88,13 @@ export interface Modulo {
     unidade_id: string;
 }
 
+export interface Local {
+    id: string;
+    andar: string;
+    tipo_acesso: [];
+    modulo_id: string;
+}
+
 export interface FlashMessages {
     success?: string;
     error?: string;

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\EspacoController;
+use App\Http\Controllers\LocalController;
 use App\Http\Controllers\ReservaController;
 
 Route::get('/', function () {
@@ -20,8 +21,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::resource('espacos', EspacoController::class);
-    Route::resource('reservas', ReservaController::class);
+    Route::resource('reserva', ReservaController::class);
     Route::resource('agenda', ReservaController::class)->except(['index']);
+    Route::resource('local', LocalController::class);
 });
 
 

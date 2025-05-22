@@ -22,7 +22,6 @@ class EspacoFactory extends Factory
             'modulo_id' => Modulo::pluck('id')->random(),
             'nome'=> fake()->randomDigitNotNull(),
             'capacidadePessoas' => fake()->randomDigitNotNull(),
-            'acessibilidade' => False,
             'descricao' => fake()->text(),
             'created_at'=>now(),
             'updated_at'=>now()
