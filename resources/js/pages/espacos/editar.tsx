@@ -18,11 +18,9 @@ export default function EditarEspaco() {
     const [showModal, setShowModal] = useState(false);
     const { props } = usePage<{ espaco: Espaco }>();
     const espaco = props.espaco;
-    
+
     const { data, setData, put, processing, errors } = useForm({
-        campus: espaco.campus || '',
-        modulo: espaco.modulo || '',
-        andar: espaco.andar || '',
+        modulo: espaco.modulo_id|| '',
         nome: espaco.nome || '',
         capacidadePessoas: espaco.capacidadePessoas || '',
         acessibilidade: espaco.acessibilidade || false,
@@ -45,7 +43,7 @@ export default function EditarEspaco() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Editar ${espaco.nome}`} />
-            
+
             <div className="min-h-screen bg-gray-50 py-8">
                 <div className="mx-auto max-w-3xl">
                     <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">

@@ -19,4 +19,8 @@ class Modulo extends Model
     {
         return $this->hasMany(Espaco::class);
     }
+    public function locals()
+    {
+        return $this->hasMany(Local::class);
+    }
 }

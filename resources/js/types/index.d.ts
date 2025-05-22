@@ -53,7 +53,6 @@ export interface Espaco {
     capacidadePessoas: number;
     acessibilidade: boolean;
     descricao: string;
-    setor_id: string;
 }
 
 export interface AgendaTurno {

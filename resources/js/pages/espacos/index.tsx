@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { Espaco, Modulo, Setor, User } from '@/types';
+import { Espaco, Modulo, User } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Calendar, Edit, Home, Info, Projector, Search, Users, ShipWheelIcon as Wheelchair, Wifi, Wind } from 'lucide-react';
 import { useState } from 'react';
@@ -29,8 +29,8 @@ export default function EspacosPage() {
     const [viewType, setViewType] = useState('cards');
     const [selectedEspaco, setSelectedEspaco] = useState<Espaco | null>(null);
     const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-    const { props } = usePage<{ espacos: Espaco[]; user: User; modulos: Modulo[]; setores: Setor[] }>();
-    const { espacos, user, modulos, setores } = props;
+    const { props } = usePage<{ espacos: Espaco[]; user: User; modulos: Modulo[]}>();
+    const { espacos, user, modulos } = props;
     console.log(modulos);
     const userType = user.tipo_usuario;
 
@@ -79,6 +79,17 @@ export default function EspacosPage() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Espacos" />
+            <div>
+                <button
+                    type="button"
+                    onClick={() => {
+                        router.visit('/espacos/create');
+                    }}
+                >
+                    {' '}
+                    Cadastrar espaço{' '}
+                </button>
+            </div>
             {/* Todo o conteúdo a partir dos filtros até o final em uma única div */}
             <div className="m-8">
                 {/* Filtros e Busca */}
@@ -171,7 +182,7 @@ export default function EspacosPage() {
 
                                             <div className="flex items-center gap-2">
                                                 <span className="text-muted-foreground">Setor:</span>
-                                                <span>{setores.find((setor) => setor.id == espaco.setor_id)?.sigla}</span>
+                                                <span>{}</span>
                                             </div>
 
                                             <div className="mt-2 flex flex-wrap gap-2">
@@ -235,7 +246,7 @@ export default function EspacosPage() {
                                                 <td className="p-4 align-middle">{modulos.find((modulo) => modulo.id == espaco.modulo_id)?.nome}</td>
                                                 <td className="p-4 align-middle">
                                                     <Badge variant={espaco ? 'default' : 'destructive'}>
-                                                        {setores.find((setor) => setor.id == espaco.setor_id)?.nome}
+                                                        {}
                                                     </Badge>
                                                 </td>
                                                 <td className="p-4 align-middle">

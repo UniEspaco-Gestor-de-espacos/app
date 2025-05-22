@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('modulos', function (Blueprint $table) {
+        Schema::create('locals', function (Blueprint $table) {
             $table->id();
-            $table->string('nome');
-            $table->foreignId('unidade_id')->constrained('unidades')->onDelete('cascade');
+            $table->string('andar');
+            $table->json('tipo_acesso')->nullable();
+            $table->foreignId('modulo_id')->constrained('modulos')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('modulos');
+        Schema::dropIfExists('locals');
     }
 };
