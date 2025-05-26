@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Andar;
 use App\Rules\UniqueNormalizedFloorName;
 use Exception;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class AndarController extends Controller
@@ -36,19 +37,25 @@ class AndarController extends Controller
         ];
         try {
             $form_validado = $request->validate([
-                'nome' => ['required', 'string', new UniqueNormalizedFloorName()],
+                'nome' => ['required', 'string'],
                 'tipo_acesso' => 'required',
                 'modulo_id' => 'required'
             ], $messages);
             $novo_andar = Andar::create([
-                'nome' => Andar::normalizarNome($form_validado['nome']), // Normaliza nome antes de cadastrar
+                'nome' => $form_validado['nome'], // Normaliza nome antes de cadastrar
+                'nome_normalizado' => Andar::normalizarNome($form_validado['nome']), // Normaliza nome antes de cadastrar
                 'tipo_acesso' => $form_validado['tipo_acesso'],
                 'modulo_id' => $form_validado['modulo_id']
             ]);
             $id_novo_andar = $novo_andar->id;
             return redirect()->back()->withInput(compact('novo_andar', 'id_novo_andar'))->with('success', 'Andar cadastrado com sucesso!');
+        } catch (QueryException $error) {
+            if ($error->errorInfo[0] == '23505') {
+                return redirect()->back()->with('error', "Ja existe andar cadastrado");
+            }
+            return redirect()->back()->with('error', "Erro ao cadastrar o andar: {$error->getMessage()} ");
         } catch (Exception $error) {
-            return redirect()->back()->with('error', "Erro ao cadastrar o Local: {$error->getMessage()} ");
+            return redirect()->back()->with('error', "Erro ao cadastrar o andar: {$error->getMessage()} ");
         }
     }
 

@@ -54,7 +54,7 @@ export default function CadastroEspacoPage() {
     const [moduloSelecionado, setModuloSelecionado] = useState<string | null>(null);
     const [andarSelecionado, setAndarSelecionado] = useState<string | null>(null);
     const [imagesWithPreviews, setImagesWithPreviews] = useState<ImageWithPreview[]>([]);
-    const [isAddLocalDialogOpen, setIsAddLocalDialogOpen] = useState(false);
+    const [isAddAndarDialogOpen, setIsAddAndarDialogOpen] = useState(false);
     const [nomeNovoAndar, setNomeNovoAndar] = useState('');
     const [tipoAcessoNovoAndar, setTipoAcessoNovoAndar] = useState<string[]>([]);
 
@@ -105,18 +105,12 @@ export default function CadastroEspacoPage() {
             },
             {
                 onSuccess: () => {
-                    setIsAddLocalDialogOpen(false); // Fechar o diálogo
-                },
-                onError: (errors) => {
-                    // 'errors' é um objeto contendo erros de validação ou outros erros da requisição.
-                    console.error('Erro na requisição:', errors);
-                    // Exemplo: exibir os erros para o usuário
-                    // if (errors.andar) alert(errors.andar);
+                    setIsAddAndarDialogOpen(false); // Fechar o diálogo
                 },
             },
         );
         // Fechar o diálogo e limpar o campo
-        setIsAddLocalDialogOpen(false);
+        setIsAddAndarDialogOpen(false);
     };
 
     // Função para remover um tipo de acesso
@@ -274,8 +268,8 @@ export default function CadastroEspacoPage() {
     // Função para enviar o formulário
     function onSubmit(e: React.FormEvent) {
         e.preventDefault();
-        /*
-        post(window.route('espacos.store'), {
+
+        post(route('espacos.store'), {
             onSuccess: () => {
                 // Limpar as URLs de preview para evitar vazamento de memória
                 imagesWithPreviews.forEach((img) => URL.revokeObjectURL(img.preview));
@@ -285,7 +279,7 @@ export default function CadastroEspacoPage() {
                 setImagesWithPreviews([]);
                 setData('mainImageIndex', null);
             },
-        });*/
+        });
     }
 
     return (
@@ -383,7 +377,7 @@ export default function CadastroEspacoPage() {
                                             </SelectUIContent>
                                         </SelectUI>
 
-                                        <Dialog open={isAddLocalDialogOpen} onOpenChange={setIsAddLocalDialogOpen}>
+                                        <Dialog open={isAddAndarDialogOpen} onOpenChange={setIsAddAndarDialogOpen}>
                                             <DialogTrigger asChild>
                                                 <Button type="button" variant="outline" size="icon" disabled={!moduloSelecionado || processing}>
                                                     <Plus className="h-4 w-4" />

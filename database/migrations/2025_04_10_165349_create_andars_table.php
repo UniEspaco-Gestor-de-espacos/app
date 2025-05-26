@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('andars', function (Blueprint $table) {
             $table->id();
-            $table->string('nome')->unique();
-            $table->string('nome_normalizado')->unique();
+            $table->string('nome');
+            $table->string('nome_normalizado');
             $table->json('tipo_acesso')->nullable();
             $table->foreignId('modulo_id')->constrained('modulos')->onDelete('cascade');
+            $table->unique(['nome_normalizado', 'modulo_id']);
             $table->timestamps();
         });
     }

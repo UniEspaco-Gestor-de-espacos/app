@@ -46,6 +46,7 @@ class EspacoController extends Controller
      */
     public function store(Request $request)
     {
+        # ESCREVER AS PROPRIEDADES QUE TAO VINDO DO FRONT
         $messages = [
             'modulo.required' => 'O campo módulo é obrigatório.',
             'nome.required' => 'O nome é obrigatório.',
