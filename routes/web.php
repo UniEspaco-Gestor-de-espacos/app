@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AndarController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('espacos', EspacoController::class);
     Route::resource('reserva', ReservaController::class);
     Route::resource('agenda', ReservaController::class)->except(['index']);
-    Route::resource('local', LocalController::class);
+    Route::resource('andar', AndarController::class);
 });
 
 

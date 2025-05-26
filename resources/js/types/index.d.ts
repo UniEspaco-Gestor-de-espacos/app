@@ -88,9 +88,9 @@ export interface Modulo {
     unidade_id: string;
 }
 
-export interface Local {
+export interface Andar {
     id: string;
-    andar: string;
+    nome: string;
     tipo_acesso: [];
     modulo_id: string;
 }

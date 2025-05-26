@@ -2,18 +2,17 @@
 
 namespace Database\Seeders;
 
-use App\Models\Local;
-use App\Models\Modulo;
+use App\Models\Andar;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
-class LocalSeeder extends Seeder
+class AndarSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        Local::factory(10)->create();
+        Andar::factory(10)->create();
     }
 }

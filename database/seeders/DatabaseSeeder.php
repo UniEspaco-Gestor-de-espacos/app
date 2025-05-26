@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
             UnidadeSeeder::class,
             SetorSeeder::class,
             ModuloSeeder::class,
-            LocalSeeder::class,
+            AndarSeeder::class,
             EspacoSeeder::class,
             UserSeeder::class,
             AgendaTurnoSeeder::class,

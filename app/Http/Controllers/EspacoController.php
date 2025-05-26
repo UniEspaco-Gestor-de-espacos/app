@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AgendaTurno;
+use App\Models\Andar;
 use App\Models\Espaco;
 use App\Models\Local;
 use App\Models\Modulo;
@@ -36,8 +37,8 @@ class EspacoController extends Controller
     {
         $unidades = Unidade::all();
         $modulos = Modulo::all();
-        $locais = Local::all();
-        return Inertia::render('espacos/cadastrar', compact('unidades', 'modulos', 'locais'));
+        $andares = Andar::all();
+        return Inertia::render('espacos/cadastrar', compact('unidades', 'modulos', 'andares'));
     }
 
     /**

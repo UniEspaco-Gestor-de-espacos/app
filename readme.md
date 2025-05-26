@@ -7,6 +7,8 @@ O objetivo principal da solução proposta é criar um sistema integrado de gest
 
 ## Pré-requisitos
 
+- **PHP - 8.4**: Certifique-se de que o php esteja instalado em sua maquina, na versão 8.4
+- **Composer**: Certifique-se de que o Composer esteja instalado em sua maquina
 - **Docker**: Certifique-se de que o Docker está instalado em sua máquina. Você pode baixá-lo e instalá-lo a partir do [site oficial do Docker](https://www.docker.com/get-started).
 
 - **Windows com WSL2**: Se você estiver utilizando Windows, é necessário ter o WSL2 habilitado. Consulte a [documentação oficial do Laravel Sail](https://laravel.com/docs/12.x/sail) para obter instruções detalhadas.
