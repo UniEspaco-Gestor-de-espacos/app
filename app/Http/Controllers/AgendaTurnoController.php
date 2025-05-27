@@ -12,7 +12,7 @@ class AgendaTurnoController extends Controller
      */
     public function index()
     {
-        //
+
     }
 
     /**
@@ -36,7 +36,7 @@ class AgendaTurnoController extends Controller
      */
     public function show(AgendaTurno $agendaTurno)
     {
-        //
+        
     }
 
     /**

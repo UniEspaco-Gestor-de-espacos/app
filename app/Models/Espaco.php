@@ -11,13 +11,12 @@ class Espaco extends Model
     use HasFactory;
 
     protected $fillable = [
-        'modulo',
         'nome',
-        'capacidadePessoas',
-        'acessibilidade',
         'descricao',
+        'capacidadePessoas',
+        'modulo_id',
         'imagens',
-        'modulo_id'
+        'main_image_index'
     ];
 
     /**

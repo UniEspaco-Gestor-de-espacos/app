@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('locals', function (Blueprint $table) {
-            $table->id();
+            $table->id()->autoIncrement();
             $table->string('andar');
             $table->json('tipo_acesso')->nullable();
             $table->foreignId('modulo_id')->constrained('modulos')->onDelete('cascade');

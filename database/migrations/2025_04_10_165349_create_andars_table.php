@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('andars', function (Blueprint $table) {
-            $table->id();
+            $table->id()->autoIncrement();
             $table->string('nome');
             $table->string('nome_normalizado');
             $table->json('tipo_acesso')->nullable();

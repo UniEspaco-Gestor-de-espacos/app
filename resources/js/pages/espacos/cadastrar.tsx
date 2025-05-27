@@ -19,7 +19,7 @@ import { Andar, Modulo, Unidade } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react'; // Importação correta para Inertia
 import { Loader2, Plus, X } from 'lucide-react';
 import type React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const breadcrumbs = [
     {
@@ -29,15 +29,15 @@ const breadcrumbs = [
 ];
 
 type FormValues = {
-    unidade_id: string;
-    modulo_id: string;
-    andar_id: string;
-    tipo_acesso: string[];
     nome: string;
     capacidadePessoas: number | undefined;
     descricao: string;
     imagens: File[];
-    mainImageIndex: number | null;
+    main_image_index: number | undefined;
+    unidade_id: number | undefined;
+    modulo_id: number | undefined;
+    andar_id: number | undefined;
+    tipo_acesso: string[];
 };
 
 // Interface para imagens com preview
@@ -50,9 +50,9 @@ export default function CadastroEspacoPage() {
     const tiposDeAcesso = ['terreo', 'escada', 'elevador', 'rampa'];
     const { props } = usePage<{ unidades: Unidade[]; modulos: Modulo[]; andares: Andar[] }>();
     const { unidades, modulos, andares } = props;
-    const [unidadeSelecionada, setUnidadeSelecionada] = useState<string | null>(null);
-    const [moduloSelecionado, setModuloSelecionado] = useState<string | null>(null);
-    const [andarSelecionado, setAndarSelecionado] = useState<string | null>(null);
+    const [unidadeSelecionada, setUnidadeSelecionada] = useState<number | undefined>(undefined);
+    const [moduloSelecionado, setModuloSelecionado] = useState<number | undefined>(undefined);
+    const [andarSelecionado, setAndarSelecionado] = useState<number | undefined>(undefined);
     const [imagesWithPreviews, setImagesWithPreviews] = useState<ImageWithPreview[]>([]);
     const [isAddAndarDialogOpen, setIsAddAndarDialogOpen] = useState(false);
     const [nomeNovoAndar, setNomeNovoAndar] = useState('');
@@ -60,36 +60,34 @@ export default function CadastroEspacoPage() {
 
     // Inicializar o formulário com o hook useForm do Inertia
     const { data, setData, post, processing, errors, reset } = useForm<FormValues>({
-        unidade_id: '',
-        modulo_id: '',
-        andar_id: '',
-        tipo_acesso: [],
         nome: '',
         capacidadePessoas: undefined,
         descricao: '',
         imagens: [],
-        mainImageIndex: null,
+        main_image_index: undefined,
+        unidade_id: undefined,
+        modulo_id: undefined,
+        andar_id: undefined,
+        tipo_acesso: [],
     });
 
-    // Função para lidar com a mudança de unidade
-    const handleUnidadeChange = (value: string) => {
-        setUnidadeSelecionada(value);
-        setModuloSelecionado(null);
-        setData('unidade_id', value);
-        setData('modulo_id', ''); // Resetar o módulo quando a unidade muda
-        setData('andar_id', ''); // Resetar o andar quando a unidade muda
-    };
+    useEffect(() => {
+        setModuloSelecionado(undefined);
+        setData('unidade_id', unidadeSelecionada); // Resetar o módulo quando a unidade muda
+        setData('modulo_id', undefined); // Resetar o módulo quando a unidade muda
+        setData('andar_id', undefined); // Resetar o andar quando a unidade muda
+    }, [setData, unidadeSelecionada]);
 
     // Função para lidar com a mudança de módulo
-    const handleModuloChange = (value: string) => {
+    const handleModuloChange = (value: number) => {
         setModuloSelecionado(value);
         setData('modulo_id', value);
-        setData('andar_id', ''); // Resetar o andar quando a unidade muda
+        setData('andar_id', undefined); // Resetar o andar quando a unidade muda
     };
     // Função para lidar com a mudança de local
-    const handleLocalChange = (value: string) => {
-        setAndarSelecionado(value);
-        setData('andar_id', value); // Resetar o andar quando a unidade muda
+    const handleAndarChange = (value: string) => {
+        setAndarSelecionado(parseInt(value));
+        setData('andar_id', parseInt(value)); // Resetar o andar quando a unidade muda
     };
 
     // Função para adicionar um novo andar
@@ -122,7 +120,7 @@ export default function CadastroEspacoPage() {
     };
 
     // Componente personalizado para Select com múltipla seleção
-    const Select = ({ multiple, value, onValueChange, children, disabled }) => {
+    function Select({ value, onValueChange, disabled }: { value: string[]; onValueChange: (selectedValues: string[]) => void; disabled: boolean }) {
         const [open, setOpen] = useState(false);
 
         return (
@@ -184,14 +182,7 @@ export default function CadastroEspacoPage() {
                 )}
             </div>
         );
-    };
-
-    // Componentes de placeholder para manter a estrutura
-    const SelectTrigger = ({ children, className }) => null;
-    const SelectValue = ({ placeholder }) => null;
-    const SelectContent = () => null;
-    const SelectItem = ({ value, children }) => null;
-
+    }
     // Função para lidar com o upload de imagens
     const handleImagesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -228,8 +219,8 @@ export default function CadastroEspacoPage() {
         setData('imagens', updatedImages);
 
         // Se não houver imagem principal definida e temos imagens, definir a primeira como principal
-        if (data.mainImageIndex === null && updatedImages.length > 0) {
-            setData('mainImageIndex', 0);
+        if (data.main_image_index === null && updatedImages.length > 0) {
+            setData('main_image_index', 0);
         }
     };
 
@@ -249,20 +240,20 @@ export default function CadastroEspacoPage() {
         setData('imagens', updatedImages);
 
         // Ajustar o índice da imagem principal se necessário
-        if (data.mainImageIndex !== null) {
-            if (index === data.mainImageIndex) {
+        if (data.main_image_index !== undefined) {
+            if (index === data.main_image_index) {
                 // Se a imagem removida era a principal
-                setData('mainImageIndex', updatedImages.length > 0 ? 0 : null);
-            } else if (index < data.mainImageIndex) {
+                setData('main_image_index', updatedImages.length > 0 ? 0 : undefined);
+            } else if (index < data.main_image_index) {
                 // Se a imagem removida estava antes da principal, ajustar o índice
-                setData('mainImageIndex', data.mainImageIndex - 1);
+                setData('main_image_index', data.main_image_index - 1);
             }
         }
     };
 
     // Função para definir uma imagem como principal
     const setMainImage = (index: number) => {
-        setData('mainImageIndex', index);
+        setData('main_image_index', index);
     };
 
     // Função para enviar o formulário
@@ -274,10 +265,10 @@ export default function CadastroEspacoPage() {
                 // Limpar as URLs de preview para evitar vazamento de memória
                 imagesWithPreviews.forEach((img) => URL.revokeObjectURL(img.preview));
                 reset();
-                setUnidadeSelecionada(null);
-                setModuloSelecionado(null);
+                setUnidadeSelecionada(undefined);
+                setModuloSelecionado(undefined);
                 setImagesWithPreviews([]);
-                setData('mainImageIndex', null);
+                setData('main_image_index', undefined);
             },
         });
     }
@@ -300,8 +291,8 @@ export default function CadastroEspacoPage() {
                                         Unidade
                                     </label>
                                     <SelectUI
-                                        value={String(data.unidade_id)}
-                                        onValueChange={(value) => handleUnidadeChange(value)}
+                                        value={unidadeSelecionada?.toString()}
+                                        onValueChange={(value) => setUnidadeSelecionada(parseInt(value))}
                                         disabled={processing}
                                     >
                                         <SelectUITrigger>
@@ -309,13 +300,12 @@ export default function CadastroEspacoPage() {
                                         </SelectUITrigger>
                                         <SelectUIContent>
                                             {unidades.map((unidade) => (
-                                                <SelectUIItem key={String(unidade.id)} value={String(unidade.id)}>
+                                                <SelectUIItem key={unidade.id.toString()} value={unidade.id.toString()}>
                                                     {unidade.nome}
                                                 </SelectUIItem>
                                             ))}
                                         </SelectUIContent>
                                     </SelectUI>
-                                    {errors.unidade_id && <p className="mt-1 text-sm text-red-500">{errors.unidade_id}</p>}
                                 </div>
 
                                 {/* Seleção de Módulo (dependente da unidade) */}
@@ -325,7 +315,7 @@ export default function CadastroEspacoPage() {
                                     </label>
                                     <SelectUI
                                         value={String(data.modulo_id)}
-                                        onValueChange={(value: string) => handleModuloChange(value)}
+                                        onValueChange={(value: string) => handleModuloChange(parseInt(value))}
                                         disabled={!unidadeSelecionada || processing}
                                     >
                                         <SelectUITrigger>
@@ -353,12 +343,12 @@ export default function CadastroEspacoPage() {
                                 {/* Seleção de Andar (dependente do módulo) */}
                                 <div className="space-y-2">
                                     <label htmlFor="andar_id" className="text-sm font-medium">
-                                        Andar | Local
+                                        Andar
                                     </label>
                                     <div className="flex gap-2">
                                         <SelectUI
                                             value={String(andarSelecionado)}
-                                            onValueChange={handleLocalChange}
+                                            onValueChange={handleAndarChange}
                                             disabled={!moduloSelecionado || processing}
                                         >
                                             <SelectUITrigger>
@@ -368,9 +358,9 @@ export default function CadastroEspacoPage() {
                                             </SelectUITrigger>
                                             <SelectUIContent>
                                                 {andares
-                                                    .filter((andar) => andar.modulo_id == moduloSelecionado)
+                                                    .filter((andar) => andar.modulo_id == moduloSelecionado?.toString())
                                                     .map((andar) => (
-                                                        <SelectUIItem key={andar.id} value={String(andar.id)}>
+                                                        <SelectUIItem key={andar.id.toString()} value={andar.id.toString()}>
                                                             {andar.nome}
                                                         </SelectUIItem>
                                                     ))}
@@ -433,24 +423,12 @@ export default function CadastroEspacoPage() {
 
                                                             <div className="relative">
                                                                 <Select
-                                                                    multiple
                                                                     value={tipoAcessoNovoAndar}
                                                                     onValueChange={(selectedValues: string[]) =>
                                                                         setTipoAcessoNovoAndar(selectedValues)
                                                                     }
                                                                     disabled={processing}
-                                                                >
-                                                                    <SelectTrigger className="w-full">
-                                                                        <SelectValue placeholder="Selecione os tipos de acesso" />
-                                                                    </SelectTrigger>
-                                                                    <SelectUIContent>
-                                                                        {tiposDeAcesso.map((tipo: string, index: number) => (
-                                                                            <SelectItem key={index} value={tipo}>
-                                                                                {tipo}
-                                                                            </SelectItem>
-                                                                        ))}
-                                                                    </SelectUIContent>
-                                                                </Select>
+                                                                />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -551,7 +529,7 @@ export default function CadastroEspacoPage() {
                                                 <div key={index} className="group relative">
                                                     <div
                                                         className={`aspect-square overflow-hidden rounded-md border ${
-                                                            data.mainImageIndex === index ? 'ring-primary border-primary ring-2' : 'bg-slate-50'
+                                                            data.main_image_index === index ? 'ring-primary border-primary ring-2' : 'bg-slate-50'
                                                         }`}
                                                     >
                                                         <img
@@ -559,7 +537,7 @@ export default function CadastroEspacoPage() {
                                                             alt={`Imagem ${index + 1}`}
                                                             className="h-full w-full object-cover"
                                                         />
-                                                        {data.mainImageIndex === index && (
+                                                        {data.main_image_index === index && (
                                                             <div className="bg-primary absolute top-0 left-0 rounded-br px-1.5 py-0.5 text-xs text-white">
                                                                 Principal
                                                             </div>
@@ -572,7 +550,7 @@ export default function CadastroEspacoPage() {
                                                             size="icon"
                                                             className="h-6 w-6 rounded-full bg-white shadow-md"
                                                             onClick={() => setMainImage(index)}
-                                                            disabled={processing || data.mainImageIndex === index}
+                                                            disabled={processing || data.main_image_index === index}
                                                             title="Definir como imagem principal"
                                                         >
                                                             <svg

@@ -32,7 +32,7 @@ export interface SharedData {
 }
 
 export interface User {
-    id: string;
+    id: number;
     name: string;
     email: string;
     email_verified_at: string | null;
@@ -47,49 +47,51 @@ export interface User {
 }
 export type TipoUsuario = 'setor' | 'professor' | 'aluno' | 'externo';
 export interface Espaco {
-    id: string;
-    modulo_id: string;
+    id: number;
+    modulo_id: number;
     nome: string;
     capacidadePessoas: number;
     acessibilidade: boolean;
     descricao: string;
+    imagens: [];
+    main_image_index: string;
 }
 
 export interface AgendaTurno {
-    id: string;
+    id: number;
     espaco_id: string;
     user_id: string;
     turno: 'manha' | 'tarde' | 'noite';
 }
 export interface Instituicao {
-    id: string;
+    id: number;
     nome: string;
     sigla: string;
 }
 
 export interface Unidade {
-    id: string;
+    id: number;
     nome: string;
     sigla: string;
     instituicao_id: string;
 }
 
 export interface Setor {
-    id: string;
+    id: number;
     nome: string;
     sigla: string;
     unidade_id: string;
 }
 
 export interface Modulo {
-    id: string;
+    id: number;
     nome: string;
     andar: string;
-    unidade_id: string;
+    unidade_id: number;
 }
 
 export interface Andar {
-    id: string;
+    id: number;
     nome: string;
     tipo_acesso: [];
     modulo_id: string;

@@ -29,7 +29,7 @@ export default function EspacosPage() {
     const [viewType, setViewType] = useState('cards');
     const [selectedEspaco, setSelectedEspaco] = useState<Espaco | null>(null);
     const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-    const { props } = usePage<{ espacos: Espaco[]; user: User; modulos: Modulo[]}>();
+    const { props } = usePage<{ espacos: Espaco[]; user: User; modulos: Modulo[] }>();
     const { espacos, user, modulos } = props;
     console.log(modulos);
     const userType = user.tipo_usuario;
@@ -39,7 +39,7 @@ export default function EspacosPage() {
         const modulosFiltrados = modulos.filter((modulo) => modulo.nome.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase()));
         const idModulosFiltrados = modulosFiltrados.map((modulo) => modulo.id);
         const matchesSearch = espaco.nome.toLowerCase().includes(searchTerm.toLowerCase()) || idModulosFiltrados.includes(espaco.modulo_id);
-        const matchModulo = selectedModulo == '' || selectedModulo == 'all' || espaco.modulo_id == selectedModulo;
+        const matchModulo = selectedModulo == '' || selectedModulo == 'all' || espaco.modulo_id.toString() == selectedModulo;
         const matchesCapacidade =
             selectedCapacidade === '' ||
             (selectedCapacidade === 'pequeno' && espaco.capacidadePessoas <= 30) ||
@@ -115,7 +115,7 @@ export default function EspacosPage() {
                                 <SelectContent>
                                     <SelectItem value={'all'}>Todos os Modulos</SelectItem>
                                     {modulos.map((modulo) => (
-                                        <SelectItem value={modulo.id}>{modulo.nome}</SelectItem>
+                                        <SelectItem value={modulo.id.toString()}>{modulo.nome}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -159,7 +159,11 @@ export default function EspacosPage() {
                             {filteredespacos.map((espaco) => (
                                 <Card key={espaco.id} className="overflow-hidden">
                                     <CardHeader className="p-0">
-                                        <img src={espacoImage} alt={espaco.nome} className="object-absolute h-40 w-full" />
+                                        <img
+                                            src={espaco.main_image_index ? `/storage/${espaco.main_image_index}` : espacoImage}
+                                            alt={espaco.nome}
+                                            className="object-absolute h-40 w-full"
+                                        />
                                     </CardHeader>
                                     <CardContent className="pt-6">
                                         <div className="mb-2 flex items-start justify-between">
@@ -245,9 +249,7 @@ export default function EspacosPage() {
                                                 <td className="p-4 align-middle">{espaco.capacidadePessoas}</td>
                                                 <td className="p-4 align-middle">{modulos.find((modulo) => modulo.id == espaco.modulo_id)?.nome}</td>
                                                 <td className="p-4 align-middle">
-                                                    <Badge variant={espaco ? 'default' : 'destructive'}>
-                                                        {}
-                                                    </Badge>
+                                                    <Badge variant={espaco ? 'default' : 'destructive'}>{}</Badge>
                                                 </td>
                                                 <td className="p-4 align-middle">
                                                     <div className="flex gap-2">

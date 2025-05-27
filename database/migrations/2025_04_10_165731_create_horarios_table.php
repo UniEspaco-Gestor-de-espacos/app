@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('horarios', function (Blueprint $table) {
-            $table->id();
+            $table->id()->autoIncrement();
             $table->foreignId('agenda_id')->constrained('agenda_turnos')->onDelete('cascade');
             $table->time('horarioInicio');
             $table->time('horarioFim');
