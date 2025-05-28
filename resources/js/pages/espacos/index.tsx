@@ -30,7 +30,6 @@ export default function EspacosPage() {
     const [showDetailsDialog, setShowDetailsDialog] = useState(false);
     const { props } = usePage<{ espacos: Espaco[]; user: User; modulos: Modulo[] }>();
     const { espacos, user, modulos } = props;
-    console.log(modulos);
     const userType = user.permission_type_id; // 1 - INSTITUCIONAL, 2 - GESTOR, 3 - COMUM
 
     // Filtrar espaços com base nos critérios selecionados
@@ -67,7 +66,7 @@ export default function EspacosPage() {
 
     // Função para solicitar reserva
     const handleSolicitarReserva = (espacoId: string) => {
-        router.visit(`/espacos/reservar/${espacoId}`);
+        router.visit(`/espacos/${espacoId}`);
     };
 
     // Função para editar espaço

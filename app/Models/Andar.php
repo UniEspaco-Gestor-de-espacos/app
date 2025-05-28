@@ -52,4 +52,8 @@ class Andar extends Model
     {
         return $this->belongsTo(Modulo::class);
     }
+    public function espacos()
+    {
+        return $this->hasMany(Espaco::class);
+    }
 }

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('descricao');
             $table->json('imagens')->nullable();
             $table->string('main_image_index')->nullable();
-            $table->foreignId('modulo_id')->constrained('modulos')->onDelete('cascade');
+            $table->foreignId('andar_id')->constrained('andars')->onDelete('cascade');
             $table->timestamps();
         });
     }

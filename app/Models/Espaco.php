@@ -16,7 +16,7 @@ class Espaco extends Model
         'descricao',
         'imagens',
         'main_image_index',
-        'modulo_id'
+        'andar_id'
     ];
 
     /**
@@ -32,9 +32,9 @@ class Espaco extends Model
     {
         return $this->hasMany(Agenda::class);
     }
-    public function modulo()
+    public function andar()
     {
-        return $this->belongsTo(Modulo::class);
+        return $this->belongsTo(Andar::class);
     }
     public function user()
     {

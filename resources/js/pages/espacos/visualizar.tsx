@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { Agenda, BreadcrumbItem } from '@/types';
+import { Agenda, Andar, BreadcrumbItem, Espaco, Modulo } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -31,7 +31,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 // Tipos
-interface Slot {
+interface Horario {
     id: string;
     dia: Date;
     inicio: string;
@@ -42,11 +42,16 @@ interface Slot {
     setor?: string;
 }
 
-interface Espaco {
-    nome: string;
-    modulo: string;
-    andar: string;
-    capacidade: number;
+interface GestoresEspaco {
+    manha: GestorTurno;
+    tarde: GestorTurno;
+    noite: GestorTurno;
+}
+
+interface ReservasTurno {
+    manha: Horario[];
+    tarde: Horario[];
+    noite: Horario[];
 }
 
 interface GestorTurno {
@@ -99,41 +104,14 @@ const opcoesRecorrencia: OpcaoRecorrencia[] = [
     },
 ];
 
-// Dados de exemplo
-const espaco: Espaco = {
-    nome: 'Laboratório de Informática',
-    modulo: 'Bloco A',
-    andar: '2º Andar',
-    capacidade: 30,
-};
-
-// Dados dos gestores de turno
-const gestoresTurno: Record<'manha' | 'tarde' | 'noite', GestorTurno> = {
-    manha: {
-        nome: 'Ana Silva',
-        email: 'ana.silva@uniespaço.edu.br',
-        departamento: 'Departamento de Ciências da Computação',
-    },
-    tarde: {
-        nome: 'Carlos Oliveira',
-        email: 'carlos.oliveira@uniespaço.edu.br',
-        departamento: 'Departamento de Engenharia',
-    },
-    noite: {
-        nome: 'Mariana Santos',
-        email: 'mariana.santos@uniespaço.edu.br',
-        departamento: 'Departamento de Administração',
-    },
-};
-
 // Função para gerar slots de horário para a semana
 const gerarSlotsParaSemana = (semanaInicio: Date) => {
-    const slots: Slot[] = [];
+    const slots: Horario[] = [];
     const horaInicio = 7;
     const horaFim = 22;
 
     // Gerar para cada dia da semana (segunda a sábado)
-    for (let diaSemana = 0; diaSemana < 6; diaSemana++) {
+    for (let diaSemana = 0; diaSemana < 7; diaSemana++) {
         const dia = addDays(semanaInicio, diaSemana);
 
         // Gerar para cada hora do dia
@@ -169,9 +147,16 @@ const identificarTurno = (hora: number): 'manha' | 'tarde' | 'noite' => {
 };
 
 export default function AgendaEspaço() {
-    const { props } = usePage<{ agendas: Agenda[] }>();
-    const { agendas } = props;
-    console.log(agendas);
+    const { props } = usePage<{
+        agendas: Agenda[];
+        espaco: Espaco;
+        modulo: Modulo;
+        andar: Andar;
+        gestores_espaco: GestoresEspaco;
+        horarios_turno: ReservasTurno
+    }>();
+    const { agendas, espaco, modulo, andar, gestores_espaco,  } = props;
+
     const hoje = new Date();
     const [semanaAtual, setSemanaAtual] = useState(startOfWeek(hoje, { weekStartsOn: 1 }));
     const [slotsSelecao, setSlotsSelecao] = useState<Slot[]>([]);
@@ -187,7 +172,7 @@ export default function AgendaEspaço() {
 
     // Gerar dias da semana (segunda a sábado)
     const diasSemana = useMemo(() => {
-        return Array.from({ length: 6 }).map((_, i) => {
+        return Array.from({ length: 7 }).map((_, i) => {
             const dia = addDays(semanaAtual, i);
             return {
                 data: dia,
@@ -200,6 +185,7 @@ export default function AgendaEspaço() {
         });
     }, [semanaAtual, hoje]);
 
+    console.log(diasSemana);
     // Gerar slots apenas quando a semana mudar
     useEffect(() => {
         setTodosSlots(gerarSlotsParaSemana(semanaAtual));
@@ -356,22 +342,22 @@ export default function AgendaEspaço() {
                     <CardHeader className="pb-2">
                         <CardTitle className="flex items-center gap-2 text-xl">
                             <MapPin className="h-5 w-5" />
-                            {espaco.nome}
+                            Nome: {espaco.nome}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="pb-3">
                         <div className="mb-3 flex flex-wrap gap-2">
                             <Badge variant="outline" className="flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
-                                {espaco.modulo}
+                                {modulo.nome}
                             </Badge>
                             <Badge variant="outline" className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
-                                {espaco.andar}
+                                {andar.nome}
                             </Badge>
                             <Badge variant="outline" className="flex items-center gap-1">
                                 <Users className="h-3 w-3" />
-                                {espaco.capacidade} pessoas
+                                {espaco.capacidade_pessoas} pessoas
                             </Badge>
                         </div>
 
@@ -385,15 +371,15 @@ export default function AgendaEspaço() {
                                                 <div className="font-semibold">MANHÃ:</div>
                                                 <div className="flex items-center gap-1">
                                                     <User className="text-muted-foreground h-3 w-3" />
-                                                    <span>{gestoresTurno.manha.nome}</span>
+                                                    <span>{gestores_espaco.manha.nome}</span>
                                                 </div>
                                             </div>
                                         </TooltipTrigger>
                                         <TooltipContent>
                                             <div className="space-y-1">
-                                                <p className="font-medium">{gestoresTurno.manha.nome}</p>
-                                                <p className="text-xs">{gestoresTurno.manha.email}</p>
-                                                <p className="text-muted-foreground text-xs">{gestoresTurno.manha.departamento}</p>
+                                                <p className="font-medium">{gestores_espaco.manha.nome}</p>
+                                                <p className="text-xs">{gestores_espaco.manha.email}</p>
+                                                <p className="text-muted-foreground text-xs">{gestores_espaco.manha.departamento}</p>
                                             </div>
                                         </TooltipContent>
                                     </Tooltip>
@@ -406,15 +392,15 @@ export default function AgendaEspaço() {
                                                 <div className="font-semibold">TARDE:</div>
                                                 <div className="flex items-center gap-1">
                                                     <User className="text-muted-foreground h-3 w-3" />
-                                                    <span>{gestoresTurno.tarde.nome}</span>
+                                                    <span>{gestores_espaco.tarde.nome}</span>
                                                 </div>
                                             </div>
                                         </TooltipTrigger>
                                         <TooltipContent>
                                             <div className="space-y-1">
-                                                <p className="font-medium">{gestoresTurno.tarde.nome}</p>
-                                                <p className="text-xs">{gestoresTurno.tarde.email}</p>
-                                                <p className="text-muted-foreground text-xs">{gestoresTurno.tarde.departamento}</p>
+                                                <p className="font-medium">{gestores_espaco.tarde.nome}</p>
+                                                <p className="text-xs">{gestores_espaco.tarde.email}</p>
+                                                <p className="text-muted-foreground text-xs">{gestores_espaco.tarde.departamento}</p>
                                             </div>
                                         </TooltipContent>
                                     </Tooltip>
@@ -427,15 +413,15 @@ export default function AgendaEspaço() {
                                                 <div className="font-semibold">NOITE:</div>
                                                 <div className="flex items-center gap-1">
                                                     <User className="text-muted-foreground h-3 w-3" />
-                                                    <span>{gestoresTurno.noite.nome}</span>
+                                                    <span>{gestores_espaco.noite.nome}</span>
                                                 </div>
                                             </div>
                                         </TooltipTrigger>
                                         <TooltipContent>
                                             <div className="space-y-1">
-                                                <p className="font-medium">{gestoresTurno.noite.nome}</p>
-                                                <p className="text-xs">{gestoresTurno.noite.email}</p>
-                                                <p className="text-muted-foreground text-xs">{gestoresTurno.noite.departamento}</p>
+                                                <p className="font-medium">{gestores_espaco.noite.nome}</p>
+                                                <p className="text-xs">{gestores_espaco.noite.email}</p>
+                                                <p className="text-muted-foreground text-xs">{gestores_espaco.noite.departamento}</p>
                                             </div>
                                         </TooltipContent>
                                     </Tooltip>
@@ -469,7 +455,7 @@ export default function AgendaEspaço() {
                     <ScrollArea className="h-[calc(100vh-220px)]">
                         <div className="min-w-[800px]">
                             {/* Cabeçalho da tabela com dias da semana */}
-                            <div className="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
+                            <div className="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
                                 <div className="text-muted-foreground p-2 text-center text-sm font-medium"></div>
                                 {diasSemana.map((dia) => (
                                     <div
@@ -486,14 +472,14 @@ export default function AgendaEspaço() {
 
                             {/* Linhas da tabela com horários */}
                             {/* Cabeçalho e slots do turno da manhã */}
-                            <div className="bg-accent/10 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
+                            <div className="bg-accent/10 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
                                 <div className="p-2 text-center text-xs font-semibold">MANHÃ</div>
                                 {diasSemana.map((dia) => (
                                     <div key={`manha-${dia.valor}`} className="border-l p-2 text-center text-xs font-medium"></div>
                                 ))}
                             </div>
                             {Object.entries(slotsPorTurno.manha).map(([hora, slots]) => (
-                                <div key={hora} className="bg-accent/5 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
+                                <div key={hora} className="bg-accent/5 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
                                     {/* Coluna de horário */}
                                     <div className="text-muted-foreground border-r p-2 pr-3 text-right text-xs">
                                         {hora} - {hora.split(':')[0]}:50
@@ -536,14 +522,14 @@ export default function AgendaEspaço() {
                             ))}
 
                             {/* Cabeçalho e slots do turno da tarde */}
-                            <div className="bg-secondary/10 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
+                            <div className="bg-secondary/10 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
                                 <div className="p-2 text-center text-xs font-semibold">TARDE</div>
                                 {diasSemana.map((dia) => (
                                     <div key={`tarde-${dia.valor}`} className="border-l p-2 text-center text-xs font-medium"></div>
                                 ))}
                             </div>
                             {Object.entries(slotsPorTurno.tarde).map(([hora, slots]) => (
-                                <div key={hora} className="bg-secondary/5 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
+                                <div key={hora} className="bg-secondary/5 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
                                     {/* Coluna de horário */}
                                     <div className="text-muted-foreground border-r p-2 pr-3 text-right text-xs">
                                         {hora} - {hora.split(':')[0]}:50
@@ -586,14 +572,14 @@ export default function AgendaEspaço() {
                             ))}
 
                             {/* Cabeçalho e slots do turno da noite */}
-                            <div className="bg-muted/20 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
+                            <div className="bg-muted/20 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
                                 <div className="p-2 text-center text-xs font-semibold">NOITE</div>
                                 {diasSemana.map((dia) => (
                                     <div key={`noite-${dia.valor}`} className="border-l p-2 text-center text-xs font-medium"></div>
                                 ))}
                             </div>
                             {Object.entries(slotsPorTurno.noite).map(([hora, slots]) => (
-                                <div key={hora} className="bg-muted/10 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
+                                <div key={hora} className="bg-muted/10 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
                                     {/* Coluna de horário */}
                                     <div className="text-muted-foreground border-r p-2 pr-3 text-right text-xs">
                                         {hora} - {hora.split(':')[0]}:50

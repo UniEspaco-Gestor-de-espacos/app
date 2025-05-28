@@ -10,6 +10,7 @@ use App\Models\Local;
 use App\Models\Modulo;
 use App\Models\Setor;
 use App\Models\Unidade;
+use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
@@ -93,11 +94,11 @@ class EspacoController extends Controller
 
             $espaco = Espaco::create([
                 'nome' => $form_validado['nome'],
-                'capacidade_pessoas' => $form_validado['capacidadePessoas'],
+                'capacidade_pessoas' => $form_validado['capacidade_pessoas'],
                 'descricao' => $form_validado['descricao'],
                 'imagens' => $storedImagePaths, // Eloquent vai converter para JSON por causa do $casts
                 'main_image_index' => $mainImagePath,
-                'modulo_id' => $form_validado['modulo_id'],
+                'andar_id' => $form_validado['andar_id'],
             ]);
             // Criar agenda
             Agenda::create(['turno' => 'manha', 'espaco_id' => $espaco->id]);
@@ -117,9 +118,19 @@ class EspacoController extends Controller
      */
     public function show(Espaco $espaco)
     {
-        $agendas = Agenda::where('espaco_id', '==', $espaco->id);
-
-        return Inertia::render('espacos/visualizar', compact('espaco','agendas'));
+        $agendas = Agenda::whereEspacoId($espaco->id)->get();
+        $andar = $espaco->andar()->get()->first();
+        $modulo = $andar->first()->modulo()->get()->first();
+        $gestores_espaco = [];
+        $horarios_turno = [];
+        foreach ($agendas as $agenda) {
+            if ($agenda->user_id != null) {
+                $user = User::whereId($agenda->user_id)->get();
+                $gestores_espaco[$agenda->turno] = ['nome' => $user->first()->name, 'email' => $user->first()->email, 'setor' => $user->first()->setor()->get()->first()->nome];
+            }
+            $horarios_turno[$agenda->turno] = $agenda->horarios()->get();
+        }
+        return Inertia::render('espacos/visualizar', compact('espaco', 'agendas', 'modulo', 'andar', 'gestores_espaco', 'horarios_turno'));
     }
 
     /**

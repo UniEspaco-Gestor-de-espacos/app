@@ -52,7 +52,7 @@ export interface Espaco {
     descricao: string;
     imagens: [];
     main_image_index: string;
-    modulo_id: number;
+    andar_id: number;
 }
 
 export interface Agenda {
