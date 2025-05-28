@@ -30,14 +30,14 @@ const breadcrumbs = [
 
 type FormValues = {
     nome: string;
-    capacidadePessoas: number | undefined;
+    capacidade_pessoas: number | undefined;
     descricao: string;
     imagens: File[];
     main_image_index: number | undefined;
-    unidade_id: number | undefined;
     modulo_id: number | undefined;
-    andar_id: number | undefined;
-    tipo_acesso: string[];
+    unidade_id: number | undefined; // necessario para validar se foi preenchido
+    andar_id: number | undefined; // necessario para validar se foi preenchido
+    tipo_acesso: string[]; // necessario para validar se foi preenchido
 };
 
 // Interface para imagens com preview
@@ -61,7 +61,7 @@ export default function CadastroEspacoPage() {
     // Inicializar o formulário com o hook useForm do Inertia
     const { data, setData, post, processing, errors, reset } = useForm<FormValues>({
         nome: '',
-        capacidadePessoas: undefined,
+        capacidade_pessoas: undefined,
         descricao: '',
         imagens: [],
         main_image_index: undefined,
@@ -487,11 +487,11 @@ export default function CadastroEspacoPage() {
                                     id="capacityPessoas"
                                     type="number"
                                     min={1}
-                                    value={data.capacidadePessoas || ''}
-                                    onChange={(e) => setData('capacidadePessoas', e.target.valueAsNumber)}
+                                    value={data.capacidade_pessoas || ''}
+                                    onChange={(e) => setData('capacidade_pessoas', e.target.valueAsNumber)}
                                     disabled={processing}
                                 />
-                                {errors.capacidadePessoas && <p className="mt-1 text-sm text-red-500">{errors.capacidadePessoas}</p>}
+                                {errors.capacidade_pessoas && <p className="mt-1 text-sm text-red-500">{errors.capacidade_pessoas}</p>}
                             </div>
 
                             {/* Descrição */}

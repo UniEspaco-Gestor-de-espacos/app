@@ -5,9 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class AgendaTurno extends Model
+class Agenda extends Model
 {
-    /** @use HasFactory<\Database\Factories\AgendaTurnoFactory> */
     use HasFactory;
     protected $fillable = [
         'turno',
@@ -21,5 +20,9 @@ class AgendaTurno extends Model
     public function horarios()
     {
         return $this->hasMany(Horario::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

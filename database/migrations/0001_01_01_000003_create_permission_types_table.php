@@ -11,11 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('locals', function (Blueprint $table) {
-            $table->id()->autoIncrement();
-            $table->string('andar');
-            $table->json('tipo_acesso')->nullable();
-            $table->foreignId('modulo_id')->constrained('modulos')->onDelete('cascade');
+        Schema::create('permission_types', function (Blueprint $table) {
+            $table->id();
+            $table->string('nome');
             $table->timestamps();
         });
     }
@@ -25,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('locals');
+        Schema::dropIfExists('permission_types');
     }
 };

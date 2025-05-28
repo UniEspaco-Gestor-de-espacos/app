@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id()->autoIncrement();
             $table->string('nome');
             $table->string('sigla');
+            $table->string('endereço')->nullable();
             $table->timestamps();
         });
     }

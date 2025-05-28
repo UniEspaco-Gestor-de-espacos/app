@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { Espaco, Modulo, User } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -26,13 +25,13 @@ export default function EspacosPage() {
     const [selectedModulo, setSelectedModulo] = useState('');
     const [selectedCapacidade, setSelectedCapacidade] = useState('');
     const [selectedDisponibilidade, setSelectedDisponibilidade] = useState('');
-    const [viewType, setViewType] = useState('cards');
+    //const [viewType, setViewType] = useState('cards');
     const [selectedEspaco, setSelectedEspaco] = useState<Espaco | null>(null);
     const [showDetailsDialog, setShowDetailsDialog] = useState(false);
     const { props } = usePage<{ espacos: Espaco[]; user: User; modulos: Modulo[] }>();
     const { espacos, user, modulos } = props;
     console.log(modulos);
-    const userType = user.tipo_usuario;
+    const userType = user.permission_type_id; // 1 - INSTITUCIONAL, 2 - GESTOR, 3 - COMUM
 
     // Filtrar espaços com base nos critérios selecionados
     const filteredespacos = espacos.filter((espaco) => {
@@ -42,9 +41,9 @@ export default function EspacosPage() {
         const matchModulo = selectedModulo == '' || selectedModulo == 'all' || espaco.modulo_id.toString() == selectedModulo;
         const matchesCapacidade =
             selectedCapacidade === '' ||
-            (selectedCapacidade === 'pequeno' && espaco.capacidadePessoas <= 30) ||
-            (selectedCapacidade === 'medio' && espaco.capacidadePessoas > 30 && espaco.capacidadePessoas <= 100) ||
-            (selectedCapacidade === 'grande' && espaco.capacidadePessoas > 100);
+            (selectedCapacidade === 'pequeno' && espaco.capacidade_pessoas <= 30) ||
+            (selectedCapacidade === 'medio' && espaco.capacidade_pessoas > 30 && espaco.capacidade_pessoas <= 100) ||
+            (selectedCapacidade === 'grande' && espaco.capacidade_pessoas > 100);
         /*const matchesDisponibilidade =
             selectedDisponibilidade === '' ||
             (selectedDisponibilidade === 'disponivel' && espaco.disponivel) ||
@@ -147,144 +146,78 @@ export default function EspacosPage() {
                 </Card>
 
                 {/* Alternador de visualização */}
-                <Tabs value={viewType} onValueChange={setViewType} className="mb-6">
-                    <TabsList>
-                        <TabsTrigger value="cards">Cards</TabsTrigger>
-                        <TabsTrigger value="table">Tabela</TabsTrigger>
-                    </TabsList>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+                    {filteredespacos.map((espaco) => (
+                        <Card key={espaco.id} className="overflow-hidden">
+                            <CardHeader className="p-0">
+                                <img
+                                    src={espaco.main_image_index ? `/storage/${espaco.main_image_index}` : espacoImage}
+                                    alt={espaco.nome}
+                                    className="object-absolute h-40 w-full"
+                                />
+                            </CardHeader>
+                            <CardContent className="pt-6">
+                                <div className="mb-2 flex items-start justify-between">
+                                    <CardTitle className="text-xl">Espaço: {espaco.nome}</CardTitle>
+                                    <Badge variant={espaco ? 'default' : 'destructive'}>{espaco ? 'Disponível' : 'Indisponível'}</Badge>
+                                </div>
 
-                    {/* Exibição dos espaços */}
-                    <TabsContent value="cards" className="mt-0">
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-                            {filteredespacos.map((espaco) => (
-                                <Card key={espaco.id} className="overflow-hidden">
-                                    <CardHeader className="p-0">
-                                        <img
-                                            src={espaco.main_image_index ? `/storage/${espaco.main_image_index}` : espacoImage}
-                                            alt={espaco.nome}
-                                            className="object-absolute h-40 w-full"
-                                        />
-                                    </CardHeader>
-                                    <CardContent className="pt-6">
-                                        <div className="mb-2 flex items-start justify-between">
-                                            <CardTitle className="text-xl">Espaço: {espaco.nome}</CardTitle>
-                                            <Badge variant={espaco ? 'default' : 'destructive'}>{espaco ? 'Disponível' : 'Indisponível'}</Badge>
-                                        </div>
+                                <div className="espaco-y-2 mt-4">
+                                    <div className="flex items-center gap-2">
+                                        <Users className="text-muted-foreground h-4 w-4" />
+                                        <span>Capacidade: {espaco.capacidade_pessoas} pessoas</span>
+                                    </div>
 
-                                        <div className="espaco-y-2 mt-4">
-                                            <div className="flex items-center gap-2">
-                                                <Users className="text-muted-foreground h-4 w-4" />
-                                                <span>Capacidade: {espaco.capacidadePessoas} pessoas</span>
-                                            </div>
+                                    <div className="flex items-center gap-2">
+                                        <Home className="text-muted-foreground h-4 w-4" />
+                                        <span>
+                                            {modulos.find((modulo) => modulo.id == espaco.modulo_id)?.nome} / {espaco.nome}
+                                        </span>
+                                    </div>
 
-                                            <div className="flex items-center gap-2">
-                                                <Home className="text-muted-foreground h-4 w-4" />
-                                                <span>
-                                                    {modulos.find((modulo) => modulo.id == espaco.modulo_id)?.nome} / {espaco.nome}
-                                                </span>
-                                            </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-muted-foreground">Setor:</span>
+                                        <span>{}</span>
+                                    </div>
 
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-muted-foreground">Setor:</span>
-                                                <span>{}</span>
-                                            </div>
-
-                                            <div className="mt-2 flex flex-wrap gap-2">
-                                                <Badge variant="outline" className="flex items-center gap-1">
-                                                    {resourceIcon['climatizacao']}
-                                                    <span className="sr-only">Ar</span>
-                                                </Badge>
-                                                {/*espaco.recursos.map((resource) => (
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        <Badge variant="outline" className="flex items-center gap-1">
+                                            {resourceIcon['climatizacao']}
+                                            <span className="sr-only">Ar</span>
+                                        </Badge>
+                                        {/*espaco.recursos.map((resource) => (
                                                     <Badge key={resource} variant="outline" className="flex items-center gap-1">
                                                         {renderResourceIcon(resource)}
                                                         <span className="sr-only">{resource}</span>
                                                     </Badge>
                                                 ))*/}
-                                            </div>
-                                        </div>
-                                    </CardContent>
+                                    </div>
+                                </div>
+                            </CardContent>
 
-                                    <CardFooter className="flex flex-wrap gap-2 pt-0">
-                                        <Button variant="outline" size="sm" onClick={() => handleShowDetails(espaco)}>
-                                            <Info className="mr-2 h-4 w-4" />
-                                            Ver Detalhes
-                                        </Button>
+                            <CardFooter className="flex flex-wrap gap-2 pt-0">
+                                <Button variant="outline" size="sm" onClick={() => handleShowDetails(espaco)}>
+                                    <Info className="mr-2 h-4 w-4" />
+                                    Ver Detalhes
+                                </Button>
 
-                                        {(userType === 'professor' || userType === 'setor') && espaco && (
-                                            <Button size="sm" onClick={() => handleSolicitarReserva(espaco.id.toString())}>
-                                                <Calendar className="mr-2 h-4 w-4" />
-                                                Solicitar Reserva
-                                            </Button>
-                                        )}
+                                {userType === 3 && espaco && (
+                                    <Button size="sm" onClick={() => handleSolicitarReserva(espaco.id.toString())}>
+                                        <Calendar className="mr-2 h-4 w-4" />
+                                        Solicitar Reserva
+                                    </Button>
+                                )}
 
-                                        {(userType === 'setor' || userType === 'professor') && user.is_gestor && (
-                                            <Button variant="secondary" size="sm" onClick={() => handleEditarEspaco(espaco.id.toString())}>
-                                                <Edit className="mr-2 h-4 w-4" />
-                                                Editar Espaço
-                                            </Button>
-                                        )}
-                                    </CardFooter>
-                                </Card>
-                            ))}
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="table" className="mt-0">
-                        <div className="overflow-x-auto rounded-md border">
-                            <div className="relative w-full overflow-auto">
-                                <table className="w-full caption-bottom text-sm">
-                                    <thead>
-                                        <tr className="hover:bg-muted/50 border-b transition-colors">
-                                            <th className="h-12 px-4 text-left align-middle font-medium">Nome</th>
-                                            <th className="h-12 px-4 text-left align-middle font-medium">Capacidade</th>
-                                            <th className="h-12 px-4 text-left align-middle font-medium">Localização</th>
-                                            <th className="h-12 px-4 text-left align-middle font-medium">Setor</th>
-                                            <th className="h-12 px-4 text-left align-middle font-medium">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredespacos.map((espaco) => (
-                                            <tr key={espaco.id} className="hover:bg-muted/50 border-b transition-colors">
-                                                <td className="p-4 align-middle">{espaco.nome}</td>
-                                                <td className="p-4 align-middle">{espaco.capacidadePessoas}</td>
-                                                <td className="p-4 align-middle">{modulos.find((modulo) => modulo.id == espaco.modulo_id)?.nome}</td>
-                                                <td className="p-4 align-middle">
-                                                    <Badge variant={espaco ? 'default' : 'destructive'}>{}</Badge>
-                                                </td>
-                                                <td className="p-4 align-middle">
-                                                    <div className="flex gap-2">
-                                                        <Button variant="outline" size="sm" onClick={() => handleShowDetails(espaco)}>
-                                                            <Info className="h-4 w-4" />
-                                                            Detalhes
-                                                        </Button>
-
-                                                        {(userType === 'professor' || userType === 'setor') && espaco && (
-                                                            <Button size="sm" onClick={() => handleSolicitarReserva(espaco.id.toString())}>
-                                                                <Calendar className="h-4 w-4" />
-                                                                Reservar
-                                                            </Button>
-                                                        )}
-
-                                                        {(userType === 'setor' || userType === 'professor') && user.is_gestor && (
-                                                            <Button
-                                                                variant="secondary"
-                                                                size="sm"
-                                                                onClick={() => handleEditarEspaco(espaco.id.toString())}
-                                                            >
-                                                                <Edit className="h-4 w-4" />
-                                                                Editar
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </TabsContent>
-                </Tabs>
+                                {userType === 1 && (
+                                    <Button variant="secondary" size="sm" onClick={() => handleEditarEspaco(espaco.id.toString())}>
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        Editar Espaço
+                                    </Button>
+                                )}
+                            </CardFooter>
+                        </Card>
+                    ))}
+                </div>
 
                 {/* Modal de Detalhes */}
                 {selectedEspaco && (
@@ -303,7 +236,7 @@ export default function EspacosPage() {
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
                                         <h4 className="mb-1 font-medium">Capacidade</h4>
-                                        <p>{selectedEspaco.capacidadePessoas} pessoas</p>
+                                        <p>{selectedEspaco.capacidade_pessoas} pessoas</p>
                                     </div>
 
                                     <div>
@@ -339,14 +272,14 @@ export default function EspacosPage() {
                                 <Separator />
 
                                 <div className="flex justify-end gap-2">
-                                    {(userType === 'professor' || userType === 'setor') && selectedEspaco && (
+                                    {userType === 3 && selectedEspaco && (
                                         <Button onClick={() => handleSolicitarReserva(selectedEspaco.id.toString())}>
                                             <Calendar className="mr-2 h-4 w-4" />
                                             Solicitar Reserva
                                         </Button>
                                     )}
 
-                                    {(userType === 'setor' || userType === 'professor') && user.is_gestor && (
+                                    {userType === 1 && (
                                         <Button variant="secondary" onClick={() => handleEditarEspaco(selectedEspaco.id.toString())}>
                                             <Edit className="mr-2 h-4 w-4" />
                                             Editar Espaço

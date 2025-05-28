@@ -1,9 +1,9 @@
 <?php
 
 
-namespace App\Enums\AgendaTurno;
+namespace App\Enums\Agenda;
 
-enum AgendaTurnoEnum: string
+enum AgendaEnum: string
 {
     case MANHA = 'manha';
     case TARDE = 'tarde';

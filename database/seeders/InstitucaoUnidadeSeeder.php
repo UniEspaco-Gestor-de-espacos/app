@@ -15,18 +15,21 @@ class InstitucaoUnidadeSeeder extends Seeder
         DB::table('instituicaos')->insert([
             'nome' => 'Universidade Estadual do Sudoeste da Bahia',
             'sigla' => 'UESB',
+            'endereco' => fake()->address(),
             'created_at' => now(),
             'updated_at' => now()
         ]);
         DB::table('instituicaos')->insert([
             'nome' => 'Outra Instituição',
             'sigla' => 'outra',
+            'endereco' => fake()->address(),
             'created_at' => now(),
             'updated_at' => now()
         ]);
         DB::table('instituicaos')->insert([
             'nome' => 'Nenhuma',
             'sigla' => 'nenhuma',
+            'endereco' => fake()->address(),
             'created_at' => now(),
             'updated_at' => now()
         ]);

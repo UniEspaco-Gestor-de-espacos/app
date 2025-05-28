@@ -5,12 +5,12 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\Espaco;
 use App\Models\User;
-use App\Enums\AgendaTurno\AgendaTurnoEnum;
+use App\Enums\Agenda\AgendaEnum;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\AgendaTurno>
  */
-class AgendaTurnoFactory extends Factory
+class AgendaFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -20,9 +20,9 @@ class AgendaTurnoFactory extends Factory
     public function definition(): array
     {
         return [
-            'turno' => fake()->randomElement(array_column(AgendaTurnoEnum::cases(),'value')),
-            'espaco_id'=> Espaco::pluck('id')->random(),
-            'user_id'=> User::pluck('id')->random()
+            'turno' => fake()->randomElement(array_column(AgendaEnum::cases(), 'value')),
+            'espaco_id' => Espaco::pluck('id')->random(),
+            'user_id' => User::pluck('id')->random()
         ];
     }
 }

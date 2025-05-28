@@ -1,9 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { User, type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
-import { AdminDashboard } from './admin';
-import { ManagerDashboard } from './gestor';
-import { UserDashboard } from './cadastrar';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -19,9 +16,7 @@ export default function Dashboard() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                {(user.tipo_usuario === 'aluno' || user.tipo_usuario === 'externo' || user.tipo_usuario === 'professor') && <UserDashboard />}
-                {(user.tipo_usuario === 'setor' || user.tipo_usuario === 'professor') && user.is_gestor && <ManagerDashboard />}
-                {user.tipo_usuario === 'master' && <AdminDashboard />}
+
             </div>
         </AppLayout>
     );

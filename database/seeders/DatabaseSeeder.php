@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -22,8 +21,9 @@ class DatabaseSeeder extends Seeder
             ModuloSeeder::class,
             AndarSeeder::class,
             EspacoSeeder::class,
+            PermissionTypeSeeder::class,
             UserSeeder::class,
-            AgendaTurnoSeeder::class,
+            AgendaSeeder::class,
             HorarioSeeder::class,
             ReservaSeeder::class,
         ]);

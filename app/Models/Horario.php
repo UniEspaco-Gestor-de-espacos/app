@@ -7,19 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 
 class Horario extends Model
 {
-    /** @use HasFactory<\Database\Factories\HorarioFactory> */
+
     use HasFactory;
     protected $fillable = [
-        'horarioInicio',
-        'horarioFim'
+        'agenda_id',
+        'horario_inicio',
+        'horario_fim',
+        'dia_semana',
+        'data',
     ];
 
     public function reservas()
     {
         return $this->belongsToMany(Reserva::class, 'reserva_horario')->withTimestamps();
     }
-    public function agendaTurno()
+    public function agenda()
     {
-        return $this->belongsTo(AgendaTurno::class);
+        return $this->belongsTo(Agenda::class);
     }
 }

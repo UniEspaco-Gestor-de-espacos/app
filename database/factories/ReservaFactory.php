@@ -21,11 +21,11 @@ class ReservaFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::pluck('id')->random(),
             'titulo' => fake()->word(),
             'descricao' => fake()->text(),
-            'dataInicial' => now(),
-            'dataFinal' => now()->addWeek(),
+            'data_inicial' => now(),
+            'data_final' => now()->addWeek(),
+            'user_id' => User::pluck('id')->random(),
         ];
     }
     public function configure()

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('espacos', function (Blueprint $table) {
             $table->id()->autoIncrement();
             $table->string('nome');
-            $table->integer('capacidadePessoas');
+            $table->integer('capacidade_pessoas');
             $table->string('descricao');
             $table->json('imagens')->nullable();
             $table->string('main_image_index')->nullable();

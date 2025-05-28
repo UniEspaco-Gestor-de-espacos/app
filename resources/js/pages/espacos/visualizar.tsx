@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { AgendaTurno, BreadcrumbItem } from '@/types';
+import { Agenda, BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -169,7 +169,7 @@ const identificarTurno = (hora: number): 'manha' | 'tarde' | 'noite' => {
 };
 
 export default function AgendaEspaço() {
-    const { props } = usePage<{ agendas: AgendaTurno[] }>();
+    const { props } = usePage<{ agendas: Agenda[] }>();
     const { agendas } = props;
     console.log(agendas);
     const hoje = new Date();

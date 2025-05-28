@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ReservaHorario;
+use App\Models\Agenda;
 use Illuminate\Http\Request;
 
-class ReservaHorarioController extends Controller
+class AgendaController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
-    }
+    public function index() {}
 
     /**
      * Show the form for creating a new resource.
@@ -34,15 +31,12 @@ class ReservaHorarioController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ReservaHorario $reservaHorario)
-    {
-        //
-    }
+    public function show(Agenda $agendaTurno) {}
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ReservaHorario $reservaHorario)
+    public function edit(Agenda $agendaTurno)
     {
         //
     }
@@ -50,7 +44,7 @@ class ReservaHorarioController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ReservaHorario $reservaHorario)
+    public function update(Request $request, Agenda $agendaTurno)
     {
         //
     }
@@ -58,7 +52,7 @@ class ReservaHorarioController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ReservaHorario $reservaHorario)
+    public function destroy(Agenda $agendaTurno)
     {
         //
     }

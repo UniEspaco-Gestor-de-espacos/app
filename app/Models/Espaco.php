@@ -12,11 +12,11 @@ class Espaco extends Model
 
     protected $fillable = [
         'nome',
+        'capacidade_pessoas',
         'descricao',
-        'capacidadePessoas',
-        'modulo_id',
         'imagens',
-        'main_image_index'
+        'main_image_index',
+        'modulo_id'
     ];
 
     /**
@@ -28,9 +28,9 @@ class Espaco extends Model
         'imagens' => 'array'
     ];
 
-    public function agendaTurnos()
+    public function agendas()
     {
-        return $this->hasMany(AgendaTurno::class);
+        return $this->hasMany(Agenda::class);
     }
     public function modulo()
     {

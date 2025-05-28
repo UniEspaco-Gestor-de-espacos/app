@@ -39,7 +39,7 @@ export default function Register() {
 
     useEffect(() => {
         if (unidadeId && instituicaoId === 'UESB') {
-            const listSetores = props.setores.filter((setor) => setor.unidade_id == unidadeId);
+            const listSetores = props.setores.filter((setor) => setor.unidade_id.toString() == unidadeId);
             setSetores(listSetores);
         } else {
             setSetores([]);

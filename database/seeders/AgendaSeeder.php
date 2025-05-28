@@ -4,15 +4,15 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\AgendaTurno;
+use App\Models\Agenda;
 
-class AgendaTurnoSeeder extends Seeder
+class AgendaSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        AgendaTurno::factory(3)->create();
+        Agenda::factory(3)->create();
     }
 }

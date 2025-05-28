@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Agenda;
 use App\Models\AgendaTurno;
 use App\Models\Andar;
 use App\Models\Espaco;
@@ -52,7 +53,7 @@ class EspacoController extends Controller
         $mainImagePath = null;
         $messages = [
             'nome.required' => 'O nome é obrigatório.',
-            'capacidadePessoas.required' => 'A capacidade de pessoas é obrigatória.',
+            'capacidade_pessoas.required' => 'A capacidade de pessoas é obrigatória.',
             'descricao.required' => 'A descrição é obrigatória.',
             'unidade_id.required' => 'O campo unidade é obrigatório.',
             'modulo_id.required' => 'O campo módulo é obrigatório.',
@@ -64,7 +65,7 @@ class EspacoController extends Controller
                 'modulo_id' => 'required|exists:modulos,id',
                 'andar_id' => 'required|exists:andars,id',
                 'nome' => 'required|string|max:255',
-                'capacidadePessoas' => 'required|integer|min:1',
+                'capacidade_pessoas' => 'required|integer|min:1',
                 'descricao' => 'nullable|string',
                 'imagens' => 'nullable|array',
                 'imagens.*' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120', // Max 5MB por imagem
@@ -91,17 +92,17 @@ class EspacoController extends Controller
             }
 
             $espaco = Espaco::create([
-                'modulo_id' => $form_validado['modulo_id'],
                 'nome' => $form_validado['nome'],
-                'capacidadePessoas' => $form_validado['capacidadePessoas'],
+                'capacidade_pessoas' => $form_validado['capacidadePessoas'],
                 'descricao' => $form_validado['descricao'],
                 'imagens' => $storedImagePaths, // Eloquent vai converter para JSON por causa do $casts
                 'main_image_index' => $mainImagePath,
+                'modulo_id' => $form_validado['modulo_id'],
             ]);
             // Criar agenda
-            AgendaTurno::create(['turno' => 'manha', 'espaco_id' => $espaco->id]);
-            AgendaTurno::create(['turno' => 'tarde', 'espaco_id' => $espaco->id]);
-            AgendaTurno::create(['turno' => 'noite', 'espaco_id' => $espaco->id]);
+            Agenda::create(['turno' => 'manha', 'espaco_id' => $espaco->id]);
+            Agenda::create(['turno' => 'tarde', 'espaco_id' => $espaco->id]);
+            Agenda::create(['turno' => 'noite', 'espaco_id' => $espaco->id]);
 
             return redirect()->route('espacos.index')->with('success', 'Espaco cadastrado com sucesso!');
         } catch (QueryException $e) { // Captura erro no banco de dados
@@ -116,7 +117,7 @@ class EspacoController extends Controller
      */
     public function show(Espaco $espaco)
     {
-        $agendas = AgendaTurno::where('espaco_id', '==', $espaco->id);
+        $agendas = Agenda::where('espaco_id', '==', $espaco->id);
 
         return Inertia::render('espacos/visualizar', compact('espaco','agendas'));
     }

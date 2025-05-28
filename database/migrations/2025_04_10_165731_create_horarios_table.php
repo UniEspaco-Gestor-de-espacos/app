@@ -13,12 +13,11 @@ return new class extends Migration
     {
         Schema::create('horarios', function (Blueprint $table) {
             $table->id()->autoIncrement();
-            $table->foreignId('agenda_id')->constrained('agenda_turnos')->onDelete('cascade');
-            $table->time('horarioInicio');
-            $table->time('horarioFim');
+            $table->foreignId('agenda_id')->constrained('agendas')->onDelete('cascade');
+            $table->time('horario_inicio');
+            $table->time('horario_fim');
             $table->enum('dia_semana', ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom']);
             $table->date('data');
-            // $table->unique(['agenda_id', 'horarioInicio', 'data']); // Removido pois pode haver mais de uma solicitação para o mesmo dia e mesmo horario
             $table->timestamps();
         });
     }
