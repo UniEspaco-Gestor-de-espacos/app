@@ -18,12 +18,6 @@ class HorarioFactory extends Factory
      */
     public function definition(): array
     {
-        return [
-            'agenda_id' => Agenda::pluck('id')->random(),
-            'horario_inicio' => fake()->time('H:i'),
-            'horario_fim' => fake()->time('H:i'),
-            'data' => fake()->date(),
-            'dia_semana' => fake()->randomElement(array_column(DiasSemanaEnum::cases(), 'value')),
-        ];
+        return [];
     }
 }

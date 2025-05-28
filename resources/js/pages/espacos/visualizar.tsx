@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { Agenda, Andar, BreadcrumbItem, Espaco, Modulo } from '@/types';
+import { Andar, BreadcrumbItem, Espaco, Modulo } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -32,14 +32,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 // Tipos
 interface Horario {
-    id: string;
-    dia: Date;
-    inicio: string;
-    fim: string;
-    horaInicio: number;
-    minutoInicio: number;
-    status: 'livre' | 'reservado';
-    setor?: string;
+    id?: string;
+    data: Date;
+    dia_semana: string;
+    horario_inicio: string;
+    horario_fim: string;
+    agenda_id: number;
+    status: string;
 }
 
 interface GestoresEspaco {
@@ -58,6 +57,7 @@ interface GestorTurno {
     nome: string;
     email: string;
     departamento: string;
+    agenda_id: number;
 }
 
 interface ReservaFormData {
@@ -104,64 +104,20 @@ const opcoesRecorrencia: OpcaoRecorrencia[] = [
     },
 ];
 
-// Função para gerar slots de horário para a semana
-const gerarSlotsParaSemana = (semanaInicio: Date) => {
-    const slots: Horario[] = [];
-    const horaInicio = 7;
-    const horaFim = 22;
-
-    // Gerar para cada dia da semana (segunda a sábado)
-    for (let diaSemana = 0; diaSemana < 7; diaSemana++) {
-        const dia = addDays(semanaInicio, diaSemana);
-
-        // Gerar para cada hora do dia
-        for (let hora = horaInicio; hora < horaFim; hora++) {
-            const inicio = `${hora.toString().padStart(2, '0')}:00`;
-            const fim = `${hora.toString().padStart(2, '0')}:50`;
-
-            // Gerar status aleatório para demonstração
-            const status = Math.random() > 0.3 ? 'livre' : 'reservado';
-            const setor = status === 'reservado' ? ['CPD', 'DIREÇÃO', 'COORDENAÇÃO'][Math.floor(Math.random() * 3)] : undefined;
-
-            slots.push({
-                id: `${format(dia, 'yyyy-MM-dd')}-${inicio}`,
-                dia,
-                inicio,
-                fim,
-                horaInicio: hora,
-                minutoInicio: 0,
-                status,
-                setor,
-            });
-        }
-    }
-
-    return slots;
-};
-
-// Função para identificar o turno com base na hora
-const identificarTurno = (hora: number): 'manha' | 'tarde' | 'noite' => {
-    if (hora >= 7 && hora <= 12) return 'manha';
-    if (hora >= 13 && hora <= 18) return 'tarde';
-    return 'noite'; // 19-22
-};
-
 export default function AgendaEspaço() {
     const { props } = usePage<{
-        agendas: Agenda[];
         espaco: Espaco;
         modulo: Modulo;
         andar: Andar;
         gestores_espaco: GestoresEspaco;
-        horarios_turno: ReservasTurno
+        horarios_turno: ReservasTurno;
     }>();
-    const { agendas, espaco, modulo, andar, gestores_espaco,  } = props;
-
+    const { espaco, modulo, andar, gestores_espaco, horarios_turno } = props;
     const hoje = new Date();
     const [semanaAtual, setSemanaAtual] = useState(startOfWeek(hoje, { weekStartsOn: 1 }));
-    const [slotsSelecao, setSlotsSelecao] = useState<Slot[]>([]);
+    const [horariosSelecao, setHorariosSelecao] = useState<Horario[]>([]);
     const [dialogAberto, setDialogAberto] = useState(false);
-    const [todosSlots, setTodosSlots] = useState<Slot[]>([]);
+    const [todosHorarios, setTodosHorarios] = useState<Horario[]>([]);
     const [formData, setFormData] = useState<ReservaFormData>({
         titulo: '',
         descricao: '',
@@ -169,6 +125,48 @@ export default function AgendaEspaço() {
         dataInicio: hoje,
         dataFim: addMonths(hoje, 1),
     });
+    // Função para identificar o turno com base na hora
+    const identificarTurno = (hora: number): 'manha' | 'tarde' | 'noite' => {
+        if (hora >= 7 && hora <= 12) return 'manha';
+        if (hora >= 13 && hora <= 18) return 'tarde';
+        return 'noite'; // 19-22
+    };
+
+    // Função para gerar slots de horário para a semana
+    const gerarSlotsParaSemana = (semanaInicio: Date) => {
+        const horarios: Horario[] = [];
+        const horaInicio = 7;
+        const horaFim = 22;
+        const diaMapper = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
+        // Gerar para cada dia da semana (segunda a sábado)
+        for (let diaSemana = 0; diaSemana < 7; diaSemana++) {
+            const dia = diaMapper[addDays(semanaInicio, diaSemana).getDay()];
+            // Gerar para cada hora do dia
+            for (let hora = horaInicio; hora < horaFim; hora++) {
+                const inicio = `${hora.toString().padStart(2, '0')}:00:00`;
+                const fim = `${hora.toString().padStart(2, '0')}:50:00`;
+
+                const agenda = gestores_espaco[identificarTurno(hora)].agenda_id;
+
+                const tem_reserva = horarios_turno[identificarTurno(hora)].find((horario) => horario.horario_inicio == inicio);
+                if (tem_reserva) {
+                    horarios.push({ ...tem_reserva, id: `${format(addDays(semanaInicio, diaSemana), 'yyyy-MM-dd')}-${inicio}`, status: 'reservado' });
+                } else {
+                    horarios.push({
+                        id: `${format(addDays(semanaInicio, diaSemana), 'yyyy-MM-dd')}-${inicio}`,
+                        agenda_id: agenda,
+                        dia_semana: dia,
+                        horario_inicio: inicio,
+                        horario_fim: fim,
+                        data: addDays(semanaInicio, diaSemana),
+                        status: 'livre',
+                    });
+                }
+            }
+        }
+        console.log(horarios);
+        return horarios;
+    };
 
     // Gerar dias da semana (segunda a sábado)
     const diasSemana = useMemo(() => {
@@ -184,71 +182,71 @@ export default function AgendaEspaço() {
             };
         });
     }, [semanaAtual, hoje]);
-
-    console.log(diasSemana);
     // Gerar slots apenas quando a semana mudar
     useEffect(() => {
-        setTodosSlots(gerarSlotsParaSemana(semanaAtual));
+        setTodosHorarios(gerarSlotsParaSemana(semanaAtual));
     }, [semanaAtual]);
 
     // Agrupar slots por hora para facilitar a renderização da tabela
-    const slotsPorHora = useMemo(() => {
-        const resultado: Record<string, Slot[]> = {};
+    const horariosPorHora = useMemo(() => {
+        const resultado: Record<string, Horario[]> = {};
 
         for (let hora = 7; hora < 22; hora++) {
             const horaFormatada = `${hora.toString().padStart(2, '0')}:00`;
-            resultado[horaFormatada] = todosSlots.filter((slot) => slot.horaInicio === hora);
+            resultado[horaFormatada] = todosHorarios.filter((horario) => horario.horario_inicio == `${horaFormatada}:00`);
         }
 
         return resultado;
-    }, [todosSlots]);
+    }, [todosHorarios]);
 
     // Agrupar slots por turno para facilitar a renderização
-    const slotsPorTurno = useMemo(() => {
+    const horariosPorTurno = useMemo(() => {
         const resultado = {
-            manha: {} as Record<string, Slot[]>,
-            tarde: {} as Record<string, Slot[]>,
-            noite: {} as Record<string, Slot[]>,
+            manha: {} as Record<string, Horario[]>,
+            tarde: {} as Record<string, Horario[]>,
+            noite: {} as Record<string, Horario[]>,
         };
 
-        Object.entries(slotsPorHora).forEach(([hora, slots]) => {
+        Object.entries(horariosPorHora).forEach(([hora, horario]) => {
             const horaNum = Number.parseInt(hora.split(':')[0], 10);
             const turno = identificarTurno(horaNum);
-            resultado[turno][hora] = slots;
+            resultado[turno][hora] = horario;
         });
 
         return resultado;
-    }, [slotsPorHora]);
+    }, [horariosPorHora]);
 
     // Funções para navegar entre semanas
     const irParaSemanaAnterior = () => {
         setSemanaAtual(subWeeks(semanaAtual, 1));
         // Limpar seleção ao mudar de semana
-        setSlotsSelecao([]);
+        setHorariosSelecao([]);
     };
 
     const irParaProximaSemana = () => {
         setSemanaAtual(addWeeks(semanaAtual, 1));
         // Limpar seleção ao mudar de semana
-        setSlotsSelecao([]);
+        setHorariosSelecao([]);
     };
 
     // Função para alternar seleção de slot
-    const alternarSelecaoSlot = (slot: Slot) => {
-        if (slot.status !== 'livre') return;
+    const alternarSelecaoHorario = (horario: Horario) => {
+        if (horario.status !== 'livre') return;
 
-        const jaExiste = slotsSelecao.some((s) => s.id === slot.id);
+        const jaExiste = horariosSelecao.some((h) => h.id === horario.id);
 
         if (jaExiste) {
-            setSlotsSelecao(slotsSelecao.filter((s) => s.id !== slot.id));
+            setHorariosSelecao(horariosSelecao.filter((h) => h.id !== horario.id));
         } else {
             // Adicionar o slot à seleção sem restrição de dia
             // Ordenar slots por dia e hora
-            const novaSelecao = [...slotsSelecao, slot].sort(
-                (a, b) => a.dia.getTime() - b.dia.getTime() || a.horaInicio - b.horaInicio || a.minutoInicio - b.minutoInicio,
+            const novaSelecao = [...horariosSelecao, horario].sort(
+                (a, b) =>
+                    a.data.getTime() - b.data.getTime() || // Compara dias primeiro
+                    a.horario_inicio.localeCompare(b.horario_inicio), // Se dias iguais, compara horaInicio como string "HH:MM:SS"
             );
 
-            setSlotsSelecao(novaSelecao);
+            setHorariosSelecao(novaSelecao);
         }
     };
 
@@ -268,7 +266,7 @@ export default function AgendaEspaço() {
         if (!opcaoRecorrencia) return;
 
         // Calcular a data final com base na recorrência
-        const dataInicial = new Date(Math.min(...slotsSelecao.map((s) => s.dia.getTime())));
+        const dataInicial = new Date(Math.min(...horariosSelecao.map((h) => h.data.getTime())));
         let dataFinal: Date;
 
         if (formData.recorrencia === 'personalizado' && formData.dataFim) {
@@ -280,14 +278,14 @@ export default function AgendaEspaço() {
         console.log('Reserva solicitada:', {
             titulo: formData.titulo,
             descricao: formData.descricao,
-            slots: slotsSelecao,
+            horario: horariosSelecao,
             recorrencia: formData.recorrencia,
             dataInicial: format(dataInicial, 'dd/MM/yyyy'),
             dataFinal: format(dataFinal, 'dd/MM/yyyy'),
         });
 
         // Aqui seria implementada a lógica de reserva em período com recorrência
-        setSlotsSelecao([]);
+        setHorariosSelecao([]);
         setDialogAberto(false);
 
         // Reset do formulário
@@ -302,19 +300,19 @@ export default function AgendaEspaço() {
 
     // Função para limpar seleção
     const limparSelecao = () => {
-        setSlotsSelecao([]);
+        setHorariosSelecao([]);
     };
 
     // Verificar se um slot está selecionado
-    const isSlotSelecionado = (slot: Slot) => {
-        return slotsSelecao.some((s) => s.id === slot.id);
+    const isHorarioSelecionado = (horario: Horario) => {
+        return horariosSelecao.some((h) => h.id === horario.id);
     };
 
     // Calcular período de recorrência
     const calcularPeriodoRecorrencia = () => {
-        if (slotsSelecao.length === 0) return null;
+        if (horariosSelecao.length === 0) return null;
 
-        const dataInicial = new Date(Math.min(...slotsSelecao.map((s) => s.dia.getTime())));
+        const dataInicial = new Date(Math.min(...horariosSelecao.map((h) => h.data.getTime())));
         let dataFinal: Date;
 
         if (formData.recorrencia === 'personalizado' && formData.dataFim) {
@@ -478,7 +476,7 @@ export default function AgendaEspaço() {
                                     <div key={`manha-${dia.valor}`} className="border-l p-2 text-center text-xs font-medium"></div>
                                 ))}
                             </div>
-                            {Object.entries(slotsPorTurno.manha).map(([hora, slots]) => (
+                            {Object.entries(horariosPorTurno.manha).map(([hora, horarios]) => (
                                 <div key={hora} className="bg-accent/5 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
                                     {/* Coluna de horário */}
                                     <div className="text-muted-foreground border-r p-2 pr-3 text-right text-xs">
@@ -486,29 +484,29 @@ export default function AgendaEspaço() {
                                     </div>
 
                                     {/* Células para cada dia */}
-                                    {slots.map((slot) => (
+                                    {horarios.map((horario) => (
                                         <div
-                                            key={slot.id}
-                                            className={`relative cursor-pointer border-l p-1 transition-all ${slot.status === 'reservado' ? 'bg-muted/30' : 'hover:bg-muted/10'} ${isSlotSelecionado(slot) ? 'bg-primary/20 hover:bg-primary/30 ring-primary ring-2 ring-inset' : ''} ${isSameDay(slot.dia, hoje) ? 'bg-primary/5' : ''} `}
-                                            onClick={() => alternarSelecaoSlot(slot)}
+                                            key={horario.id}
+                                            className={`relative cursor-pointer border-l p-1 transition-all ${horario.status === 'reservado' ? 'bg-muted/30' : 'hover:bg-muted/10'} ${isHorarioSelecionado(horario) ? 'bg-primary/20 hover:bg-primary/30 ring-primary ring-2 ring-inset' : ''} ${isSameDay(horario.data, hoje) ? 'bg-primary/5' : ''} `}
+                                            onClick={() => alternarSelecaoHorario(horario)}
                                         >
-                                            {slot.status === 'reservado' ? (
+                                            {horario.status === 'reservado' ? (
                                                 <TooltipProvider>
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
                                                             <div className="flex h-full w-full items-center justify-center">
                                                                 <Badge variant="outline" className="text-xs">
-                                                                    {slot.setor}
+                                                                    COLOCAR AUTOR DA RESERVA
                                                                 </Badge>
                                                             </div>
                                                         </TooltipTrigger>
                                                         <TooltipContent>
-                                                            <p>Reservado pelo setor {slot.setor}</p>
+                                                            <p>Reservado pelo setor COLOCAR AUTOR DA RESERVA</p>
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 </TooltipProvider>
                                             ) : (
-                                                isSlotSelecionado(slot) && (
+                                                isHorarioSelecionado(horario) && (
                                                     <div className="flex h-full w-full items-center justify-center">
                                                         <Badge variant="secondary" className="text-xs">
                                                             Selecionado
@@ -528,7 +526,7 @@ export default function AgendaEspaço() {
                                     <div key={`tarde-${dia.valor}`} className="border-l p-2 text-center text-xs font-medium"></div>
                                 ))}
                             </div>
-                            {Object.entries(slotsPorTurno.tarde).map(([hora, slots]) => (
+                            {Object.entries(horariosPorTurno.tarde).map(([hora, horarios]) => (
                                 <div key={hora} className="bg-secondary/5 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
                                     {/* Coluna de horário */}
                                     <div className="text-muted-foreground border-r p-2 pr-3 text-right text-xs">
@@ -536,29 +534,29 @@ export default function AgendaEspaço() {
                                     </div>
 
                                     {/* Células para cada dia */}
-                                    {slots.map((slot) => (
+                                    {horarios.map((horario) => (
                                         <div
-                                            key={slot.id}
-                                            className={`relative cursor-pointer border-l p-1 transition-all ${slot.status === 'reservado' ? 'bg-muted/30' : 'hover:bg-muted/10'} ${isSlotSelecionado(slot) ? 'bg-primary/20 hover:bg-primary/30 ring-primary ring-2 ring-inset' : ''} ${isSameDay(slot.dia, hoje) ? 'bg-primary/5' : ''} `}
-                                            onClick={() => alternarSelecaoSlot(slot)}
+                                            key={horario.id}
+                                            className={`relative cursor-pointer border-l p-1 transition-all ${horario.status === 'reservado' ? 'bg-muted/30' : 'hover:bg-muted/10'} ${isHorarioSelecionado(horario) ? 'bg-primary/20 hover:bg-primary/30 ring-primary ring-2 ring-inset' : ''} ${isSameDay(horario.data, hoje) ? 'bg-primary/5' : ''} `}
+                                            onClick={() => alternarSelecaoHorario(horario)}
                                         >
-                                            {slot.status === 'reservado' ? (
+                                            {horario.status === 'reservado' ? (
                                                 <TooltipProvider>
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
                                                             <div className="flex h-full w-full items-center justify-center">
                                                                 <Badge variant="outline" className="text-xs">
-                                                                    {slot.setor}
+                                                                    COLOCAR AUTOR DA RESERVA
                                                                 </Badge>
                                                             </div>
                                                         </TooltipTrigger>
                                                         <TooltipContent>
-                                                            <p>Reservado pelo setor {slot.setor}</p>
+                                                            <p>Reservado pelo setor COLOCAR AUTOR DA RESERVA</p>
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 </TooltipProvider>
                                             ) : (
-                                                isSlotSelecionado(slot) && (
+                                                isHorarioSelecionado(horario) && (
                                                     <div className="flex h-full w-full items-center justify-center">
                                                         <Badge variant="secondary" className="text-xs">
                                                             Selecionado
@@ -578,7 +576,7 @@ export default function AgendaEspaço() {
                                     <div key={`noite-${dia.valor}`} className="border-l p-2 text-center text-xs font-medium"></div>
                                 ))}
                             </div>
-                            {Object.entries(slotsPorTurno.noite).map(([hora, slots]) => (
+                            {Object.entries(horariosPorTurno.noite).map(([hora, horarios]) => (
                                 <div key={hora} className="bg-muted/10 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
                                     {/* Coluna de horário */}
                                     <div className="text-muted-foreground border-r p-2 pr-3 text-right text-xs">
@@ -586,29 +584,29 @@ export default function AgendaEspaço() {
                                     </div>
 
                                     {/* Células para cada dia */}
-                                    {slots.map((slot) => (
+                                    {horarios.map((horario) => (
                                         <div
-                                            key={slot.id}
-                                            className={`relative cursor-pointer border-l p-1 transition-all ${slot.status === 'reservado' ? 'bg-muted/30' : 'hover:bg-muted/10'} ${isSlotSelecionado(slot) ? 'bg-primary/20 hover:bg-primary/30 ring-primary ring-2 ring-inset' : ''} ${isSameDay(slot.dia, hoje) ? 'bg-primary/5' : ''} `}
-                                            onClick={() => alternarSelecaoSlot(slot)}
+                                            key={horario.id}
+                                            className={`relative cursor-pointer border-l p-1 transition-all ${horario.status === 'reservado' ? 'bg-muted/30' : 'hover:bg-muted/10'} ${isHorarioSelecionado(horario) ? 'bg-primary/20 hover:bg-primary/30 ring-primary ring-2 ring-inset' : ''} ${isSameDay(horario.data, hoje) ? 'bg-primary/5' : ''} `}
+                                            onClick={() => alternarSelecaoHorario(horario)}
                                         >
-                                            {slot.status === 'reservado' ? (
+                                            {horario.status === 'reservado' ? (
                                                 <TooltipProvider>
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
                                                             <div className="flex h-full w-full items-center justify-center">
                                                                 <Badge variant="outline" className="text-xs">
-                                                                    {slot.setor}
+                                                                    COLOCAR AUTOR DA RESERVA
                                                                 </Badge>
                                                             </div>
                                                         </TooltipTrigger>
                                                         <TooltipContent>
-                                                            <p>Reservado pelo setor {slot.setor}</p>
+                                                            <p>Reservado pelo setor COLOCAR AUTOR DA RESERVA</p>
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 </TooltipProvider>
                                             ) : (
-                                                isSlotSelecionado(slot) && (
+                                                isHorarioSelecionado(horario) && (
                                                     <div className="flex h-full w-full items-center justify-center">
                                                         <Badge variant="secondary" className="text-xs">
                                                             Selecionado
@@ -625,14 +623,14 @@ export default function AgendaEspaço() {
                 </Card>
 
                 {/* Botão flutuante para reserva em período */}
-                {slotsSelecao.length > 0 && (
+                {horariosSelecao.length > 0 && (
                     <div className="fixed right-4 bottom-4 flex flex-col items-end gap-2">
                         <Dialog open={dialogAberto} onOpenChange={setDialogAberto}>
                             <DialogTrigger asChild>
                                 <Button className="shadow-lg">
-                                    Reservar {slotsSelecao.length} horário{slotsSelecao.length > 1 ? 's' : ''} em{' '}
-                                    {new Set(slotsSelecao.map((s) => format(s.dia, 'yyyy-MM-dd'))).size} dia
-                                    {new Set(slotsSelecao.map((s) => format(s.dia, 'yyyy-MM-dd'))).size > 1 ? 's' : ''}
+                                    Reservar {horariosSelecao.length} horário{horariosSelecao.length > 1 ? 's' : ''} em{' '}
+                                    {new Set(horariosSelecao.map((h) => format(h.data, 'yyyy-MM-dd'))).size} dia
+                                    {new Set(horariosSelecao.map((h) => format(h.data, 'yyyy-MM-dd'))).size > 1 ? 's' : ''}
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="max-w-md">
@@ -805,28 +803,28 @@ export default function AgendaEspaço() {
                                         <ScrollArea className="h-[200px] rounded-md border p-2">
                                             {/* Agrupar slots por dia */}
                                             {Object.entries(
-                                                slotsSelecao.reduce(
-                                                    (acc, slot) => {
-                                                        const diaKey = format(slot.dia, 'yyyy-MM-dd');
+                                                horariosSelecao.reduce(
+                                                    (acc, horario) => {
+                                                        const diaKey = format(horario.data, 'yyyy-MM-dd');
                                                         if (!acc[diaKey]) {
                                                             acc[diaKey] = {
-                                                                data: slot.dia,
+                                                                data: horario.data,
                                                                 slots: [],
                                                             };
                                                         }
-                                                        acc[diaKey].slots.push(slot);
+                                                        acc[diaKey].slots.push(horario);
                                                         return acc;
                                                     },
-                                                    {} as Record<string, { data: Date; slots: Slot[] }>,
+                                                    {} as Record<string, { data: Date; slots: Horario[] }>,
                                                 ),
                                             ).map(([diaKey, { data, slots }]) => (
                                                 <div key={diaKey} className="mb-4 last:mb-0">
                                                     <div className="mb-1 text-sm font-medium">{format(data, 'EEEE, dd/MM', { locale: ptBR })}</div>
 
                                                     <div className="border-muted border-l-2 pl-2">
-                                                        {slots.map((slot) => (
-                                                            <div key={slot.id} className="text-muted-foreground py-1 text-sm">
-                                                                {slot.inicio} - {slot.fim}
+                                                        {slots.map((horario) => (
+                                                            <div key={horario.id} className="text-muted-foreground py-1 text-sm">
+                                                                {horario.inicio} - {horario.fim}
                                                             </div>
                                                         ))}
                                                     </div>

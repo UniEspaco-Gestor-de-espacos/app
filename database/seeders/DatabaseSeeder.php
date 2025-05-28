@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             PermissionTypeSeeder::class,
             UserSeeder::class,
             AgendaSeeder::class,
-            HorarioSeeder::class,
+            //HorarioSeeder::class,
             ReservaSeeder::class,
         ]);
     }

@@ -126,10 +126,16 @@ class EspacoController extends Controller
         foreach ($agendas as $agenda) {
             if ($agenda->user_id != null) {
                 $user = User::whereId($agenda->user_id)->get();
-                $gestores_espaco[$agenda->turno] = ['nome' => $user->first()->name, 'email' => $user->first()->email, 'setor' => $user->first()->setor()->get()->first()->nome];
+                $gestores_espaco[$agenda->turno] = [
+                    'nome' => $user->first()->name,
+                    'email' => $user->first()->email,
+                    'setor' => $user->first()->setor()->get()->first()->nome,
+                    'agenda_id' => $agenda->id
+                ];
             }
             $horarios_turno[$agenda->turno] = $agenda->horarios()->get();
         }
+
         return Inertia::render('espacos/visualizar', compact('espaco', 'agendas', 'modulo', 'andar', 'gestores_espaco', 'horarios_turno'));
     }
 
