@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('agenda_id')->constrained('agendas')->onDelete('cascade');
             $table->time('horario_inicio');
             $table->time('horario_fim');
-            $table->enum('dia_semana', ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom']);
             $table->date('data');
             $table->timestamps();
         });

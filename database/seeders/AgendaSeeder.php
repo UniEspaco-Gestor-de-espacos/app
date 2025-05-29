@@ -18,7 +18,7 @@ class AgendaSeeder extends Seeder
     {
         $dataDeInicioDaSemana = now()->startOfWeek();
 
-        for ($i = 1; $i <= 4; $i++) {
+        for ($i = 1; $i <= 10; $i++) {
             $agenda_manha = Agenda::create([
                 'turno' => 'manha',
                 'espaco_id' => $i,
@@ -107,16 +107,6 @@ class AgendaSeeder extends Seeder
                 $horaDeFimDia = 22;    // Limite para o início do último horário (ex: slots até 21:00-21:50)
                 break;
         }
-        // Mapeamento do dia da semana numérico (ISO-8601) para o enum da tabela
-        $mapaDiaSemanaEnum = [
-            1 => 'seg', // Segunda-feira
-            2 => 'ter', // Terça-feira
-            3 => 'qua', // Quarta-feira
-            4 => 'qui', // Quinta-feira
-            5 => 'sex', // Sexta-feira
-            6 => 'sab', // Sábado
-            7 => 'dom', // Domingo
-        ];
 
         // Gerar para 7 dias consecutivos a partir de $semanaInicio
         for ($diaOffset = 0; $diaOffset < 7; $diaOffset++) {
@@ -125,16 +115,15 @@ class AgendaSeeder extends Seeder
                 $diaAtual->modify("+$diaOffset days");
             }
 
-            $diaDaSemanaParaEnum = $mapaDiaSemanaEnum[(int)$diaAtual->format('N')];
             $dataParaBanco = $diaAtual->format('Y-m-d');
             $horariosParaInserir = [];
-            $criarEsteDia = (mt_rand(1, 100) <= 20);
+            $criarEsteDia = (mt_rand(1, 100) <= 30);
             if ($criarEsteDia) {
                 // Gerar para cada hora dentro do intervalo de funcionamento
                 for ($hora = $horaDeInicioDia; $hora < $horaDeFimDia; $hora++) {
                     // Decide aleatoriamente se este horário específico será criado (simulando uma ocupação/disponibilidade)
                     // Manteremos a probabilidade de ~20% de um horário ser selecionado
-                    $criarEsteHorario = (mt_rand(1, 100) <= 20);
+                    $criarEsteHorario = (mt_rand(1, 100) <= 30);
 
                     if ($criarEsteHorario) {
                         // Formato HH:MM:SS para o tipo TIME do banco de dados
@@ -147,7 +136,6 @@ class AgendaSeeder extends Seeder
                             'agenda_id' => $agendaId,
                             'horario_inicio' => $horarioInicioParaBanco,
                             'horario_fim' => $horarioFimParaBanco,
-                            'dia_semana' => $diaDaSemanaParaEnum,
                             'data' => $dataParaBanco,
                             // As colunas 'id', 'created_at', 'updated_at' são gerenciadas pelo Laravel/banco.
                         ];
@@ -155,7 +143,6 @@ class AgendaSeeder extends Seeder
                             'agenda_id' => $agendaId,
                             'horario_inicio' => $horarioInicioParaBanco,
                             'horario_fim' => $horarioFimParaBanco,
-                            'dia_semana' => $diaDaSemanaParaEnum,
                             'data' => $dataParaBanco,
                             // As colunas 'id', 'created_at', 'updated_at' são gerenciadas pelo Laravel/banco.
                         ]);

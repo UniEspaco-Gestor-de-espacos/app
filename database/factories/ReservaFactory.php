@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Agenda;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\Espaco;
 use App\Models\User;
@@ -31,7 +32,7 @@ class ReservaFactory extends Factory
     public function configure()
     {
         return $this->afterCreating(function (Reserva $reserva) {
-            $horarios = Horario::inRandomOrder()->take(2)->pluck('id');
+            $horarios = Horario::whereAgendaId(Agenda::pluck('id')->random())->inRandomOrder()->take(4)->pluck('id');
             $reserva->horarios()->attach($horarios);
         });
     }

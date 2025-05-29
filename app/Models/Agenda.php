@@ -25,4 +25,8 @@ class Agenda extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function horariosReservados()
+    {
+        return $this->hasMany(Horario::class)->whereHas('reservas');
+    }
 }

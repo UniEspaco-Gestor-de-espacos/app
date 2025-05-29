@@ -13,7 +13,6 @@ class Horario extends Model
         'agenda_id',
         'horario_inicio',
         'horario_fim',
-        'dia_semana',
         'data',
     ];
 

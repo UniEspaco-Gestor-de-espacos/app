@@ -27,7 +27,7 @@ class UserSeeder extends Seeder
             'password' => Hash::make('123123123'),
             'setor_id' => Setor::pluck('id')->random(),
             'remember_token' => Str::random(10),
-            'permission_type_id' => PermissionType::pluck('id')->random()
+            'permission_type_id' => 3
         ]);
     }
 }

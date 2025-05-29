@@ -28,4 +28,5 @@ class Reserva extends Model
     {
         return $this->belongsTo(User::class);
     }
+
 }

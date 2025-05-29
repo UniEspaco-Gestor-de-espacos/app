@@ -101,3 +101,31 @@ export interface FlashMessages {
     info?: string;
     warning?: string;
 }
+
+interface Horario {
+    id?: string;
+    data: Date;
+    horario_inicio: string;
+    horario_fim: string;
+    agenda_id: number;
+    status: string;
+}
+
+interface GestoresEspaco {
+    manha: GestorTurno;
+    tarde: GestorTurno;
+    noite: GestorTurno;
+}
+
+interface ReservasTurno {
+    manha: Horario[];
+    tarde: Horario[];
+    noite: Horario[];
+}
+
+interface GestorTurno {
+    nome: string;
+    email: string;
+    departamento: string;
+    agenda_id: number;
+}

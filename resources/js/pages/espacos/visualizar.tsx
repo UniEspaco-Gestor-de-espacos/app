@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { Andar, BreadcrumbItem, Espaco, Modulo } from '@/types';
+import { Andar, BreadcrumbItem, Espaco, GestoresEspaco, Horario, Modulo, ReservasTurno } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -31,35 +31,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 // Tipos
-interface Horario {
-    id?: string;
-    data: Date;
-    dia_semana: string;
-    horario_inicio: string;
-    horario_fim: string;
-    agenda_id: number;
-    status: string;
-}
-
-interface GestoresEspaco {
-    manha: GestorTurno;
-    tarde: GestorTurno;
-    noite: GestorTurno;
-}
-
-interface ReservasTurno {
-    manha: Horario[];
-    tarde: Horario[];
-    noite: Horario[];
-}
-
-interface GestorTurno {
-    nome: string;
-    email: string;
-    departamento: string;
-    agenda_id: number;
-}
-
 interface ReservaFormData {
     titulo: string;
     descricao: string;
@@ -137,10 +108,8 @@ export default function AgendaEspaço() {
         const horarios: Horario[] = [];
         const horaInicio = 7;
         const horaFim = 22;
-        const diaMapper = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
         // Gerar para cada dia da semana (segunda a sábado)
         for (let diaSemana = 0; diaSemana < 7; diaSemana++) {
-            const dia = diaMapper[addDays(semanaInicio, diaSemana).getDay()];
             // Gerar para cada hora do dia
             for (let hora = horaInicio; hora < horaFim; hora++) {
                 const inicio = `${hora.toString().padStart(2, '0')}:00:00`;
@@ -148,14 +117,16 @@ export default function AgendaEspaço() {
 
                 const agenda = gestores_espaco[identificarTurno(hora)].agenda_id;
 
-                const tem_reserva = horarios_turno[identificarTurno(hora)].find((horario) => horario.horario_inicio == inicio);
+                const tem_reserva = horarios_turno[identificarTurno(hora)].find((horario) => {
+                    const dia = new Date(horario.data);
+                    return horario.horario_inicio == inicio && dia.getDay() == diaSemana;
+                });
                 if (tem_reserva) {
                     horarios.push({ ...tem_reserva, id: `${format(addDays(semanaInicio, diaSemana), 'yyyy-MM-dd')}-${inicio}`, status: 'reservado' });
                 } else {
                     horarios.push({
                         id: `${format(addDays(semanaInicio, diaSemana), 'yyyy-MM-dd')}-${inicio}`,
                         agenda_id: agenda,
-                        dia_semana: dia,
                         horario_inicio: inicio,
                         horario_fim: fim,
                         data: addDays(semanaInicio, diaSemana),
@@ -164,7 +135,6 @@ export default function AgendaEspaço() {
                 }
             }
         }
-        console.log(horarios);
         return horarios;
     };
 

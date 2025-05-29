@@ -8,6 +8,7 @@ use App\Models\Andar;
 use App\Models\Espaco;
 use App\Models\Local;
 use App\Models\Modulo;
+use App\Models\Reserva;
 use App\Models\Setor;
 use App\Models\Unidade;
 use App\Models\User;
@@ -119,8 +120,8 @@ class EspacoController extends Controller
     public function show(Espaco $espaco)
     {
         $agendas = Agenda::whereEspacoId($espaco->id)->get();
-        $andar = $espaco->andar()->get()->first();
-        $modulo = $andar->first()->modulo()->get()->first();
+        $andar = $espaco->andar;
+        $modulo = $andar->modulo;
         $gestores_espaco = [];
         $horarios_turno = [];
         foreach ($agendas as $agenda) {
@@ -133,9 +134,17 @@ class EspacoController extends Controller
                     'agenda_id' => $agenda->id
                 ];
             }
-            $horarios_turno[$agenda->turno] = $agenda->horarios()->get();
+            if ($agenda->horariosReservados->isNotEmpty()) {
+                /*$horarios_reservados = $agenda->horariosReservados->all();
+                foreach ($horarios_reservados as $horario_reservado) {
+                    $reserva= $horario_reservado->reservas()->whereSituacao('deferida');
+                    dd($reserva);
+                };
+                $horarios_turno[$agenda->turno] = $agenda->horariosReservados->all();*/
+            } else {
+                $horarios_turno[$agenda->turno] = [];
+            }
         }
-
         return Inertia::render('espacos/visualizar', compact('espaco', 'agendas', 'modulo', 'andar', 'gestores_espaco', 'horarios_turno'));
     }
 
