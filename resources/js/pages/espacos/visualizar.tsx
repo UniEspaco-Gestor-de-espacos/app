@@ -96,6 +96,7 @@ export default function AgendaEspaço() {
         dataInicio: hoje,
         dataFim: addMonths(hoje, 1),
     });
+    console.log(horarios_turno);
     // Função para identificar o turno com base na hora
     const identificarTurno = (hora: number): 'manha' | 'tarde' | 'noite' => {
         if (hora >= 7 && hora <= 12) return 'manha';
@@ -116,7 +117,7 @@ export default function AgendaEspaço() {
                 const fim = `${hora.toString().padStart(2, '0')}:50:00`;
 
                 const agenda = gestores_espaco[identificarTurno(hora)].agenda_id;
-
+                
                 const tem_reserva = horarios_turno[identificarTurno(hora)].find((horario) => {
                     const dia = new Date(horario.data);
                     return horario.horario_inicio == inicio && dia.getDay() == diaSemana;

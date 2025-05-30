@@ -24,4 +24,5 @@ class Horario extends Model
     {
         return $this->belongsTo(Agenda::class);
     }
+
 }

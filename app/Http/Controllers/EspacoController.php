@@ -134,13 +134,22 @@ class EspacoController extends Controller
                     'agenda_id' => $agenda->id
                 ];
             }
-            if ($agenda->horariosReservados->isNotEmpty()) {
-                /*$horarios_reservados = $agenda->horariosReservados->all();
-                foreach ($horarios_reservados as $horario_reservado) {
-                    $reserva= $horario_reservado->reservas()->whereSituacao('deferida');
-                    dd($reserva);
+            # NÃO PRECISA CRIAR RELAÇÕES NO MODEL, BASTA PEGAR A RESERVA ATRAVES DO HORARIO, E DEPOIS ADICIONAR AO HORARIOS_RESERVADOS,
+            # O MODEL DO HORARIO E DA RESERVA PARA TER AS INFORMAÇÕES
+            SD
+            foreach ($agenda->horarios()->get() as $horario_reservado) {
+                dd($horario_reservado->reservas());
+                $reserva = $horario_reservado->all();
+                $horarios_reservados[] = ['horario' => $horario_reservado, 'reserva' => $reserva];
+            };
+            if (true) {
+                $horarios_reservados = [];
+                foreach ($agenda->horarios() as $horario_reservado) {
+                    dd($horario_reservado);
+                    $reserva = $horario_reservado->all();
+                    $horarios_reservados[] = ['horario' => $horario_reservado, 'reserva' => $reserva];
                 };
-                $horarios_turno[$agenda->turno] = $agenda->horariosReservados->all();*/
+                #$horarios_turno[$agenda->turno] = [$agenda->horariosReservados->all()];
             } else {
                 $horarios_turno[$agenda->turno] = [];
             }
