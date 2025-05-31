@@ -8,6 +8,7 @@ O objetivo principal da solução proposta é criar um sistema integrado de gest
 ## Pré-requisitos
 
 - **PHP - 8.4**: Certifique-se de que o php esteja instalado em sua maquina, na versão 8.4
+    -   Certifique-se que o pacote php-xml vai ser instalado junto ao php, caso contrario vai dar erro no composer install
 - **Composer**: Certifique-se de que o Composer esteja instalado em sua maquina
 - **Docker**: Certifique-se de que o Docker está instalado em sua máquina. Você pode baixá-lo e instalá-lo a partir do [site oficial do Docker](https://www.docker.com/get-started).
 
@@ -64,8 +65,14 @@ O objetivo principal da solução proposta é criar um sistema integrado de gest
     ```bash
     sail artisan key:generate
     ```
+7. **Gerar link para storage**
 
-7. **Executar Migrações e Seeders**
+    ```bash
+    sail artisan storage:link
+    ```
+  
+
+8. **Executar Migrações e Seeders**
 
     OBS.: AGUARDE O SERVIDOR MYSQL INICIAR POR COMPLETO PARA PODER RODAR O COMANDO "MIGRATE" CASO CONTRARIO VAI DAR ERRO.
 
@@ -73,7 +80,7 @@ O objetivo principal da solução proposta é criar um sistema integrado de gest
     sail artisan migrate --seed
     ```
 
-8. **Instalar Dependências do Vite**
+9. **Instalar Dependências do Vite**
 
     Instale as dependencias do Vite
 

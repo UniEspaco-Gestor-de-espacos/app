@@ -81,9 +81,9 @@ export default function AgendaEspaço() {
         modulo: Modulo;
         andar: Andar;
         gestores_espaco: GestoresEspaco;
-        horarios_turno: ReservasTurno;
+        horarios_reservados: ReservasTurno;
     }>();
-    const { espaco, modulo, andar, gestores_espaco, horarios_turno } = props;
+    const { espaco, modulo, andar, gestores_espaco, horarios_reservados } = props;
     const hoje = new Date();
     const [semanaAtual, setSemanaAtual] = useState(startOfWeek(hoje, { weekStartsOn: 1 }));
     const [horariosSelecao, setHorariosSelecao] = useState<Horario[]>([]);
@@ -96,7 +96,6 @@ export default function AgendaEspaço() {
         dataInicio: hoje,
         dataFim: addMonths(hoje, 1),
     });
-    console.log(horarios_turno);
     // Função para identificar o turno com base na hora
     const identificarTurno = (hora: number): 'manha' | 'tarde' | 'noite' => {
         if (hora >= 7 && hora <= 12) return 'manha';
@@ -117,13 +116,19 @@ export default function AgendaEspaço() {
                 const fim = `${hora.toString().padStart(2, '0')}:50:00`;
 
                 const agenda = gestores_espaco[identificarTurno(hora)].agenda_id;
-                
-                const tem_reserva = horarios_turno[identificarTurno(hora)].find((horario) => {
+
+                const temp_horario_reservado = horarios_reservados[identificarTurno(hora)].find(({ horario }) => {
                     const dia = new Date(horario.data);
                     return horario.horario_inicio == inicio && dia.getDay() == diaSemana;
                 });
-                if (tem_reserva) {
-                    horarios.push({ ...tem_reserva, id: `${format(addDays(semanaInicio, diaSemana), 'yyyy-MM-dd')}-${inicio}`, status: 'reservado' });
+
+                if (temp_horario_reservado) {
+                    horarios.push({
+                        ...temp_horario_reservado.horario,
+                        id: `${format(addDays(semanaInicio, diaSemana), 'yyyy-MM-dd')}-${inicio}`,
+                        status: 'reservado',
+                        autor: temp_horario_reservado.autor,
+                    });
                 } else {
                     horarios.push({
                         id: `${format(addDays(semanaInicio, diaSemana), 'yyyy-MM-dd')}-${inicio}`,
@@ -132,6 +137,7 @@ export default function AgendaEspaço() {
                         horario_fim: fim,
                         data: addDays(semanaInicio, diaSemana),
                         status: 'livre',
+                        autor: '',
                     });
                 }
             }
@@ -517,12 +523,12 @@ export default function AgendaEspaço() {
                                                         <TooltipTrigger asChild>
                                                             <div className="flex h-full w-full items-center justify-center">
                                                                 <Badge variant="outline" className="text-xs">
-                                                                    COLOCAR AUTOR DA RESERVA
+                                                                    {horario.autor}
                                                                 </Badge>
                                                             </div>
                                                         </TooltipTrigger>
                                                         <TooltipContent>
-                                                            <p>Reservado pelo setor COLOCAR AUTOR DA RESERVA</p>
+                                                            <p>Reservado pelo usuario: {horario.autor}</p>
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 </TooltipProvider>
@@ -567,12 +573,12 @@ export default function AgendaEspaço() {
                                                         <TooltipTrigger asChild>
                                                             <div className="flex h-full w-full items-center justify-center">
                                                                 <Badge variant="outline" className="text-xs">
-                                                                    COLOCAR AUTOR DA RESERVA
+                                                                    {horario.autor}
                                                                 </Badge>
                                                             </div>
                                                         </TooltipTrigger>
                                                         <TooltipContent>
-                                                            <p>Reservado pelo setor COLOCAR AUTOR DA RESERVA</p>
+                                                            <p>Reservado pelo usuario: {horario.autor}</p>
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 </TooltipProvider>

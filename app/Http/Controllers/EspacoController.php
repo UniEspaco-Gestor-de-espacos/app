@@ -3,18 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Agenda;
-use App\Models\AgendaTurno;
 use App\Models\Andar;
 use App\Models\Espaco;
-use App\Models\Local;
 use App\Models\Modulo;
-use App\Models\Reserva;
 use App\Models\Setor;
 use App\Models\Unidade;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Route;
 use Inertia\Inertia;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
@@ -123,8 +119,10 @@ class EspacoController extends Controller
         $andar = $espaco->andar;
         $modulo = $andar->modulo;
         $gestores_espaco = [];
-        $horarios_turno = [];
         foreach ($agendas as $agenda) {
+            $horarios_reservados[$agenda->turno] = [];
+
+            // Busca informações do gestor caso haja
             if ($agenda->user_id != null) {
                 $user = User::whereId($agenda->user_id)->get();
                 $gestores_espaco[$agenda->turno] = [
@@ -134,27 +132,16 @@ class EspacoController extends Controller
                     'agenda_id' => $agenda->id
                 ];
             }
-            # NÃO PRECISA CRIAR RELAÇÕES NO MODEL, BASTA PEGAR A RESERVA ATRAVES DO HORARIO, E DEPOIS ADICIONAR AO HORARIOS_RESERVADOS,
-            # O MODEL DO HORARIO E DA RESERVA PARA TER AS INFORMAÇÕES
-            SD
-            foreach ($agenda->horarios()->get() as $horario_reservado) {
-                dd($horario_reservado->reservas());
-                $reserva = $horario_reservado->all();
-                $horarios_reservados[] = ['horario' => $horario_reservado, 'reserva' => $reserva];
+            // Busca horarios reservados da agenda
+            foreach ($agenda->horarios as $horario) {
+                $reserva = $horario->reservas()->where('situacao', 'deferida')->first();
+                if ($reserva) {
+                    $user_name = User::find($reserva->user_id);
+                    array_push($horarios_reservados[$agenda->turno], ['horario' => $horario, 'autor' => $user_name->name]);
+                }
             };
-            if (true) {
-                $horarios_reservados = [];
-                foreach ($agenda->horarios() as $horario_reservado) {
-                    dd($horario_reservado);
-                    $reserva = $horario_reservado->all();
-                    $horarios_reservados[] = ['horario' => $horario_reservado, 'reserva' => $reserva];
-                };
-                #$horarios_turno[$agenda->turno] = [$agenda->horariosReservados->all()];
-            } else {
-                $horarios_turno[$agenda->turno] = [];
-            }
         }
-        return Inertia::render('espacos/visualizar', compact('espaco', 'agendas', 'modulo', 'andar', 'gestores_espaco', 'horarios_turno'));
+        return Inertia::render('espacos/visualizar', compact('espaco', 'agendas', 'modulo', 'andar', 'gestores_espaco', 'horarios_reservados'));
     }
 
     /**

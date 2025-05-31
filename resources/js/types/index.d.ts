@@ -109,6 +109,7 @@ interface Horario {
     horario_fim: string;
     agenda_id: number;
     status: string;
+    autor: string;
 }
 
 interface GestoresEspaco {
@@ -118,9 +119,19 @@ interface GestoresEspaco {
 }
 
 interface ReservasTurno {
-    manha: Horario[];
-    tarde: Horario[];
-    noite: Horario[];
+    manha: { horario: Horario; autor: string }[];
+    tarde: { horario: Horario; autor: string }[];
+    noite: { horario: Horario; autor: string }[];
+}
+
+interface Reserva {
+    titulo: string;
+    descricao: string;
+    situacao: string;
+    data_inicial: Date;
+    data_final: Date;
+    observacao: string;
+    user_id: number;
 }
 
 interface GestorTurno {
