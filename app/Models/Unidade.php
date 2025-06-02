@@ -23,4 +23,8 @@ class Unidade extends Model
     {
         return $this->hasMany(Setor::class);
     }
+    public function modulos()
+    {
+        return $this->hasMany(Modulo::class);
+    }
 }

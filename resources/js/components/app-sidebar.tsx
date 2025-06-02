@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Bell, BookOpen, Calendar, LayoutGrid, Star, Wrench } from 'lucide-react';
+import { Bell, BookOpen, Calendar, LayoutGrid, Star } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -24,7 +24,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Minhas Reservas',
-        href: '/minhas-reservas',
+        href: '/reservas',
         icon: BookOpen,
     },
     /* {

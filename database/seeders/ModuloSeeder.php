@@ -1,0 +1,33 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Modulo;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class ModuloSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        Modulo::create([
+            'nome' => 'Administrativo',
+            'unidade_id' => '1',
+        ]);
+        Modulo::create([
+            'nome' => 'Joselia Navarro',
+            'unidade_id' => '1',
+        ]);
+        Modulo::create([
+            'nome' => 'Laboratórios',
+            'unidade_id' => '1',
+        ]);
+        Modulo::create([
+            'nome' => 'CPDS',
+            'unidade_id' => '1',
+        ]);
+    }
+}

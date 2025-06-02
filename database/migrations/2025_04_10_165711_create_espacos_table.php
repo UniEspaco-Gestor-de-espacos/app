@@ -12,14 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('espacos', function (Blueprint $table) {
-            $table->id();
-            $table->string('campus');
-            $table->string('modulo');
-            $table->string('andar');
+            $table->id()->autoIncrement();
             $table->string('nome');
-            $table->integer('capacidadePessoas');
-            $table->boolean('acessibilidade');
+            $table->integer('capacidade_pessoas');
             $table->string('descricao');
+            $table->json('imagens')->nullable();
+            $table->string('main_image_index')->nullable();
+            $table->foreignId('andar_id')->constrained('andars')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Models\Setor;
 use App\Enums\TipoUsuario\TipoUsuarioEnum;
+use App\Models\PermissionType;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
@@ -29,12 +30,12 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'profile_pic'=> fake()->name(),
-            'telefone'=>fake()->name(),
+            'profile_pic' => fake()->name(),
+            'telefone' => fake()->name(),
             'password' => static::$password ??= Hash::make('password'),
             'setor_id' => Setor::pluck('id')->random(),
             'remember_token' => Str::random(10),
-            'tipo_usuario'=>fake()->randomElement(array_column(TipoUsuarioEnum::cases(),'value'))
+            'permission_type_id' => PermissionType::pluck('id')->random()
         ];
     }
 
@@ -43,7 +44,7 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
         ]);
     }

@@ -13,10 +13,11 @@ class Instituicao extends Model
 
     protected $fillable = [
         'nome',
-        'sigla'
+        'sigla',
+        'endereço'
     ];
 
-    public function Unidades()
+    public function unidades()
     {
         return $this->hasMany(Unidade::class);
     }
