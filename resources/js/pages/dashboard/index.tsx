@@ -22,6 +22,7 @@ export default function Dashboard() {
                 {user.permission_type_id === 3 && <UserDashboard />}
                 {user.permission_type_id === 2 && <ManagerDashboard />}
                 {user.permission_type_id === 1 && <AdminDashboard />}
+
             </div>
         </AppLayout>
     );
