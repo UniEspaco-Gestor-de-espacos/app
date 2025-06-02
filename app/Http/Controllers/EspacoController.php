@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\EspacoMiddleware;
 use App\Models\Agenda;
 use App\Models\Andar;
 use App\Models\Espaco;
@@ -19,6 +20,7 @@ use function PHPUnit\Framework\isEmpty;
 
 class EspacoController extends Controller
 {
+
     /**
      * Display a listing of the resource.
      */
@@ -49,26 +51,7 @@ class EspacoController extends Controller
     {
         $storedImagePaths = [];
         $mainImagePath = null;
-        $messages = [
-            'nome.required' => 'O nome é obrigatório.',
-            'capacidade_pessoas.required' => 'A capacidade de pessoas é obrigatória.',
-            'descricao.required' => 'A descrição é obrigatória.',
-            'unidade_id.required' => 'O campo unidade é obrigatório.',
-            'modulo_id.required' => 'O campo módulo é obrigatório.',
-            'andar_id.required' => 'O campo andar é obrigatório.',
-        ];
         try {
-            $form_validado = $request->validate([
-                'unidade_id' => 'required|exists:unidades,id',
-                'modulo_id' => 'required|exists:modulos,id',
-                'andar_id' => 'required|exists:andars,id',
-                'nome' => 'required|string|max:255',
-                'capacidade_pessoas' => 'required|integer|min:1',
-                'descricao' => 'nullable|string',
-                'imagens' => 'nullable|array',
-                'imagens.*' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120', // Max 5MB por imagem
-                'main_image_index' => 'nullable|integer', // Ou 'required_with:imagens|integer'
-            ], $messages); // Valida se todos os campos foram preenchidos corretamente.
             if ($request->hasFile('imagens')) {
                 $uploadedImages = $request->file('imagens'); // Pega o array de UploadedFile
 
@@ -90,17 +73,17 @@ class EspacoController extends Controller
             }
 
             $espaco = Espaco::create([
-                'nome' => $form_validado['nome'],
-                'capacidade_pessoas' => $form_validado['capacidade_pessoas'],
-                'descricao' => $form_validado['descricao'],
+                'nome' => $request['nome'],
+                'capacidade_pessoas' => $request['capacidade_pessoas'],
+                'descricao' => $request['descricao'],
                 'imagens' => $storedImagePaths, // Eloquent vai converter para JSON por causa do $casts
                 'main_image_index' => $mainImagePath,
-                'andar_id' => $form_validado['andar_id'],
+                'andar_id' => $request['andar_id'],
             ]);
             // Criar agenda
-            Agenda::create(['turno' => 'manha', 'espaco_id' => $espaco->id]);
-            Agenda::create(['turno' => 'tarde', 'espaco_id' => $espaco->id]);
-            Agenda::create(['turno' => 'noite', 'espaco_id' => $espaco->id]);
+            $agenda_manha = Agenda::create(['turno' => 'manha', 'espaco_id' => $espaco->id]);
+            $agenda_tarde = Agenda::create(['turno' => 'tarde', 'espaco_id' => $espaco->id]);
+            $agenda_noite = Agenda::create(['turno' => 'noite', 'espaco_id' => $espaco->id]);
 
             return redirect()->route('espacos.index')->with('success', 'Espaco cadastrado com sucesso!');
         } catch (QueryException $e) { // Captura erro no banco de dados
@@ -115,33 +98,40 @@ class EspacoController extends Controller
      */
     public function show(Espaco $espaco)
     {
-        $agendas = Agenda::whereEspacoId($espaco->id)->get();
-        $andar = $espaco->andar;
-        $modulo = $andar->modulo;
-        $gestores_espaco = [];
-        foreach ($agendas as $agenda) {
-            $horarios_reservados[$agenda->turno] = [];
+        try {
+            $agendas = Agenda::whereEspacoId($espaco->id)->get();
+            $andar = $espaco->andar;
+            $modulo = $andar->modulo;
+            $gestores_espaco = [];
+            foreach ($agendas as $agenda) {
+                $horarios_reservados[$agenda->turno] = [];
 
-            // Busca informações do gestor caso haja
-            if ($agenda->user_id != null) {
-                $user = User::whereId($agenda->user_id)->get();
-                $gestores_espaco[$agenda->turno] = [
-                    'nome' => $user->first()->name,
-                    'email' => $user->first()->email,
-                    'setor' => $user->first()->setor()->get()->first()->nome,
-                    'agenda_id' => $agenda->id
-                ];
-            }
-            // Busca horarios reservados da agenda
-            foreach ($agenda->horarios as $horario) {
-                $reserva = $horario->reservas()->where('situacao', 'deferida')->first();
-                if ($reserva) {
-                    $user_name = User::find($reserva->user_id);
-                    array_push($horarios_reservados[$agenda->turno], ['horario' => $horario, 'autor' => $user_name->name]);
+                // Busca informações do gestor caso haja
+                if ($agenda->user_id != null) {
+                    $user = User::whereId($agenda->user_id)->get();
+                    $gestores_espaco[$agenda->turno] = [
+                        'nome' => $user->first()->name,
+                        'email' => $user->first()->email,
+                        'setor' => $user->first()->setor()->get()->first()->nome,
+                        'agenda_id' => $agenda->id
+                    ];
                 }
-            };
+                // Busca horarios reservados da agenda
+                foreach ($agenda->horarios as $horario) {
+                    $reserva = $horario->reservas()->where('situacao', 'deferida')->first();
+                    if ($reserva) {
+                        $user_name = User::find($reserva->user_id);
+                        array_push($horarios_reservados[$agenda->turno], ['horario' => $horario, 'autor' => $user_name->name]);
+                    }
+                };
+            }
+            if (count($gestores_espaco) <= 0) {
+                throw new Exception();
+            }
+            return Inertia::render('espacos/visualizar', compact('espaco', 'agendas', 'modulo', 'andar', 'gestores_espaco', 'horarios_reservados'));
+        } catch (Exception $th) {
+            return redirect()->route('espacos.index')->with('error', 'Espaço sem gestor cadastrado - Aguardando cadastro');
         }
-        return Inertia::render('espacos/visualizar', compact('espaco', 'agendas', 'modulo', 'andar', 'gestores_espaco', 'horarios_reservados'));
     }
 
     /**

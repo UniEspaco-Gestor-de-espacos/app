@@ -36,8 +36,8 @@ export default function EspacosPage() {
     const filteredespacos = espacos.filter((espaco) => {
         const modulosFiltrados = modulos.filter((modulo) => modulo.nome.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase()));
         const idModulosFiltrados = modulosFiltrados.map((modulo) => modulo.id);
-        const matchesSearch = espaco.nome.toLowerCase().includes(searchTerm.toLowerCase()) || idModulosFiltrados.includes(espaco.modulo_id);
-        const matchModulo = selectedModulo == '' || selectedModulo == 'all' || espaco.modulo_id.toString() == selectedModulo;
+        const matchesSearch = espaco.nome.toLowerCase().includes(searchTerm.toLowerCase()) || idModulosFiltrados.includes(espaco.andar_id);
+        const matchModulo = selectedModulo == '' || selectedModulo == 'all' || espaco.andar_id.toString() == selectedModulo;
         const matchesCapacidade =
             selectedCapacidade === '' ||
             (selectedCapacidade === 'pequeno' && espaco.capacidade_pessoas <= 30) ||
@@ -113,7 +113,9 @@ export default function EspacosPage() {
                                 <SelectContent>
                                     <SelectItem value={'all'}>Todos os Modulos</SelectItem>
                                     {modulos.map((modulo) => (
-                                        <SelectItem value={modulo.id.toString()}>{modulo.nome}</SelectItem>
+                                        <SelectItem key={modulo.id} value={modulo.id.toString()}>
+                                            {modulo.nome}
+                                        </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -170,7 +172,7 @@ export default function EspacosPage() {
                                     <div className="flex items-center gap-2">
                                         <Home className="text-muted-foreground h-4 w-4" />
                                         <span>
-                                            {modulos.find((modulo) => modulo.id == espaco.modulo_id)?.nome} / {espaco.nome}
+                                            {modulos.find((modulo) => modulo.id == espaco.andar_id)?.nome} / {espaco.nome}
                                         </span>
                                     </div>
 
@@ -224,7 +226,7 @@ export default function EspacosPage() {
                         <DialogContent className="sm:max-w-[600px]">
                             <DialogHeader>
                                 <DialogTitle>
-                                    {selectedEspaco.nome} - {modulos.find((modulo) => modulo.id == selectedEspaco.modulo_id)?.nome}
+                                    {selectedEspaco.nome} - {modulos.find((modulo) => modulo.id == selectedEspaco.andar_id)?.nome}
                                 </DialogTitle>
                                 <DialogDescription>Detalhes completos do espaço</DialogDescription>
                             </DialogHeader>
@@ -240,7 +242,7 @@ export default function EspacosPage() {
 
                                     <div>
                                         <h4 className="mb-1 font-medium">Localização</h4>
-                                        <p>{modulos.find((modulo) => modulo.id == selectedEspaco.modulo_id)?.nome}</p>
+                                        <p>{modulos.find((modulo) => modulo.id == selectedEspaco.andar_id)?.nome}</p>
                                     </div>
 
                                     <div>

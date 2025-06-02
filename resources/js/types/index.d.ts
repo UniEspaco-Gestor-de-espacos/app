@@ -102,7 +102,7 @@ export interface FlashMessages {
     warning?: string;
 }
 
-interface Horario {
+type Horario = {
     id?: string;
     data: Date;
     horario_inicio: string;
@@ -110,7 +110,7 @@ interface Horario {
     agenda_id: number;
     status: string;
     autor: string;
-}
+};
 
 interface GestoresEspaco {
     manha: GestorTurno;
@@ -124,15 +124,25 @@ interface ReservasTurno {
     noite: { horario: Horario; autor: string }[];
 }
 
-interface Reserva {
+type Reserva ={
+    id: number;
     titulo: string;
     descricao: string;
-    situacao: string;
+    situacao: SituacaoReserva;
     data_inicial: Date;
     data_final: Date;
     observacao: string;
     user_id: number;
+    created_at: Date;
+    updated_at: Date;
 }
+
+type ReservaHorarios = {
+    reserva: Reserva;
+    horarios: Horario[];
+};
+
+type SituacaoReserva = 'em_analise' | 'deferida' | 'indeferida';
 
 interface GestorTurno {
     nome: string;

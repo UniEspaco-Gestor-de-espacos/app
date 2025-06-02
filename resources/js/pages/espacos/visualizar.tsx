@@ -1,8 +1,3 @@
-import { addDays, addMonths, addWeeks, format, isSameDay, startOfWeek, subWeeks } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Calendar, ChevronLeft, ChevronRight, FileText, Info, MapPin, Repeat, Type, User, Users } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -17,8 +12,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { Andar, BreadcrumbItem, Espaco, GestoresEspaco, Horario, Modulo, ReservasTurno } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { Andar, Auth, BreadcrumbItem, Espaco, GestoresEspaco, Horario, Modulo, ReservasTurno } from '@/types';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import { addDays, addMonths, addWeeks, format, isSameDay, startOfWeek, subWeeks } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Calendar, ChevronLeft, ChevronRight, FileText, Info, MapPin, Repeat, Type, User, Users } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -31,13 +30,15 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 // Tipos
-interface ReservaFormData {
+type ReservaFormData = {
     titulo: string;
     descricao: string;
     recorrencia: string;
-    dataInicio?: Date;
-    dataFim?: Date;
-}
+    data_inicial: Date;
+    data_final: Date;
+    user_id: number;
+    horarios_solicitados: Horario[];
+};
 
 // Tipos para recorrência
 type OpcaoRecorrencia = {
@@ -47,34 +48,6 @@ type OpcaoRecorrencia = {
     calcularDataFinal: (dataInicial: Date) => Date;
 };
 
-// Opções de recorrência
-const opcoesRecorrencia: OpcaoRecorrencia[] = [
-    {
-        valor: 'unica',
-        label: 'Apenas esta semana',
-        descricao: 'A reserva será feita apenas para os dias selecionados nesta semana',
-        calcularDataFinal: (dataInicial: Date) => addDays(dataInicial, 6), // Até o fim da semana atual
-    },
-    {
-        valor: '15dias',
-        label: 'Próximos 15 dias',
-        descricao: 'A reserva será replicada pelos próximos 15 dias',
-        calcularDataFinal: (dataInicial: Date) => addDays(dataInicial, 14),
-    },
-    {
-        valor: '1mes',
-        label: '1 mês',
-        descricao: 'A reserva será replicada por 1 mês',
-        calcularDataFinal: (dataInicial: Date) => addMonths(dataInicial, 1),
-    },
-    {
-        valor: 'personalizado',
-        label: 'Período personalizado',
-        descricao: 'Defina um período personalizado para a recorrência',
-        calcularDataFinal: (dataInicial: Date) => dataInicial, // Será substituído pela data personalizada
-    },
-];
-
 export default function AgendaEspaço() {
     const { props } = usePage<{
         espaco: Espaco;
@@ -82,20 +55,53 @@ export default function AgendaEspaço() {
         andar: Andar;
         gestores_espaco: GestoresEspaco;
         horarios_reservados: ReservasTurno;
+        auth: Auth;
     }>();
-    const { espaco, modulo, andar, gestores_espaco, horarios_reservados } = props;
+    const { espaco, modulo, andar, gestores_espaco, horarios_reservados, auth } = props;
     const hoje = new Date();
+    const user = auth.user;
     const [semanaAtual, setSemanaAtual] = useState(startOfWeek(hoje, { weekStartsOn: 1 }));
     const [horariosSelecao, setHorariosSelecao] = useState<Horario[]>([]);
     const [dialogAberto, setDialogAberto] = useState(false);
     const [todosHorarios, setTodosHorarios] = useState<Horario[]>([]);
-    const [formData, setFormData] = useState<ReservaFormData>({
+
+    // Inicializar o formulário com o hook useForm do Inertia
+    const { data, setData, post, processing, errors, reset } = useForm<ReservaFormData>({
         titulo: '',
         descricao: '',
         recorrencia: 'unica',
-        dataInicio: hoje,
-        dataFim: addMonths(hoje, 1),
+        data_inicial: hoje,
+        data_final: addMonths(hoje, 1),
+        user_id: user.id,
+        horarios_solicitados: [],
     });
+    // Opções de recorrência
+    const opcoesRecorrencia: OpcaoRecorrencia[] = [
+        {
+            valor: 'unica',
+            label: 'Apenas esta semana',
+            descricao: 'A reserva será feita apenas para os dias selecionados nesta semana',
+            calcularDataFinal: (dataInicial: Date) => addDays(dataInicial, 6), // Até o fim da semana atual
+        },
+        {
+            valor: '15dias',
+            label: 'Próximos 15 dias',
+            descricao: 'A reserva será replicada pelos próximos 15 dias',
+            calcularDataFinal: (dataInicial: Date) => addDays(dataInicial, 14),
+        },
+        {
+            valor: '1mes',
+            label: '1 mês',
+            descricao: 'A reserva será replicada por 1 mês',
+            calcularDataFinal: (dataInicial: Date) => addMonths(dataInicial, 1),
+        },
+        {
+            valor: 'personalizado',
+            label: 'Período personalizado',
+            descricao: 'Defina um período personalizado para a recorrência',
+            calcularDataFinal: (dataInicial: Date) => dataInicial, // Será substituído pela data personalizada
+        },
+    ];
     // Função para identificar o turno com base na hora
     const identificarTurno = (hora: number): 'manha' | 'tarde' | 'noite' => {
         if (hora >= 7 && hora <= 12) return 'manha';
@@ -164,6 +170,10 @@ export default function AgendaEspaço() {
         setTodosHorarios(gerarSlotsParaSemana(semanaAtual));
     }, [semanaAtual]);
 
+    // Adicionar horario solicitado ao form
+    useEffect(() => {
+        setData('horarios_solicitados', horariosSelecao);
+    }, [horariosSelecao]);
     // Agrupar slots por hora para facilitar a renderização da tabela
     const horariosPorHora = useMemo(() => {
         const resultado: Record<string, Horario[]> = {};
@@ -227,53 +237,28 @@ export default function AgendaEspaço() {
         }
     };
 
-    // Handler para atualizar os campos do formulário
-    const handleFormChange = (field: keyof ReservaFormData, value: any) => {
-        setFormData((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-    };
-
-    // Função para solicitar reserva em período
-    const solicitarReservaPeriodo = () => {
+    // Função para enviar o formulário
+    function onSubmit(e: React.FormEvent) {
+        e.preventDefault();
         // Obter a opção de recorrência selecionada
-        const opcaoRecorrencia = opcoesRecorrencia.find((opcao) => opcao.valor === formData.recorrencia);
-
+        const opcaoRecorrencia = opcoesRecorrencia.find((opcao) => opcao.valor === data.recorrencia);
         if (!opcaoRecorrencia) return;
 
         // Calcular a data final com base na recorrência
         const dataInicial = new Date(Math.min(...horariosSelecao.map((h) => h.data.getTime())));
-        let dataFinal: Date;
 
-        if (formData.recorrencia === 'personalizado' && formData.dataFim) {
-            dataFinal = formData.dataFim;
-        } else {
-            dataFinal = opcaoRecorrencia.calcularDataFinal(dataInicial);
+        if (data.recorrencia !== 'personalizado') {
+            setData('data_final', opcaoRecorrencia.calcularDataFinal(dataInicial));
         }
 
-        console.log('Reserva solicitada:', {
-            titulo: formData.titulo,
-            descricao: formData.descricao,
-            horario: horariosSelecao,
-            recorrencia: formData.recorrencia,
-            dataInicial: format(dataInicial, 'dd/MM/yyyy'),
-            dataFinal: format(dataFinal, 'dd/MM/yyyy'),
+        post(route('reservas.store'), {
+            onSuccess: () => {
+                setHorariosSelecao([]);
+                setDialogAberto(false);
+                reset();
+            },
         });
-
-        // Aqui seria implementada a lógica de reserva em período com recorrência
-        setHorariosSelecao([]);
-        setDialogAberto(false);
-
-        // Reset do formulário
-        setFormData({
-            titulo: '',
-            descricao: '',
-            recorrencia: 'unica',
-            dataInicio: hoje,
-            dataFim: addMonths(hoje, 1),
-        });
-    };
+    }
 
     // Função para limpar seleção
     const limparSelecao = () => {
@@ -292,10 +277,10 @@ export default function AgendaEspaço() {
         const dataInicial = new Date(Math.min(...horariosSelecao.map((h) => h.data.getTime())));
         let dataFinal: Date;
 
-        if (formData.recorrencia === 'personalizado' && formData.dataFim) {
-            dataFinal = formData.dataFim;
+        if (data.recorrencia === 'personalizado' && data.data_final) {
+            dataFinal = data.data_final;
         } else {
-            const opcaoRecorrencia = opcoesRecorrencia.find((opcao) => opcao.valor === formData.recorrencia);
+            const opcaoRecorrencia = opcoesRecorrencia.find((opcao) => opcao.valor === data.recorrencia);
             if (!opcaoRecorrencia) return null;
             dataFinal = opcaoRecorrencia.calcularDataFinal(dataInicial);
         }
@@ -473,12 +458,12 @@ export default function AgendaEspaço() {
                                                         <TooltipTrigger asChild>
                                                             <div className="flex h-full w-full items-center justify-center">
                                                                 <Badge variant="outline" className="text-xs">
-                                                                    COLOCAR AUTOR DA RESERVA
+                                                                    {horario.autor}
                                                                 </Badge>
                                                             </div>
                                                         </TooltipTrigger>
                                                         <TooltipContent>
-                                                            <p>Reservado pelo setor COLOCAR AUTOR DA RESERVA</p>
+                                                            <p>Reservado pelo setor {horario.autor}</p>
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 </TooltipProvider>
@@ -611,214 +596,217 @@ export default function AgendaEspaço() {
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="max-w-md">
-                                <DialogHeader>
-                                    <DialogTitle>Confirmar Reserva</DialogTitle>
-                                    <DialogDescription>Preencha os detalhes da sua reserva.</DialogDescription>
-                                </DialogHeader>
-
-                                <div className="space-y-4 py-4">
-                                    {/* Campos de título e descrição */}
-                                    <div className="space-y-4">
-                                        <div className="space-y-2">
-                                            <div className="mb-1 flex items-center gap-2">
-                                                <Type className="text-muted-foreground h-4 w-4" />
-                                                <Label htmlFor="titulo" className="font-medium">
-                                                    Título da Reserva
-                                                </Label>
+                                <form onSubmit={onSubmit}>
+                                    <DialogHeader>
+                                        <DialogTitle>Confirmar Reserva</DialogTitle>
+                                        <DialogDescription>Preencha os detalhes da sua reserva.</DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                        {/* Campos de título e descrição */}
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <div className="mb-1 flex items-center gap-2">
+                                                    <Type className="text-muted-foreground h-4 w-4" />
+                                                    <Label htmlFor="titulo" className="font-medium">
+                                                        Título da Reserva
+                                                    </Label>
+                                                </div>
+                                                <Input
+                                                    id="titulo"
+                                                    placeholder="Ex: Aula de Programação, Reunião de Departamento"
+                                                    value={data.titulo}
+                                                    onChange={(e) => setData('titulo', e.target.value)}
+                                                    required
+                                                />
                                             </div>
-                                            <Input
-                                                id="titulo"
-                                                placeholder="Ex: Aula de Programação, Reunião de Departamento"
-                                                value={formData.titulo}
-                                                onChange={(e) => handleFormChange('titulo', e.target.value)}
-                                                required
-                                            />
-                                        </div>
 
-                                        <div className="space-y-2">
-                                            <div className="mb-1 flex items-center gap-2">
-                                                <FileText className="text-muted-foreground h-4 w-4" />
-                                                <Label htmlFor="descricao" className="font-medium">
-                                                    Descrição
-                                                </Label>
+                                            <div className="space-y-2">
+                                                <div className="mb-1 flex items-center gap-2">
+                                                    <FileText className="text-muted-foreground h-4 w-4" />
+                                                    <Label htmlFor="descricao" className="font-medium">
+                                                        Descrição
+                                                    </Label>
+                                                </div>
+                                                <Textarea
+                                                    id="descricao"
+                                                    placeholder="Descreva o propósito da reserva..."
+                                                    value={data.descricao}
+                                                    onChange={(e) => setData('descricao', e.target.value)}
+                                                    className="min-h-[80px] resize-none"
+                                                />
                                             </div>
-                                            <Textarea
-                                                id="descricao"
-                                                placeholder="Descreva o propósito da reserva..."
-                                                value={formData.descricao}
-                                                onChange={(e) => handleFormChange('descricao', e.target.value)}
-                                                className="min-h-[80px] resize-none"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Opções de recorrência */}
-                                    <div className="space-y-2 border-t pt-2">
-                                        <div className="mb-2 flex items-center gap-2">
-                                            <Repeat className="text-muted-foreground h-4 w-4" />
-                                            <h3 className="font-medium">Período de Recorrência</h3>
                                         </div>
 
-                                        <RadioGroup
-                                            value={formData.recorrencia}
-                                            onValueChange={(value) => handleFormChange('recorrencia', value)}
-                                            className="space-y-2"
-                                        >
-                                            {opcoesRecorrencia.map((opcao) => (
-                                                <div key={opcao.valor} className="flex items-start space-x-2">
-                                                    <RadioGroupItem value={opcao.valor} id={opcao.valor} />
-                                                    <div className="grid gap-1">
-                                                        <Label htmlFor={opcao.valor} className="font-medium">
-                                                            {opcao.label}
+                                        {/* Opções de recorrência */}
+                                        <div className="space-y-2 border-t pt-2">
+                                            <div className="mb-2 flex items-center gap-2">
+                                                <Repeat className="text-muted-foreground h-4 w-4" />
+                                                <h3 className="font-medium">Período de Recorrência</h3>
+                                            </div>
+
+                                            <RadioGroup
+                                                value={data.recorrencia}
+                                                onValueChange={(value) => setData('recorrencia', value)}
+                                                className="space-y-2"
+                                            >
+                                                {opcoesRecorrencia.map((opcao) => (
+                                                    <div key={opcao.valor} className="flex items-start space-x-2">
+                                                        <RadioGroupItem value={opcao.valor} id={opcao.valor} />
+                                                        <div className="grid gap-1">
+                                                            <Label htmlFor={opcao.valor} className="font-medium">
+                                                                {opcao.label}
+                                                            </Label>
+                                                            <p className="text-muted-foreground text-xs">{opcao.descricao}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </RadioGroup>
+                                        </div>
+
+                                        {/* Seletor de datas personalizado */}
+                                        {data.recorrencia === 'personalizado' && (
+                                            <div className="bg-muted/10 space-y-4 rounded-md border p-3">
+                                                <h4 className="text-sm font-medium">Selecione o período personalizado</h4>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="data-inicial" className="text-xs">
+                                                            Data de início
                                                         </Label>
-                                                        <p className="text-muted-foreground text-xs">{opcao.descricao}</p>
+                                                        <Popover>
+                                                            <PopoverTrigger asChild>
+                                                                <Button
+                                                                    id="data-inicial"
+                                                                    variant={'outline'}
+                                                                    className={cn(
+                                                                        'w-full justify-start text-left font-normal',
+                                                                        !data.data_final && 'text-muted-foreground',
+                                                                    )}
+                                                                >
+                                                                    <Calendar className="mr-2 h-4 w-4" />
+                                                                    {data.data_inicial ? (
+                                                                        format(data.data_inicial, 'dd/MM/yyyy')
+                                                                    ) : (
+                                                                        <span>Selecione a data</span>
+                                                                    )}
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-auto p-0" align="start">
+                                                                <CalendarComponent
+                                                                    mode="single"
+                                                                    selected={data.data_inicial}
+                                                                    onSelect={(date) => setData('data_inicial', date!)}
+                                                                    initialFocus
+                                                                    disabled={(date) => date < hoje}
+                                                                />
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="data-final" className="text-xs">
+                                                            Data de término
+                                                        </Label>
+                                                        <Popover>
+                                                            <PopoverTrigger asChild>
+                                                                <Button
+                                                                    id="data-final"
+                                                                    variant={'outline'}
+                                                                    className={cn(
+                                                                        'w-full justify-start text-left font-normal',
+                                                                        !data.data_final && 'text-muted-foreground',
+                                                                    )}
+                                                                >
+                                                                    <Calendar className="mr-2 h-4 w-4" />
+                                                                    {data.data_final ? (
+                                                                        format(data.data_final, 'dd/MM/yyyy')
+                                                                    ) : (
+                                                                        <span>Selecione a data</span>
+                                                                    )}
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-auto p-0" align="start">
+                                                                <CalendarComponent
+                                                                    mode="single"
+                                                                    selected={data.data_final}
+                                                                    onSelect={(date) => setData('data_final', date!)}
+                                                                    initialFocus
+                                                                    disabled={(date) => (data.data_inicial ? date < data.data_inicial : date < hoje)}
+                                                                />
+                                                            </PopoverContent>
+                                                        </Popover>
                                                     </div>
                                                 </div>
-                                            ))}
-                                        </RadioGroup>
-                                    </div>
-
-                                    {/* Seletor de datas personalizado */}
-                                    {formData.recorrencia === 'personalizado' && (
-                                        <div className="bg-muted/10 space-y-4 rounded-md border p-3">
-                                            <h4 className="text-sm font-medium">Selecione o período personalizado</h4>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="data-inicio" className="text-xs">
-                                                        Data de início
-                                                    </Label>
-                                                    <Popover>
-                                                        <PopoverTrigger asChild>
-                                                            <Button
-                                                                id="data-inicio"
-                                                                variant={'outline'}
-                                                                className={cn(
-                                                                    'w-full justify-start text-left font-normal',
-                                                                    !formData.dataInicio && 'text-muted-foreground',
-                                                                )}
-                                                            >
-                                                                <Calendar className="mr-2 h-4 w-4" />
-                                                                {formData.dataInicio ? (
-                                                                    format(formData.dataInicio, 'dd/MM/yyyy')
-                                                                ) : (
-                                                                    <span>Selecione a data</span>
-                                                                )}
-                                                            </Button>
-                                                        </PopoverTrigger>
-                                                        <PopoverContent className="w-auto p-0" align="start">
-                                                            <CalendarComponent
-                                                                mode="single"
-                                                                selected={formData.dataInicio}
-                                                                onSelect={(date) => handleFormChange('dataInicio', date)}
-                                                                initialFocus
-                                                                disabled={(date) => date < hoje}
-                                                            />
-                                                        </PopoverContent>
-                                                    </Popover>
-                                                </div>
-
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="data-fim" className="text-xs">
-                                                        Data de término
-                                                    </Label>
-                                                    <Popover>
-                                                        <PopoverTrigger asChild>
-                                                            <Button
-                                                                id="data-fim"
-                                                                variant={'outline'}
-                                                                className={cn(
-                                                                    'w-full justify-start text-left font-normal',
-                                                                    !formData.dataFim && 'text-muted-foreground',
-                                                                )}
-                                                            >
-                                                                <Calendar className="mr-2 h-4 w-4" />
-                                                                {formData.dataFim ? (
-                                                                    format(formData.dataFim, 'dd/MM/yyyy')
-                                                                ) : (
-                                                                    <span>Selecione a data</span>
-                                                                )}
-                                                            </Button>
-                                                        </PopoverTrigger>
-                                                        <PopoverContent className="w-auto p-0" align="start">
-                                                            <CalendarComponent
-                                                                mode="single"
-                                                                selected={formData.dataFim}
-                                                                onSelect={(date) => handleFormChange('dataFim', date)}
-                                                                initialFocus
-                                                                disabled={(date) => (formData.dataInicio ? date < formData.dataInicio : date < hoje)}
-                                                            />
-                                                        </PopoverContent>
-                                                    </Popover>
-                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
 
-                                    {/* Período selecionado */}
-                                    {periodoRecorrencia && (
-                                        <div className="bg-muted/30 rounded-md p-3">
-                                            <div className="flex items-start gap-2">
-                                                <Info className="text-muted-foreground mt-0.5 h-4 w-4" />
-                                                <div>
-                                                    <p className="text-sm font-medium">Período da reserva</p>
-                                                    <p className="text-muted-foreground text-xs">
-                                                        De {periodoRecorrencia.inicio} até {periodoRecorrencia.fim}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Horários selecionados */}
-                                    <div className="space-y-2 border-t pt-2">
-                                        <div className="mb-2 flex items-center gap-2">
-                                            <Calendar className="text-muted-foreground h-4 w-4" />
-                                            <h3 className="font-medium">Horários selecionados</h3>
-                                        </div>
-
-                                        <ScrollArea className="h-[200px] rounded-md border p-2">
-                                            {/* Agrupar slots por dia */}
-                                            {Object.entries(
-                                                horariosSelecao.reduce(
-                                                    (acc, horario) => {
-                                                        const diaKey = format(horario.data, 'yyyy-MM-dd');
-                                                        if (!acc[diaKey]) {
-                                                            acc[diaKey] = {
-                                                                data: horario.data,
-                                                                slots: [],
-                                                            };
-                                                        }
-                                                        acc[diaKey].slots.push(horario);
-                                                        return acc;
-                                                    },
-                                                    {} as Record<string, { data: Date; slots: Horario[] }>,
-                                                ),
-                                            ).map(([diaKey, { data, slots }]) => (
-                                                <div key={diaKey} className="mb-4 last:mb-0">
-                                                    <div className="mb-1 text-sm font-medium">{format(data, 'EEEE, dd/MM', { locale: ptBR })}</div>
-
-                                                    <div className="border-muted border-l-2 pl-2">
-                                                        {slots.map((horario) => (
-                                                            <div key={horario.id} className="text-muted-foreground py-1 text-sm">
-                                                                {horario.inicio} - {horario.fim}
-                                                            </div>
-                                                        ))}
+                                        {/* Período selecionado */}
+                                        {periodoRecorrencia && (
+                                            <div className="bg-muted/30 rounded-md p-3">
+                                                <div className="flex items-start gap-2">
+                                                    <Info className="text-muted-foreground mt-0.5 h-4 w-4" />
+                                                    <div>
+                                                        <p className="text-sm font-medium">Período da reserva</p>
+                                                        <p className="text-muted-foreground text-xs">
+                                                            De {periodoRecorrencia.inicio} até {periodoRecorrencia.fim}
+                                                        </p>
                                                     </div>
                                                 </div>
-                                            ))}
-                                        </ScrollArea>
-                                    </div>
-                                </div>
+                                            </div>
+                                        )}
 
-                                <DialogFooter>
-                                    <Button variant="outline" onClick={() => setDialogAberto(false)}>
-                                        Cancelar
-                                    </Button>
-                                    <Button onClick={solicitarReservaPeriodo} disabled={!formData.titulo.trim()}>
-                                        Confirmar Reserva
-                                    </Button>
-                                </DialogFooter>
+                                        {/* Horários selecionados */}
+                                        <div className="space-y-2 border-t pt-2">
+                                            <div className="mb-2 flex items-center gap-2">
+                                                <Calendar className="text-muted-foreground h-4 w-4" />
+                                                <h3 className="font-medium">Horários selecionados</h3>
+                                            </div>
+
+                                            <ScrollArea className="h-[200px] rounded-md border p-2">
+                                                {/* Agrupar slots por dia */}
+                                                {Object.entries(
+                                                    horariosSelecao.reduce(
+                                                        (acc, horario) => {
+                                                            const diaKey = format(horario.data, 'yyyy-MM-dd');
+                                                            if (!acc[diaKey]) {
+                                                                acc[diaKey] = {
+                                                                    data: horario.data,
+                                                                    slots: [],
+                                                                };
+                                                            }
+                                                            acc[diaKey].slots.push(horario);
+                                                            return acc;
+                                                        },
+                                                        {} as Record<string, { data: Date; slots: Horario[] }>,
+                                                    ),
+                                                ).map(([diaKey, { data, slots }]) => (
+                                                    <div key={diaKey} className="mb-4 last:mb-0">
+                                                        <div className="mb-1 text-sm font-medium">
+                                                            {format(data, 'EEEE, dd/MM', { locale: ptBR })}
+                                                        </div>
+
+                                                        <div className="border-muted border-l-2 pl-2">
+                                                            {slots.map((horario) => (
+                                                                <div key={horario.id} className="text-muted-foreground py-1 text-sm">
+                                                                    {horario.horario_inicio} - {horario.horario_fim}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </ScrollArea>
+                                        </div>
+                                    </div>
+
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setDialogAberto(false)}>
+                                            Cancelar
+                                        </Button>
+                                        <Button type="submit" disabled={!data.titulo.trim()}>
+                                            Confirmar Reserva
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
                             </DialogContent>
                         </Dialog>
 
