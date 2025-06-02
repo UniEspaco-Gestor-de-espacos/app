@@ -12,15 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
+            $table->id()->autoIncrement();
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('telefone');
             $table->string('profile_pic');
-            $table->enum('tipo_usuario', ['setor', 'professor', 'aluno', 'externo', 'master'])->default('externo');
-            $table->boolean('is_gestor')->default(false);
+            $table->foreignId('permission_type_id')->constrained('permission_types'); // Usuario pode não ser vinculado a um setor ao ser criado
             $table->foreignId('setor_id')->nullable()->constrained('setors'); // Usuario pode não ser vinculado a um setor ao ser criado
             $table->rememberToken();
             $table->timestamps();

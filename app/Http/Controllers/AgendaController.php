@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AgendaTurno;
+use App\Models\Agenda;
 use Illuminate\Http\Request;
 
-class AgendaTurnoController extends Controller
+class AgendaController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
-    }
+    public function index() {}
 
     /**
      * Show the form for creating a new resource.
@@ -34,15 +31,12 @@ class AgendaTurnoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(AgendaTurno $agendaTurno)
-    {
-        //
-    }
+    public function show(Agenda $agendaTurno) {}
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(AgendaTurno $agendaTurno)
+    public function edit(Agenda $agendaTurno)
     {
         //
     }
@@ -50,7 +44,7 @@ class AgendaTurnoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, AgendaTurno $agendaTurno)
+    public function update(Request $request, Agenda $agendaTurno)
     {
         //
     }
@@ -58,7 +52,7 @@ class AgendaTurnoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(AgendaTurno $agendaTurno)
+    public function destroy(Agenda $agendaTurno)
     {
         //
     }

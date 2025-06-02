@@ -54,9 +54,10 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'telefone' => '73001211212', // Vai sair
+            'telefone' => $request->phone,
             'profile_pic' => 'aushaushuahsas', // temporario
-            // 'setor_id' => Setor::pluck('id')->random() // so pra testes
+            'setor_id' => Setor::pluck('id')->random(),
+            'permission_type_id' => 3 // Usuario default
         ]);
 
         event(new Registered($user));

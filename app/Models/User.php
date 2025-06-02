@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'telefone',
         'profile_pic',
+        'permission_type_id',
         'setor_id'
     ];
 
@@ -53,9 +54,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Setor::class);
     }
-    public function agendaTurnos()
+    public function agendas()
     {
-        return $this->hasMany(AgendaTurno::class);
+        return $this->hasMany(Agenda::class);
     }
     public function reservas()
     {

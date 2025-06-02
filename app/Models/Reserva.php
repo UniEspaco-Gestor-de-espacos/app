@@ -13,8 +13,11 @@ class Reserva extends Model
     protected $fillable = [
         'titulo',
         'descricao',
-        'dataInicio',
-        'dataFinal',
+        'situacao',
+        'data_inicial',
+        'data_final',
+        'observacao',
+        'user_id'
     ];
 
     public function horarios()
@@ -25,4 +28,5 @@ class Reserva extends Model
     {
         return $this->belongsTo(User::class);
     }
+
 }

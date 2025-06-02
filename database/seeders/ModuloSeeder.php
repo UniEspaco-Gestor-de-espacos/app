@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Modulo;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -12,26 +13,21 @@ class ModuloSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('modulos')->insert([
+        Modulo::create([
             'nome' => 'Administrativo',
-            'andar' => '1',
             'unidade_id' => '1',
-            'created_at' => now(),
-            'updated_at' => now()
         ]);
-        DB::table('modulos')->insert([
+        Modulo::create([
             'nome' => 'Joselia Navarro',
-            'andar' => '1',
             'unidade_id' => '1',
-            'created_at' => now(),
-            'updated_at' => now()
         ]);
-        DB::table('modulos')->insert([
+        Modulo::create([
             'nome' => 'Laboratórios',
-            'andar' => '1',
             'unidade_id' => '1',
-            'created_at' => now(),
-            'updated_at' => now()
+        ]);
+        Modulo::create([
+            'nome' => 'CPDS',
+            'unidade_id' => '1',
         ]);
     }
 }

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('unidades', function (Blueprint $table) {
-            $table->id();
+            $table->id()->autoIncrement();
             $table->string('nome');
             $table->string('sigla')->nullable();
             $table->foreignId('instituicao_id')->constrained('instituicaos')->onDelete('cascade');

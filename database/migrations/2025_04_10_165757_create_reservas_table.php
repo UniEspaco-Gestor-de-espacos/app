@@ -12,12 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('reservas', function (Blueprint $table) {
-            $table->id();
+            $table->id()->autoIncrement();
             $table->string('titulo');
             $table->text('descricao');
             $table->enum('situacao', ['em_analise', 'deferida', 'indeferida'])->default('em_analise');;
-            $table->dateTime('dataInicial');
-            $table->dateTime('dataFinal');
+            $table->dateTime('data_inicial');
+            $table->dateTime('data_final');
             $table->text('observacao')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();

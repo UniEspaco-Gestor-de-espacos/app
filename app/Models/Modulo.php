@@ -8,7 +8,6 @@ class Modulo extends Model
 {
     protected $fillable = [
         'nome',
-        'andar',
         'unidade_id'
     ];
     public function unidade()
@@ -18,5 +17,9 @@ class Modulo extends Model
     public function espacos()
     {
         return $this->hasMany(Espaco::class);
+    }
+    public function andars()
+    {
+        return $this->hasMany(Andar::class);
     }
 }
