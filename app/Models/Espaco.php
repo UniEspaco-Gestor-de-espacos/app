@@ -11,13 +11,33 @@ class Espaco extends Model
     use HasFactory;
 
     protected $fillable = [
-        'campus',
-        'modulo',
-        'andar',
         'nome',
-        'capacidadePessoas',
-        'acessibilidade',
-        'descricao'
+        'capacidade_pessoas',
+        'descricao',
+        'imagens',
+        'main_image_index',
+        'andar_id'
     ];
 
+    /**
+     * Casting para array os urls das imagens
+     *
+     * @var array
+     */
+    protected $casts = [
+        'imagens' => 'array'
+    ];
+
+    public function agendas()
+    {
+        return $this->hasMany(Agenda::class);
+    }
+    public function andar()
+    {
+        return $this->belongsTo(Andar::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

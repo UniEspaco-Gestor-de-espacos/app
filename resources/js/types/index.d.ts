@@ -35,42 +35,64 @@ export interface User {
     id: number;
     name: string;
     email: string;
-    avatar?: string;
     email_verified_at: string | null;
+    password: string;
+    telefone: string;
+    profile_pic?: string;
+    permission_type_id: number;
+    setor_id: number;
     created_at: string;
     updated_at: string;
-    [key: string]: unknown; // This allows for additional properties...
 }
-
+export type TipoUsuario = 'setor' | 'professor' | 'aluno' | 'externo';
 export interface Espaco {
     id: number;
-    campus: string;
-    modulo: string;
-    andar: string;
     nome: string;
-    capacidadePessoas: number;
-    acessibilidade: boolean;
+    capacidade_pessoas: number;
     descricao: string;
+    imagens: [];
+    main_image_index: string;
+    andar_id: number;
 }
 
+export interface Agenda {
+    id: number;
+    turno: 'manha' | 'tarde' | 'noite';
+    espaco_id: string;
+    user_id: string;
+}
 export interface Instituicao {
     id: number;
     nome: string;
     sigla: string;
+    endereco: string;
 }
 
 export interface Unidade {
     id: number;
     nome: string;
     sigla: string;
-    instituicao_id: string;
+    instituicao_id: number;
 }
 
 export interface Setor {
     id: number;
     nome: string;
     sigla: string;
-    unidade_id: string;
+    unidade_id: number;
+}
+
+export interface Modulo {
+    id: number;
+    nome: string;
+    unidade_id: number;
+}
+
+export interface Andar {
+    id: number;
+    nome: string;
+    tipo_acesso: [];
+    modulo_id: string;
 }
 
 export interface FlashMessages {
@@ -78,4 +100,53 @@ export interface FlashMessages {
     error?: string;
     info?: string;
     warning?: string;
+}
+
+type Horario = {
+    id?: string;
+    data: Date;
+    horario_inicio: string;
+    horario_fim: string;
+    agenda_id: number;
+    status: string;
+    autor: string;
+};
+
+interface GestoresEspaco {
+    manha: GestorTurno;
+    tarde: GestorTurno;
+    noite: GestorTurno;
+}
+
+interface ReservasTurno {
+    manha: { horario: Horario; autor: string }[];
+    tarde: { horario: Horario; autor: string }[];
+    noite: { horario: Horario; autor: string }[];
+}
+
+type Reserva ={
+    id: number;
+    titulo: string;
+    descricao: string;
+    situacao: SituacaoReserva;
+    data_inicial: Date;
+    data_final: Date;
+    observacao: string;
+    user_id: number;
+    created_at: Date;
+    updated_at: Date;
+}
+
+type ReservaHorarios = {
+    reserva: Reserva;
+    horarios: Horario[];
+};
+
+type SituacaoReserva = 'em_analise' | 'deferida' | 'indeferida';
+
+interface GestorTurno {
+    nome: string;
+    email: string;
+    departamento: string;
+    agenda_id: number;
 }

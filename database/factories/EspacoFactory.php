@@ -2,6 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Andar;
+use App\Models\Modulo;
+use App\Models\Setor;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,13 +20,10 @@ class EspacoFactory extends Factory
     public function definition(): array
     {
         return [
-            'campus' => fake()->word(),
-            'modulo'=> fake()->word(),
-            'andar' => fake()->randomDigitNotNull(),
             'nome'=> fake()->randomDigitNotNull(),
-            'capacidadePessoas' => fake()->randomDigitNotNull(),
-            'acessibilidade' => False,
+            'capacidade_pessoas' => fake()->randomDigitNotNull(),
             'descricao' => fake()->text(),
+            'andar_id' => Andar::pluck('id')->random(),
             'created_at'=>now(),
             'updated_at'=>now()
         ];

@@ -2,17 +2,17 @@
 
 namespace Database\Seeders;
 
+use App\Models\Andar;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\AgendaTurno;
 
-class AgendaTurnoSeeder extends Seeder
+class AndarSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        AgendaTurno::factory(3)->create();
+        Andar::factory(10)->create();
     }
 }

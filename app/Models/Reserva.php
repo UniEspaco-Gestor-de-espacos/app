@@ -13,11 +13,20 @@ class Reserva extends Model
     protected $fillable = [
         'titulo',
         'descricao',
-        'dataInicio',
-        'dataFinal',
+        'situacao',
+        'data_inicial',
+        'data_final',
+        'observacao',
+        'user_id'
     ];
 
-    public function horarios(){
+    public function horarios()
+    {
         return $this->belongsToMany(Horario::class, 'reserva_horario')->withTimestamps();
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
 }

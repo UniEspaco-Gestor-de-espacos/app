@@ -13,6 +13,6 @@ class EspacoSeeder extends Seeder
      */
     public function run(): void
     {
-        Espaco::factory(4)->create();
+        Espaco::factory(10)->create();
     }
 }

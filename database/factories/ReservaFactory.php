@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Agenda;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\Espaco;
 use App\Models\User;
@@ -21,18 +22,17 @@ class ReservaFactory extends Factory
     public function definition(): array
     {
         return [
-            'espaco_id' => Espaco::pluck('id')->random(),
-            'user_id' => User::pluck('id')->random(),
             'titulo' => fake()->word(),
             'descricao' => fake()->text(),
-            'dataInicial' => now(),
-            'dataFinal' => now()->addWeek()
+            'data_inicial' => now(),
+            'data_final' => now()->addWeek(),
+            'user_id' => User::pluck('id')->random(),
         ];
     }
     public function configure()
     {
         return $this->afterCreating(function (Reserva $reserva) {
-            $horarios = Horario::inRandomOrder()->take(2)->pluck('id');
+            $horarios = Horario::whereAgendaId(Agenda::pluck('id')->random())->inRandomOrder()->take(4)->pluck('id');
             $reserva->horarios()->attach($horarios);
         });
     }
