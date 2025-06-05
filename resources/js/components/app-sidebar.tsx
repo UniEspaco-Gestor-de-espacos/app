@@ -24,7 +24,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Minhas Reservas',
-        href: '/reservas',
+        href: '/minhas-reservas',
         icon: BookOpen,
     },
     /* {

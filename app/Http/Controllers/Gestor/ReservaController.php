@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
-class ReservaController extends Controller
+class GestorReservaController extends Controller
 {
     /**
      * Display a listing of the resource.

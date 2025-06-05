@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
-class ReservaMiddleware
+class CadastroReservaMiddleware
 {
     /**
      * Handle an incoming request.
