@@ -37,6 +37,11 @@ const mainNavItems: NavItem[] = [
         href: '/favoritos',
         icon: Star,
     },
+    {
+        title: 'Gerenciar reservas',
+        href: '/gestor/reservas',
+        icon: Star,
+    },
 ];
 
 export function AppSidebar() {

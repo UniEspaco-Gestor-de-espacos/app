@@ -10,51 +10,51 @@ use App\Http\Controllers\InstitucionalAndarController;
 use App\Http\Controllers\InstitucionalEspacoController;
 use App\Http\Controllers\InstituicaoController;
 use App\Http\Controllers\ModuloController;
-use App\Http\Controllers\ReservaController;
-use App\Http\Controllers\UnidadeController;
-use App\Http\Controllers\UsuarioController;
-use App\Http\Middleware\AtualizarUsuarioMiddleware;
-use App\Http\Middleware\AvaliarReservaMiddleware;
-use App\Http\Middleware\CadastrarUsuarioMiddleware;
-use App\Http\Middleware\CadastroEspacoMiddleware;
-use App\Http\Middleware\CadastroReservaMiddleware;
-use App\Http\Middleware\EditarEspacoMiddleware;
+    use App\Http\Controllers\ReservaController;
+    use App\Http\Controllers\UnidadeController;
+    use App\Http\Controllers\UsuarioController;
+    use App\Http\Middleware\AtualizarUsuarioMiddleware;
+    use App\Http\Middleware\AvaliarReservaMiddleware;
+    use App\Http\Middleware\CadastrarUsuarioMiddleware;
+    use App\Http\Middleware\CadastroEspacoMiddleware;
+    use App\Http\Middleware\CadastroReservaMiddleware;
+    use App\Http\Middleware\EditarEspacoMiddleware;
 
-Route::get('/', function () {
-    return Auth::check()
-        ? redirect()->route('dashboard')
-        : redirect()->route('login');
-})->name('home');
+    Route::get('/', function () {
+        return Auth::check()
+            ? redirect()->route('dashboard')
+            : redirect()->route('login');
+    })->name('home');
 
 
-Route::middleware(['auth', 'verified'])->group(function () {
+    Route::middleware(['auth', 'verified'])->group(function () {
 
-    // Painel geral
-    Route::get('dashboard', function () {
-        $user = Auth::user();
-        switch ($user->permission_type_id) {
-            case 1: // Institucional
-                return Inertia::render('dashboard/institucional', compact('user'));
-            case 2: // Gestor
-                return Inertia::render('dashboard/gestor', compact('user'));
-            default: // Usuario Comum
-                return Inertia::render('dashboard/usuario', compact('user'));
-        }
-    })->name('dashboard');
+        // Painel geral
+        Route::get('dashboard', function () {
+            $user = Auth::user();
+            switch ($user->permission_type_id) {
+                case 1: // Institucional
+                    return Inertia::render('dashboard/institucional', compact('user'));
+                case 2: // Gestor
+                    return Inertia::render('dashboard/gestor', compact('user'));
+                default: // Usuario Comum
+                    return Inertia::render('dashboard/usuario', compact('user'));
+            }
+        })->name('dashboard');
 
-    // Visualização de espaços
-    Route::get('espacos', [EspacoController::class, 'index'])->name('espacos.index');
-    Route::get('espacos/{espaco}', [EspacoController::class, 'show'])->name('espacos.show');
+        // Visualização de espaços
+        Route::get('espacos', [EspacoController::class, 'index'])->name('espacos.index');
+        Route::get('espacos/{espaco}', [EspacoController::class, 'show'])->name('espacos.show');
 
-    // Reservas
-    // Visualizar
-    Route::get('minhas-reservas', [ReservaController::class, 'index'])->name('reservas.index');
-    Route::get('minhas-reservas/{reserva}', [ReservaController::class, 'show'])->name('reservas.show'); // Não usada
-    // Cadastrar
-    Route::get('reservas/criar', [ReservaController::class, 'create'])->name('reservas.create'); // Não usada
-    Route::post('reservas', [ReservaController::class, 'store'])
-        ->middleware(CadastroReservaMiddleware::class)->name('reservas.store');
-    // Editar antes de avaliada
+        // Reservas
+        // Visualizar
+        Route::get('minhas-reservas', [ReservaController::class, 'index'])->name('reservas.index');
+        Route::get('minhas-reservas/{reserva}', [ReservaController::class, 'show'])->name('reservas.show'); // Não usada
+        // Cadastrar
+        Route::get('reservas/criar', [ReservaController::class, 'create'])->name('reservas.create'); // Não usada
+        Route::post('reservas', [ReservaController::class, 'store'])
+            ->middleware(CadastroReservaMiddleware::class)->name('reservas.store');
+        // Editar antes de avaliada
     Route::middleware([])->group(function () { // Aplicar regra para ver se reserva ja foi avaliada
         Route::get('reservas/{reserva}/editar', [ReservaController::class, 'edit'])->name('reserva.edit');
         Route::patch('reserva/{reserva}', [ReservaController::class, 'update'])->name('reservas.avaliar');

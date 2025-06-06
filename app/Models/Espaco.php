@@ -16,7 +16,8 @@ class Espaco extends Model
         'descricao',
         'imagens',
         'main_image_index',
-        'andar_id'
+        'andar_id',
+        'user_id'
     ];
 
     /**

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Agenda;
+use App\Models\Espaco;
 use App\Models\Horario;
 use App\Models\Reserva;
 use Exception;
@@ -19,7 +21,15 @@ class GestorReservaController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $reservasUsuario = Reserva::whereUserId($user->id)->get();
+        $agendas = Agenda::whereUserId($user->id);
+        $reservas = Reserva::all();
+
+        #VOU BUSCAR OS HORARIOS QUE PERTENCEM AS AGENDAS DO GESTOR
+        # Estou pensando em fazer um find many e passar como atributo a agenda mas parece q nao vai dar certo.
+        foreach ($reservas as $reserva) {
+            $reserva->horarios()->findMany()
+
+        }
         $reservas = [];
         foreach ($reservasUsuario as $reserva) {
             $horarios_reserva = $reserva->horarios()->get();
