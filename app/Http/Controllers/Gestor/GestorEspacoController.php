@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Gestor;
 
-use App\Http\Middleware\EspacoMiddleware;
 use App\Models\Agenda;
 use App\Models\Andar;
 use App\Models\Espaco;
@@ -15,8 +14,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
 
-use function PHPUnit\Framework\isEmpty;
 
 class GestorEspacoController extends Controller
 {

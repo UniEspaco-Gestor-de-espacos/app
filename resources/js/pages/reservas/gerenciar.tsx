@@ -16,9 +16,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function MinhasReservas() {
-    const { props } = usePage<{ user: User; reservas: ReservaHorarios[] }>();
-    const { reservas } = props;
-
+    const { props } = usePage<{ user: User; reservasGestor: ReservaHorarios[] }>();
+    const reservas = props.reservasGestor;
+    console.log(reservas);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />

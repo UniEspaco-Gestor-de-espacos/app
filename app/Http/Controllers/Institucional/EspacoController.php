@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Institucional;
 
+use App\Http\Controllers\Controller;
 use App\Models\Agenda;
 use App\Models\Andar;
 use App\Models\Espaco;

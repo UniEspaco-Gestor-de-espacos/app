@@ -1,17 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Gestor;
 
 use App\Models\Agenda;
-use App\Models\Espaco;
 use App\Models\Horario;
 use App\Models\Reserva;
 use Exception;
-use Illuminate\Foundation\Exceptions\Renderer\Renderer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use App\Http\Controllers\Controller;
+use App\Models\Espaco;
 
 class GestorReservaController extends Controller
 {
@@ -21,21 +20,21 @@ class GestorReservaController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $agendas = Agenda::whereUserId($user->id);
-        $reservas = Reserva::all();
+        $agendas = Agenda::whereUserId($user->id)->get();
+        $todasReservas = Reserva::all();
+        $reservasGestor = [];
 
-        #VOU BUSCAR OS HORARIOS QUE PERTENCEM AS AGENDAS DO GESTOR
-        # Estou pensando em fazer um find many e passar como atributo a agenda mas parece q nao vai dar certo.
-        foreach ($reservas as $reserva) {
-            $reserva->horarios()->findMany()
-
+        foreach ($todasReservas as $reserva) {
+            foreach ($agendas as $agenda) {
+                $horariosReservaAgenda = $reserva->horarios->whereIn('agenda_id', $agenda->id);
+                $espaco = Espaco::whereId($agenda->espaco_id)->first();
+                if ($horariosReservaAgenda->isNotEmpty()) {
+                    $reservasGestor[] = ['reserva' => $reserva, 'horarios' => $horariosReservaAgenda, 'agenda' => $agenda, 'espaco' => $espaco];
+                }
+                continue;
+            }
         }
-        $reservas = [];
-        foreach ($reservasUsuario as $reserva) {
-            $horarios_reserva = $reserva->horarios()->get();
-            array_push($reservas, ['reserva' => $reserva, 'horarios' => $horarios_reserva]);
-        }
-        return Inertia::render('reservas/minhasReservas', compact('reservas'));
+        return Inertia::render('reservas/gerenciar', compact('reservasGestor'));
     }
 
     /**

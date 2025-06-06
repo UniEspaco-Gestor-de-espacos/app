@@ -69,6 +69,7 @@ export function ReservasList({ fallback, reservas }: { fallback: React.ReactNode
                             <TableRow>
                                 <TableHead>Título</TableHead>
                                 <TableHead className="hidden md:table-cell">Situação</TableHead>
+                                <TableHead className="hidden md:table-cell">Local</TableHead>
                                 <TableHead className="hidden lg:table-cell">Data de Início</TableHead>
                                 <TableHead className="hidden lg:table-cell">Data de Término</TableHead>
                                 <TableHead className="text-right">Ações</TableHead>
@@ -89,10 +90,22 @@ export function ReservasList({ fallback, reservas }: { fallback: React.ReactNode
                                     <TableCell className="hidden md:table-cell">
                                         <SituacaoBadge situacao={reserva.reserva.situacao} />
                                     </TableCell>
+                                    PAREI ADICIONANDO A COLUNA A MAIS SOBRE O LOCAL DA RESERVA, MODULO, ANDAR E ESPAÇO
+                                    PRECISO COLOCAR OS MESMOS DADOS NO CONTROLLER DA RESERVA DO USUARIO COMUM
+                                    <TableCell className="hidden md:table-cell">
+                                        {reserva.reserva.titulo}
+                                        <p className="text-muted-foreground hidden text-sm sm:block">
+                                            {reserva.reserva.descricao.substring(0, 60)}
+                                            {reserva.reserva.descricao.length > 60 ? '...' : ''}
+                                        </p>{' '}
+                                    </TableCell>
                                     <TableCell className="hidden lg:table-cell">
                                         {formatDate(reserva.reserva.data_inicial)} - {pegarPrimeiroHorario(reserva.horarios).horario_inicio}
                                     </TableCell>
-                                    <TableCell className="hidden lg:table-cell"> {formatDate(reserva.reserva.data_final)} - {pegarUltimoHorario(reserva.horarios).horario_fim}</TableCell>
+                                    <TableCell className="hidden lg:table-cell">
+                                        {' '}
+                                        {formatDate(reserva.reserva.data_final)} - {pegarUltimoHorario(reserva.horarios).horario_fim}
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2 pt-2">
                                             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Gestor;
 
 use App\Models\Andar;
 use App\Rules\UniqueNormalizedFloorName;
 use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
-
+use App\Http\Controllers\Controller;
 class GestorAndarController extends Controller
 {
     /**
