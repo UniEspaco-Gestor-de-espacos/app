@@ -1,50 +1,24 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { formatDate, formatDateTime, pegarPrimeiroHorario, pegarUltimoHorario } from '@/lib/utils';
+import { formatDate, formatDateTime, getStatusReservaColor, getStatusReservaText, pegarPrimeiroHorario, pegarUltimoHorario } from '@/lib/utils';
 import { ReservaHorarios, SituacaoReserva } from '@/types';
 import { Calendar, Clock, Edit, Eye, XCircle } from 'lucide-react';
 import { useState } from 'react';
 
 // Componente para exibir o status da reserva com cores e ícones apropriados
 export function SituacaoIndicator({ situacao }: { situacao: SituacaoReserva }) {
-    const getStatusColor = () => {
-        switch (situacao) {
-            case 'em_analise':
-                return 'bg-yellow-500';
-            case 'deferida':
-                return 'bg-green-500';
-            case 'indeferida':
-                return 'bg-red-500';
-            default:
-                return 'bg-gray-500';
-        }
-    };
-
-    const getStatusText = () => {
-        switch (situacao) {
-            case 'em_analise':
-                return 'Em Analise';
-            case 'deferida':
-                return 'Deferida';
-            case 'indeferida':
-                return 'Indeferida';
-            default:
-                return 'Desconhecido';
-        }
-    };
-
     return (
         <span className="flex items-center gap-2">
-            <span className={`h-3 w-3 rounded-full ${getStatusColor()}`}></span>
-            <span className="text-sm font-medium">{getStatusText()}</span>
+            <span className={`h-3 w-3 rounded-full ${getStatusReservaColor(situacao)}`}></span>
+            <span className="text-sm font-medium">{getStatusReservaText(situacao)}</span>
         </span>
     );
 }
 
-export function ReservaCard({ reserva, horarios }: ReservaHorarios) {
+export function ReservaCard(reservaHorarios: ReservaHorarios) {
     const [dialogOpen, setDialogOpen] = useState(false);
-
+    const { reserva, horarios } = reservaHorarios;
     return (
         <Card>
             <CardHeader className="pb-2">

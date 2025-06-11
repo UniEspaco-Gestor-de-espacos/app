@@ -2,11 +2,11 @@ import AppLayout from '@/layouts/app-layout';
 import { ReservaHorarios, User, type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { Suspense } from 'react';
-import { ReservasEmpty } from './fragments/reservasEmpty';
-import { ReservasFilters } from './fragments/reservasFilters';
-import { ReservasHeader } from './fragments/reservasHeader';
-import { ReservasList } from './fragments/reservasList';
-import { ReservasLoading } from './fragments/reservasLoading';
+import { ReservasEmpty } from '../fragments/reservasEmpty';
+import { ReservasFilters } from '../fragments/reservasFilters';
+import { ReservasHeader } from '../fragments/reservasHeader';
+import { ReservasList } from '../fragments/reservasList';
+import { ReservasLoading } from '../fragments/reservasLoading';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -27,7 +27,7 @@ export default function MinhasReservas() {
                     <ReservasHeader />
                     <ReservasFilters />
                     <Suspense fallback={<ReservasLoading />}>
-                        <ReservasList fallback={<ReservasEmpty />} reservas={reservas} />
+                        <ReservasList fallback={<ReservasEmpty />} isGestor reservas={reservas} />
                     </Suspense>
                 </div>
             </div>

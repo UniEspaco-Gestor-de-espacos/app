@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDate, formatDateTime, pegarPrimeiroHorario, pegarUltimoHorario } from '@/lib/utils';
 import { ReservaHorarios } from '@/types';
+import { router } from '@inertiajs/react';
 import { CheckCircle, ChevronLeft, ChevronRight, Clock, Edit, Eye, XCircle, XSquare } from 'lucide-react';
 import type React from 'react';
 import { useState } from 'react';
@@ -42,7 +43,15 @@ function SituacaoBadge({ situacao }: { situacao: Situacao }) {
 }
 
 // Componente principal da lista de reservas
-export function ReservasList({ fallback, reservas }: { fallback: React.ReactNode; reservas: ReservaHorarios[] }) {
+export function ReservasList({
+    fallback,
+    reservas,
+    isGestor = false,
+}: {
+    fallback: React.ReactNode;
+    reservas: ReservaHorarios[];
+    isGestor?: boolean;
+}) {
     const [page, setPage] = useState(1);
     const [view, setView] = useState<'table' | 'cards'>('table');
     const [dialogOpen, setDialogOpen] = useState<boolean>(false);
@@ -90,22 +99,16 @@ export function ReservasList({ fallback, reservas }: { fallback: React.ReactNode
                                     <TableCell className="hidden md:table-cell">
                                         <SituacaoBadge situacao={reserva.reserva.situacao} />
                                     </TableCell>
-                                    PAREI ADICIONANDO A COLUNA A MAIS SOBRE O LOCAL DA RESERVA, MODULO, ANDAR E ESPAÇO
-                                    PRECISO COLOCAR OS MESMOS DADOS NO CONTROLLER DA RESERVA DO USUARIO COMUM
                                     <TableCell className="hidden md:table-cell">
-                                        {reserva.reserva.titulo}
-                                        <p className="text-muted-foreground hidden text-sm sm:block">
-                                            {reserva.reserva.descricao.substring(0, 60)}
-                                            {reserva.reserva.descricao.length > 60 ? '...' : ''}
-                                        </p>{' '}
+                                        <div>
+                                            <p>
+                                                Espaço: {reserva.espaco.nome} / {reserva.andar.nome} / {reserva.modulo.nome}
+                                            </p>
+                                        </div>
                                     </TableCell>
-                                    <TableCell className="hidden lg:table-cell">
-                                        {formatDate(reserva.reserva.data_inicial)} - {pegarPrimeiroHorario(reserva.horarios).horario_inicio}
-                                    </TableCell>
-                                    <TableCell className="hidden lg:table-cell">
-                                        {' '}
-                                        {formatDate(reserva.reserva.data_final)} - {pegarUltimoHorario(reserva.horarios).horario_fim}
-                                    </TableCell>
+
+                                    <TableCell className="hidden lg:table-cell">{formatDate(reserva.reserva.data_inicial)}</TableCell>
+                                    <TableCell className="hidden lg:table-cell"> {formatDate(reserva.reserva.data_final)}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2 pt-2">
                                             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -161,29 +164,65 @@ export function ReservasList({ fallback, reservas }: { fallback: React.ReactNode
                                                         </Button>
                                                         {reserva.reserva.situacao === 'em_analise' && (
                                                             <>
-                                                                <Button variant="outline">
-                                                                    <Edit className="mr-1 h-4 w-4" />
-                                                                    Editar
-                                                                </Button>
-                                                                <Button variant="destructive">
-                                                                    <XCircle className="mr-1 h-4 w-4" />
-                                                                    Cancelar
-                                                                </Button>
+                                                                {isGestor ? (
+                                                                    <div>
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            onClick={() => {
+                                                                                router.visit(`/gestor/reservas/${reserva.reserva.id}`);
+                                                                            }}
+                                                                        >
+                                                                            <Edit className="mr-1 h-4 w-4" />
+                                                                            Avaliar
+                                                                        </Button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div>
+                                                                        <Button variant="outline">
+                                                                            <Edit className="mr-1 h-4 w-4" />
+                                                                            Editar
+                                                                        </Button>
+                                                                        <Button variant="destructive">
+                                                                            <XCircle className="mr-1 h-4 w-4" />
+                                                                            Cancelar
+                                                                        </Button>
+                                                                    </div>
+                                                                )}
                                                             </>
                                                         )}
                                                     </DialogFooter>
                                                 </DialogContent>
                                             </Dialog>
+
                                             {reserva.reserva.situacao === 'em_analise' && (
                                                 <>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Editar">
-                                                        <Edit className="h-4 w-4" />
-                                                        <span className="sr-only">Editar</span>
-                                                    </Button>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" title="Cancelar">
-                                                        <XCircle className="h-4 w-4" />
-                                                        <span className="sr-only">Cancelar</span>
-                                                    </Button>
+                                                    {isGestor ? (
+                                                        <div>
+                                                            <Button
+                                                                onClick={() => {
+                                                                    router.visit(`/gestor/reservas/${reserva.reserva.id}`);
+                                                                }}
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8"
+                                                                title="Avaliar"
+                                                            >
+                                                                <Edit className="h-4 w-4" />
+                                                                <span className="sr-only">Avaliar</span>
+                                                            </Button>
+                                                        </div>
+                                                    ) : (
+                                                        <div>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Editar">
+                                                                <Edit className="h-4 w-4" />
+                                                                <span className="sr-only">Editar</span>
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" title="Cancelar">
+                                                                <XCircle className="h-4 w-4" />
+                                                                <span className="sr-only">Cancelar</span>
+                                                            </Button>
+                                                        </div>
+                                                    )}
                                                 </>
                                             )}
                                         </div>
@@ -196,7 +235,7 @@ export function ReservasList({ fallback, reservas }: { fallback: React.ReactNode
             ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {reservas.map((reserva: ReservaHorarios, index: number) => (
-                        <ReservaCard key={index} reserva={reserva.reserva} horarios={reserva.horarios} />
+                        <ReservaCard key={index} {...reserva} />
                     ))}
                 </div>
             )}

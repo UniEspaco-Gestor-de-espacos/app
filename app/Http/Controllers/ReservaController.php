@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Agenda;
+use App\Models\Andar;
+use App\Models\Espaco;
 use App\Models\Horario;
+use App\Models\Modulo;
 use App\Models\Reserva;
 use Exception;
 use Illuminate\Foundation\Exceptions\Renderer\Renderer;
@@ -21,9 +25,21 @@ class ReservaController extends Controller
         $user = Auth::user();
         $reservasUsuario = Reserva::whereUserId($user->id)->get();
         $reservas = [];
-        foreach ($reservasUsuario as $reserva) {
-            $horarios_reserva = $reserva->horarios()->get();
-            array_push($reservas, ['reserva' => $reserva, 'horarios' => $horarios_reserva]);
+        foreach ($reservasUsuario as $reserva) { //
+            $horariosReservaAgenda = $reserva->horarios()->get();
+            $primeiroHorario = $horariosReservaAgenda->first();
+            $agenda = Agenda::whereId($primeiroHorario->agenda_id)->first();
+            $espaco = Espaco::whereId($agenda->espaco_id)->first();
+            $andar = Andar::whereId($espaco->andar_id)->first();
+            $modulo = Modulo::whereId($andar->modulo_id)->first();
+            $reservas[] = [
+                'reserva' => $reserva,
+                'horarios' => $horariosReservaAgenda,
+                'agenda' => $agenda,
+                'espaco' => $espaco,
+                'andar' => $andar,
+                'modulo' => $modulo
+            ];
         }
         return Inertia::render('reservas/minhasReservas', compact('reservas'));
     }

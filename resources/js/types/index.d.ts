@@ -124,7 +124,7 @@ interface ReservasTurno {
     noite: { horario: Horario; autor: string }[];
 }
 
-type Reserva ={
+type Reserva = {
     id: number;
     titulo: string;
     descricao: string;
@@ -135,11 +135,15 @@ type Reserva ={
     user_id: number;
     created_at: Date;
     updated_at: Date;
-}
+};
 
 type ReservaHorarios = {
     reserva: Reserva;
     horarios: Horario[];
+    agenda: Agenda;
+    espaco: Espaco;
+    andar: Andar;
+    modulo: Modulo;
 };
 
 type SituacaoReserva = 'em_analise' | 'deferida' | 'indeferida';

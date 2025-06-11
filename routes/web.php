@@ -9,6 +9,9 @@ use App\Http\Controllers\Gestor\GestorReservaController;
 use App\Http\Controllers\Institucional\InstitucionalAndarController;
 use App\Http\Controllers\Institucional\InstitucionalEspacoController;
 use App\Http\Controllers\Institucional\InstituicaoController;
+use App\Http\Controllers\Institucional\ModuloController as InstitucionalModuloController;
+use App\Http\Controllers\Institucional\UnidadeController as InstitucionalUnidadeController;
+use App\Http\Controllers\Institucional\UsuarioController as InstitucionalUsuarioController;
 use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\UnidadeController;
@@ -91,20 +94,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('institucional')->name('institucional.')->group(function () {
 
         // Usuarios
-        Route::resource('usuarios', UsuarioController::class)->except(['store', 'update']);
-        Route::patch('usuarios/{usuario}', [UsuarioController::class, 'update'])
+        Route::resource('usuarios', InstitucionalUsuarioController::class)->except(['store', 'update']);
+        Route::patch('usuarios/{usuario}', [InstitucionalUsuarioController::class, 'update'])
             ->middleware(AtualizarUsuarioMiddleware::class)->name('usuario.update'); // TODO: Criar Validação
-        Route::post('usuarios', [UsuarioController::class, 'store'])
+        Route::post('usuarios', [InstitucionalUsuarioController::class, 'store'])
             ->middleware(CadastrarUsuarioMiddleware::class)->name('usuario.store'); // TODO: Criar Validação
 
         // Instituicao
         Route::resource('instituicoes', InstituicaoController::class);
 
         // Unidades
-        Route::resource('unidades', UnidadeController::class);
+        Route::resource('unidades', InstitucionalUnidadeController::class);
 
         // Modulos
-        Route::resource('modulos', ModuloController::class);
+        Route::resource('modulos', InstitucionalModuloController::class);
 
         // Andares
         Route::resource('andares', InstitucionalAndarController::class);

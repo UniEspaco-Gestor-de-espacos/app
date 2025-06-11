@@ -10,7 +10,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Http\Controllers\Controller;
+use App\Models\Andar;
 use App\Models\Espaco;
+use App\Models\Modulo;
+use App\Models\User;
 
 class GestorReservaController extends Controller
 {
@@ -20,21 +23,30 @@ class GestorReservaController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $agendas = Agenda::whereUserId($user->id)->get();
+        $agendas = Agenda::whereUserId($user->id)->get(); // Busca agendas em que o usuario é gestor
         $todasReservas = Reserva::all();
         $reservasGestor = [];
 
         foreach ($todasReservas as $reserva) {
-            foreach ($agendas as $agenda) {
+            foreach ($agendas as $agenda) { // Verifica se a reserva tem horario da agenda
                 $horariosReservaAgenda = $reserva->horarios->whereIn('agenda_id', $agenda->id);
                 $espaco = Espaco::whereId($agenda->espaco_id)->first();
+                $andar = Andar::whereId($espaco->andar_id)->first();
+                $modulo = Modulo::whereId($andar->modulo_id)->first();
                 if ($horariosReservaAgenda->isNotEmpty()) {
-                    $reservasGestor[] = ['reserva' => $reserva, 'horarios' => $horariosReservaAgenda, 'agenda' => $agenda, 'espaco' => $espaco];
+                    $reservasGestor[] = [
+                        'reserva' => $reserva,
+                        'horarios' => $horariosReservaAgenda,
+                        'agenda' => $agenda,
+                        'espaco' => $espaco,
+                        'andar' => $andar,
+                        'modulo' => $modulo
+                    ];
                 }
                 continue;
             }
         }
-        return Inertia::render('reservas/gerenciar', compact('reservasGestor'));
+        return Inertia::render('reservas/gestor/verReservas', compact('reservasGestor'));
     }
 
     /**
@@ -44,6 +56,8 @@ class GestorReservaController extends Controller
     {
         //
     }
+
+    public function avaliar() {}
 
     /**
      * Store a newly created resource in storage.
@@ -79,7 +93,21 @@ class GestorReservaController extends Controller
      */
     public function show(Reserva $reserva)
     {
-        //
+        $usuario = User::whereId($reserva->user_id)->first();
+        $horariosReservaAgenda = $reserva->horarios()->get();
+        $agenda = $horariosReservaAgenda->first()->agenda()->get();
+        $espaco = Espaco::whereId($agenda->first()->espaco_id)->first();
+        $andar = Andar::whereId($espaco->andar_id)->first();
+        $modulo = Modulo::whereId($andar->modulo_id)->first();
+
+        return Inertia::render('reservas/gestor/avaliarReserva', ['reserva' => [
+            'reserva' => $reserva,
+            'horarios' => $horariosReservaAgenda,
+            'agenda' => $agenda,
+            'espaco' => $espaco,
+            'andar' => $andar,
+            'modulo' => $modulo
+        ], 'usuario' => $usuario]);
     }
 
     /**
