@@ -25,7 +25,7 @@ import { toast } from 'sonner';
 const breadcrumbs = [
     {
         title: 'Espaço',
-        href: '/espacos',
+        href: '/institucional/espacos',
     },
     {
         title: 'Cadastrar',
@@ -53,6 +53,7 @@ interface ImageWithPreview {
 
 export default function CadastroEspacoPage() {
     const tiposDeAcesso = ['terreo', 'escada', 'elevador', 'rampa'];
+    const andaresPredefinidos = ['Térreo', ...Array.from({ length: 10 }, (_, i) => `${i + 1}º Andar`)];
     const { props } = usePage<{ unidades: Unidade[]; modulos: Modulo[]; andares: Andar[] }>();
     const { unidades, modulos, andares } = props;
     const [unidadeSelecionada, setUnidadeSelecionada] = useState<number | undefined>(undefined);
@@ -100,7 +101,7 @@ export default function CadastroEspacoPage() {
         if (!nomeNovoAndar.trim() || !moduloSelecionado) return;
 
         router.post(
-            route('gestor.andares.store'),
+            route('institucional.andares.store'),
             {
                 nome: nomeNovoAndar,
                 tipo_acesso: tipoAcessoNovoAndar,
@@ -269,7 +270,7 @@ export default function CadastroEspacoPage() {
     function onSubmit(e: React.FormEvent) {
         e.preventDefault();
 
-        post(route('gestor.espacos.store'), {
+        post(route('institucional.espacos.store'), {
             onSuccess: () => {
                 // Limpar as URLs de preview para evitar vazamento de memória
                 imagesWithPreviews.forEach((img) => URL.revokeObjectURL(img.preview));
@@ -391,19 +392,21 @@ export default function CadastroEspacoPage() {
                                                 <DialogHeader>
                                                     <DialogTitle>Adicionar Novo Andar</DialogTitle>
                                                 </DialogHeader>
-                                                <div className="grid gap-4 py-4">
-                                                    <div className="grid grid-cols-4 items-center gap-4">
-                                                        <Label htmlFor="novo-andar" className="text-right">
-                                                            Nome
-                                                        </Label>
-                                                        <Input
-                                                            id="novo-andar"
-                                                            value={nomeNovoAndar}
-                                                            onChange={(e) => setNomeNovoAndar(e.target.value)}
-                                                            className="col-span-3"
-                                                            placeholder="Ex: 3º Andar, Mezanino"
-                                                        />
-                                                    </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="novo-andar-select">Nome do Andar</Label>
+                                                    <SelectUI value={nomeNovoAndar} onValueChange={setNomeNovoAndar}>
+                                                        <SelectUITrigger id="novo-andar-select">
+                                                            <SelectUIValue placeholder="Selecione um andar" />
+                                                        </SelectUITrigger>
+                                                        <SelectUIContent>
+                                                            {/* Lista de andares pré-definidos */}
+                                                            {andaresPredefinidos.map((andar) => (
+                                                                <SelectUIItem key={andar} value={andar}>
+                                                                    {andar}
+                                                                </SelectUIItem>
+                                                            ))}
+                                                        </SelectUIContent>
+                                                    </SelectUI>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <div>

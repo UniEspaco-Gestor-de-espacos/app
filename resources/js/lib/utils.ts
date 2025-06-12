@@ -2,6 +2,7 @@ import { Horario, SituacaoReserva } from '@/types';
 import { type ClassValue, clsx } from 'clsx';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
+import { useEffect, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
@@ -89,3 +90,18 @@ export const getTurnoText = (turno: 'manha' | 'tarde' | 'noite') => {
             return 'Desconhecido';
     }
 };
+export function useDebounce(value: string, delay: number) {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [value, delay]);
+
+    return debouncedValue;
+}

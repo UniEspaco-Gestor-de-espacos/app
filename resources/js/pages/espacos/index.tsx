@@ -9,10 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
-import { Espaco, Modulo, User } from '@/types';
-import { Head, router, usePage } from '@inertiajs/react';
+import { useDebounce } from '@/lib/utils';
+import { Andar, Espaco, Modulo, Unidade, User } from '@/types';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Calendar, Edit, Home, Info, Projector, Search, Users, ShipWheelIcon as Wheelchair, Wifi, Wind } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 const breadcrumbs = [
     {
         title: 'Espaços',
@@ -21,35 +22,69 @@ const breadcrumbs = [
 ];
 
 export default function EspacosPage() {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedModulo, setSelectedModulo] = useState('');
-    const [selectedCapacidade, setSelectedCapacidade] = useState('');
-    const [selectedDisponibilidade, setSelectedDisponibilidade] = useState('');
-    //const [viewType, setViewType] = useState('cards');
+    const { props } = usePage<{
+        // A prop `espacos` agora é um objeto paginador do Laravel
+        espacos: {
+            data: Espaco[];
+            links: { url: string | null; label: string; active: boolean }[];
+            meta: object; // Contém 'from', 'to', 'total', etc.
+        };
+        unidades: Unidade[];
+        modulos: Modulo[];
+        andares: Andar[];
+        filters: {
+            // Recebe os filtros atuais do controller
+            search?: string;
+            unidade?: string;
+            modulo?: string;
+            andar?: string;
+            capacidade?: string;
+        };
+        user: User;
+    }>();
+    const { andares, modulos, unidades, user } = props;
+    const userType = user.permission_type_id; // 1 - INSTITUCIONAL, 2 - GESTOR, 3 - COMUM
+    // Extrai os dados do paginador
+    const { data: espacos, links } = props.espacos;
+    const { filters } = props;
+
+    console.log(andares);
+    // Gerencia de estado
+    const [searchTerm, setSearchTerm] = useState(filters.search || '');
+    const [selectedUnidade, setSelectedUnidade] = useState(filters.unidade || 'all');
+    const [selectedModulo, setSelectedModulo] = useState(filters.modulo || 'all');
+    const [selectedAndar, setSelectedAndar] = useState(filters.andar || 'all');
+    const [selectedCapacidade, setSelectedCapacidade] = useState(filters.capacidade || '');
     const [selectedEspaco, setSelectedEspaco] = useState<Espaco | null>(null);
     const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-    const { props } = usePage<{ espacos: Espaco[]; user: User; modulos: Modulo[] }>();
-    const { espacos, user, modulos } = props;
-    const userType = user.permission_type_id; // 1 - INSTITUCIONAL, 2 - GESTOR, 3 - COMUM
+    const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
+    // Hook que reserta caso modulo ou andar mude
+    useEffect(() => {
+        setSelectedModulo('all');
+        setSelectedAndar('all');
+    }, [selectedUnidade]);
 
-    // Filtrar espaços com base nos critérios selecionados
-    const filteredespacos = espacos.filter((espaco) => {
-        const modulosFiltrados = modulos.filter((modulo) => modulo.nome.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase()));
-        const idModulosFiltrados = modulosFiltrados.map((modulo) => modulo.id);
-        const matchesSearch = espaco.nome.toLowerCase().includes(searchTerm.toLowerCase()) || idModulosFiltrados.includes(espaco.andar_id);
-        const matchModulo = selectedModulo == '' || selectedModulo == 'all' || espaco.andar_id.toString() == selectedModulo;
-        const matchesCapacidade =
-            selectedCapacidade === '' ||
-            (selectedCapacidade === 'pequeno' && espaco.capacidade_pessoas <= 30) ||
-            (selectedCapacidade === 'medio' && espaco.capacidade_pessoas > 30 && espaco.capacidade_pessoas <= 100) ||
-            (selectedCapacidade === 'grande' && espaco.capacidade_pessoas > 100);
-        /*const matchesDisponibilidade =
-            selectedDisponibilidade === '' ||
-            (selectedDisponibilidade === 'disponivel' && espaco.disponivel) ||
-            (selectedDisponibilidade === 'indisponivel' && !espaco.disponivel);*/
+    // Reseta o andar quando o módulo muda
+    useEffect(() => {
+        setSelectedAndar('all');
+    }, [selectedModulo]);
 
-        return matchesSearch && matchModulo && matchesCapacidade; // && matchesDisponibilidade;
-    });
+    useEffect(() => {
+        const params = {
+            search: debouncedSearchTerm || undefined,
+            unidade: selectedUnidade === 'all' ? undefined : selectedUnidade,
+            modulo: selectedModulo === 'all' ? undefined : selectedModulo,
+            andar: selectedAndar === 'all' ? undefined : selectedAndar,
+            capacidade: selectedCapacidade === 'qualquer' ? undefined : selectedCapacidade,
+        };
+
+        router.get(route('espacos.index'), params, {
+            preserveState: true, // Mantém o estado dos filtros na página
+            preserveScroll: true, // Não rola a página para o topo
+            replace: true, // Não adiciona ao histórico do navegador
+        });
+    }, [debouncedSearchTerm, selectedUnidade, selectedModulo, selectedAndar, selectedCapacidade]);
+
     // Função para renderizar ícones de recursos
     const resourceIcon = {
         projetor: <Projector className="h-4 w-4" />,
@@ -77,40 +112,45 @@ export default function EspacosPage() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Espacos" />
-            <div>
-                <button
-                    type="button"
-                    onClick={() => {
-                        router.visit('/gestor/espacos/criar');
-                    }}
-                >
-                    Cadastrar espaço
-                </button>
-            </div>
             {/* Todo o conteúdo a partir dos filtros até o final em uma única div */}
             <div className="m-8">
                 {/* Filtros e Busca */}
                 <Card className="mb-6">
                     <CardContent className="pt-6">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                            <div className="sm:col-span-2">
-                                <div className="relative">
-                                    <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
-                                    <Input
-                                        placeholder="Buscar por nome ou localização..."
-                                        className="pl-8"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </div>
+                            {/* Busca */}
+                            <div className="relative sm:col-span-2 lg:col-span-5">
+                                <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+                                <Input
+                                    placeholder="Buscar por nome do espaço, andar ou módulo..."
+                                    className="pl-8"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
                             </div>
 
-                            <Select value={selectedModulo} onValueChange={setSelectedModulo}>
+                            {/* Filtro de Unidade */}
+                            <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Modulo" />
+                                    <SelectValue placeholder="Unidade" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value={'all'}>Todos os Modulos</SelectItem>
+                                    <SelectItem value="all">Todas as Unidades</SelectItem>
+                                    {unidades.map((unidade) => (
+                                        <SelectItem key={unidade.id} value={unidade.id.toString()}>
+                                            {unidade.nome}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            {/* Filtro de Módulo */}
+                            <Select value={selectedModulo} onValueChange={setSelectedModulo} disabled={selectedUnidade === 'all'}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Módulo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todos os Módulos</SelectItem>
                                     {modulos.map((modulo) => (
                                         <SelectItem key={modulo.id} value={modulo.id.toString()}>
                                             {modulo.nome}
@@ -119,26 +159,31 @@ export default function EspacosPage() {
                                 </SelectContent>
                             </Select>
 
+                            {/* Filtro de Andar */}
+                            <Select value={selectedAndar} onValueChange={setSelectedAndar} disabled={selectedModulo === 'all'}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Andar" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todos os Andares</SelectItem>
+                                    {andares.map((andar) => (
+                                        <SelectItem key={andar.id} value={andar.id.toString()}>
+                                            {andar.nome}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            {/* Filtro de Capacidade */}
                             <Select value={selectedCapacidade} onValueChange={setSelectedCapacidade}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Capacidade" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="qualquer">Qualquer Capacidade</SelectItem>
+                                    <SelectItem value="qualquer">Qualquer</SelectItem>
                                     <SelectItem value="pequeno">Pequeno (até 30)</SelectItem>
                                     <SelectItem value="medio">Médio (31-100)</SelectItem>
-                                    <SelectItem value="grande">Grande (101+)</SelectItem>
-                                </SelectContent>
-                            </Select>
-
-                            <Select value={selectedDisponibilidade} onValueChange={setSelectedDisponibilidade}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Disponibilidade" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="todos">Todos</SelectItem>
-                                    <SelectItem value="disponivel">Disponível</SelectItem>
-                                    <SelectItem value="indisponivel">Indisponível</SelectItem>
+                                    <SelectItem value="grande">Grande (+100)</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -147,7 +192,7 @@ export default function EspacosPage() {
 
                 {/* Alternador de visualização */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-                    {filteredespacos.map((espaco) => (
+                    {espacos.map((espaco) => (
                         <Card key={espaco.id} className="overflow-hidden">
                             <CardHeader className="p-0">
                                 <img
@@ -290,6 +335,27 @@ export default function EspacosPage() {
                         </DialogContent>
                     </Dialog>
                 )}
+            </div>
+            {/* Componente de Paginação */}
+            <div className="mt-6 flex justify-center">
+                <div className="flex gap-1">
+                    {links.map((link, index) =>
+                        link.url ? (
+                            <Link
+                                key={index}
+                                href={link.url}
+                                className={`rounded-md border px-4 py-2 text-sm ${link.active ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent'}`}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        ) : (
+                            <span
+                                key={index}
+                                className="text-muted-foreground rounded-md border px-4 py-2 text-sm"
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        ),
+                    )}
+                </div>
             </div>
         </AppLayout>
     );

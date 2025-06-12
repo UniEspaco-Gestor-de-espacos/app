@@ -2,21 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Middleware\EspacoMiddleware;
-use App\Models\Agenda;
 use App\Models\Andar;
 use App\Models\Espaco;
 use App\Models\Modulo;
-use App\Models\Setor;
 use App\Models\Unidade;
-use App\Models\User;
-use Exception;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Auth;
-
-use function PHPUnit\Framework\isEmpty;
+use Inertia\Inertia;
 
 class EspacoController extends Controller
 {
@@ -26,11 +18,51 @@ class EspacoController extends Controller
      */
     public function index()
     {
-        $espacos = Espaco::all();
         $user = Auth::user();
-        $modulos = Modulo::all();
-        $setores = Setor::all();
-        return Inertia::render('espacos/index', compact('espacos', 'user', 'modulos', 'setores'));
+        // Pega os parâmetros de filtro da URL (query string)
+        $filters = Request::only(['search', 'unidade', 'modulo', 'andar', 'capacidade']);
+
+        $espacos = Espaco::query()
+            // O join com 'andars' e 'modulos' é necessário para filtrar por eles
+            ->join('andars', 'espacos.andar_id', '=', 'andars.id')
+            ->join('modulos', 'andars.modulo_id', '=', 'modulos.id')
+            // Começa a aplicar os filtros
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('espacos.nome', 'like', '%' . $search . '%')
+                        ->orWhere('andars.nome', 'like', '%' . $search . '%')
+                        ->orWhere('modulos.nome', 'like', '%' . $search . '%');
+                });
+            })
+            ->when($filters['unidade'] ?? null, function ($query, $unidade) {
+                $query->where('modulos.unidade_id', $unidade);
+            })
+            ->when($filters['modulo'] ?? null, function ($query, $modulo) {
+                $query->where('andars.modulo_id', $modulo);
+            })
+            ->when($filters['andar'] ?? null, function ($query, $andar) {
+                $query->where('espacos.andar_id', $andar);
+            })
+            ->when($filters['capacidade'] ?? null, function ($query, $capacidade) {
+                if ($capacidade === 'pequeno') $query->where('espacos.capacidade_pessoas', '<=', 30);
+                if ($capacidade === 'medio') $query->whereBetween('espacos.capacidade_pessoas', [31, 100]);
+                if ($capacidade === 'grande') $query->where('espacos.capacidade_pessoas', '>', 100);
+            })
+            // Seleciona as colunas de espacos para evitar conflitos de 'id'
+            ->select('espacos.*')
+            ->latest('espacos.created_at')
+            ->paginate(15)
+            // Adiciona a query string à paginação para que os filtros sejam mantidos ao mudar de página
+            ->withQueryString();
+
+        return Inertia::render('espacos/index', [
+            'espacos' => $espacos, // Agora é um objeto paginador
+            'andares' => Andar::all(), // Você ainda precisa de todos para popular os selects
+            'modulos' => Modulo::all(),
+            'unidades' => Unidade::all(),
+            'filters' => $filters, // Envie os filtros de volta para a view
+            'user' => $user
+        ]);
     }
 
     /**

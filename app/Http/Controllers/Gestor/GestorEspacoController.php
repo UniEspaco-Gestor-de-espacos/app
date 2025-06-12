@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEspacoRequest;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class GestorEspacoController extends Controller
 {
@@ -52,7 +53,6 @@ class GestorEspacoController extends Controller
     {
         // A validação já foi feita pela Form Request!
         $validated = $request->validated();
-        dd($validated);
         try {
             // Envolve toda a lógica em uma transação. Ou tudo funciona, ou nada é salvo.
             $espaco = DB::transaction(function () use ($validated, $request) {

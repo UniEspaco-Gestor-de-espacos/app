@@ -76,19 +76,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Gestão de espaços
         Route::get('espacos', [GestorEspacoController::class, 'index'])->name('espacos.index');
-        // Criar
-        Route::get('espacos/criar', [GestorEspacoController::class, 'create'])->name('espacos.create');
-        Route::post('espacos', [GestorEspacoController::class, 'store'])
-            ->middleware(CadastroEspacoMiddleware::class)->name('espacos.store');
-        // Editar
-        Route::get('espacos/{espaco}/editar', [GestorEspacoController::class, 'edit'])->name('espacos.edit');
-        Route::patch('espacos/{espaco}', [GestorEspacoController::class, 'update'])
-            ->middleware(EditarEspacoMiddleware::class)->name('espacos.update'); // TODO: Criar regras de editar espaço
-        // Deleta
-        Route::delete('espacos/{espaco}', [GestorEspacoController::class, 'destroy'])->name('espacos.destroy');
-
-        // Andares
-        Route::resource('andares', GestorAndarController::class);
     });
 
 
