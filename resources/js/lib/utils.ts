@@ -76,3 +76,16 @@ export const getStatusReservaText = (situacao: SituacaoReserva) => {
             return 'Desconhecido';
     }
 };
+
+export const getTurnoText = (turno: 'manha' | 'tarde' | 'noite') => {
+    switch (turno) {
+        case 'manha':
+            return 'Manhã';
+        case 'tarde':
+            return 'Tarde';
+        case 'noite':
+            return 'Noite';
+        default:
+            return 'Desconhecido';
+    }
+};

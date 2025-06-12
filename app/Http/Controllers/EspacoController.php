@@ -186,7 +186,6 @@ class EspacoController extends Controller
             $espaco->delete();
             return redirect()->route('espacos.index')->with('success', 'Espaço excluído com sucesso!');
         } catch (Exception $error) {
-            dd($error->getMessage());
             return redirect()->back()->with('error', 'Erro ao excluir, favor tentar novamente');
         }
     }

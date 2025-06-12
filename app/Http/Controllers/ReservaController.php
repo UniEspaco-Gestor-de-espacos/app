@@ -12,6 +12,8 @@ use Exception;
 use Illuminate\Foundation\Exceptions\Renderer\Renderer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -55,29 +57,45 @@ class ReservaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+
+
     public function store(Request $request)
     {
+        // A validação já foi executada pela Form Request.
+        // Usamos uma transação para garantir que tudo seja salvo, ou nada.
         try {
-            // Cria primeiro a reserva para depois vincular ao horario
-            $reserva = Reserva::create([
-                'titulo' => $request['titulo'],
-                'descricao' => $request['descricao'],
-                'data_inicial' => $request['data_inicial'],
-                'data_final' => $request['data_final'],
-                'user_id' => $request['user_id']
-            ]);
-            foreach ($request['horarios_solicitados'] as $horario) {
-                $temp_horario = Horario::create([
-                    'agenda_id' => $horario['agenda_id'],
-                    'horario_inicio' => $horario['horario_inicio'],
-                    'horario_fim' => $horario['horario_fim'],
-                    'data' => $horario['data']
-                ]);
-                $reserva->horarios()->attach($temp_horario->id);
-            };
-            return redirect(status: 201)->route('espacos.index')->with('success', 'Reserva solicitada com sucesso! Aguarde avaliação');
+            $reserva = DB::transaction(function () use ($request) {
+                // Pega os dados validados da reserva, mas adiciona o user_id seguro.
+                $reservaData = $request->only(['titulo', 'descricao', 'data_inicial', 'data_final']);
+                $reservaData['user_id'] = Auth::id(); // Forma segura de pegar o ID do usuário.
+
+                // 1. Cria a reserva
+                $reserva = Reserva::create($reservaData);
+
+                $horariosIds = [];
+
+                // 2. Itera sobre os horários validados
+                foreach ($request['horarios_solicitados'] as $horarioData) {
+                    // Cria o horário
+                    $horario = Horario::create($horarioData);
+                    // Guarda o ID para o attach
+                    $horariosIds[] = $horario->id;
+                }
+
+                // 3. Anexa TODOS os horários à reserva de uma só vez.
+                $reserva->horarios()->attach($horariosIds);
+
+                // A transação retorna a reserva criada
+                return $reserva;
+            });
+
+            return to_route('espacos.index')
+                ->with('success', 'Reserva solicitada com sucesso! Aguarde avaliação.');
         } catch (Exception $error) {
-            return redirect(status: 501)->route('espacos.index')->with('error', 'Erro ao solicitar reserva, favor verificar com administrador do sistema');
+            // Registra o erro para depuração
+            Log::error('Erro ao solicitar reserva: ' . $error->getMessage());
+            return to_route('espacos.index')
+                ->with('error', 'Erro ao solicitar reserva. Por favor, tente novamente ou contate o administrador.');
         }
     }
 

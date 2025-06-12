@@ -57,35 +57,12 @@ class GestorReservaController extends Controller
         //
     }
 
-    public function avaliar() {}
-
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        try {
-            // Cria primeiro a reserva para depois vincular ao horario
-            $reserva = Reserva::create([
-                'titulo' => $request['titulo'],
-                'descricao' => $request['descricao'],
-                'data_inicial' => $request['data_inicial'],
-                'data_final' => $request['data_final'],
-                'user_id' => $request['user_id']
-            ]);
-            foreach ($request['horarios_solicitados'] as $horario) {
-                $temp_horario = Horario::create([
-                    'agenda_id' => $horario['agenda_id'],
-                    'horario_inicio' => $horario['horario_inicio'],
-                    'horario_fim' => $horario['horario_fim'],
-                    'data' => $horario['data']
-                ]);
-                $reserva->horarios()->attach($temp_horario->id);
-            };
-            return redirect(status: 201)->route('espacos.index')->with('success', 'Reserva solicitada com sucesso! Aguarde avaliação');
-        } catch (Exception $error) {
-            return redirect(status: 501)->route('espacos.index')->with('error', 'Erro ao solicitar reserva, favor verificar com administrador do sistema');
-        }
+        // Não utiliza no gestor
     }
 
     /**
@@ -93,21 +70,44 @@ class GestorReservaController extends Controller
      */
     public function show(Reserva $reserva)
     {
-        $usuario = User::whereId($reserva->user_id)->first();
-        $horariosReservaAgenda = $reserva->horarios()->get();
-        $agenda = $horariosReservaAgenda->first()->agenda()->get();
-        $espaco = Espaco::whereId($agenda->first()->espaco_id)->first();
-        $andar = Andar::whereId($espaco->andar_id)->first();
-        $modulo = Modulo::whereId($andar->modulo_id)->first();
+        // 1. Eager Loading: Carrega todas as relações necessárias em poucas queries.
+        $reserva->load([
+            'user', // Carrega o usuário que fez a reserva
+            'horarios.agenda.espaco.andar.modulo' // Carrega toda a árvore de dependências
+        ]);
 
-        return Inertia::render('reservas/gestor/avaliarReserva', ['reserva' => [
-            'reserva' => $reserva,
-            'horarios' => $horariosReservaAgenda,
-            'agenda' => $agenda,
-            'espaco' => $espaco,
-            'andar' => $andar,
-            'modulo' => $modulo
-        ], 'usuario' => $usuario]);
+        // 2. Pega o gestor.
+        $gestor = Auth::user();
+
+        // 3. Filtra os horários já carregados e usa ->values() para reindexar.
+        $horariosDoGestor = $reserva->horarios->filter(function ($horario) use ($gestor) {
+            return $horario->agenda && $horario->agenda->user_id === $gestor->id;
+        })->values();
+
+        // 4. Verificação de segurança: O que acontece se nenhum horário pertencer a este gestor?
+        if ($horariosDoGestor->isEmpty()) {
+            // Você pode retornar um erro 403 (Proibido) ou redirecionar com uma mensagem de erro.
+            return redirect(403)->route('gestor.reservas.index')->with('error', 'Você não tem permissão para avaliar os horários desta reserva.');
+        }
+
+        // 5. Acessa os dados já carregados, sem novas consultas ao banco.
+        // Pega a agenda do primeiro horário filtrado.
+        $agenda = $horariosDoGestor->first()->agenda;
+        $espaco = $agenda->espaco;
+        $andar = $espaco->andar;
+        $modulo = $andar->modulo;
+
+        return Inertia::render('reservas/gestor/avaliarReserva', [
+            'reserva' => [
+                'reserva' => $reserva,
+                'horarios' => $horariosDoGestor, // Horários reindexados e corretos
+                'agenda' => $agenda,
+                'espaco' => $espaco,
+                'andar' => $andar,
+                'modulo' => $modulo
+            ],
+            'usuario' => $reserva->user // Usuário também já carregado
+        ]);
     }
 
     /**
@@ -123,7 +123,13 @@ class GestorReservaController extends Controller
      */
     public function update(Request $request, Reserva $reserva)
     {
-        //
+        $data = ['situacao' => $request->input('situacao')];
+        // Se a situação NÃO for 'deferido', adicionamos o motivo ao array.
+        if ($request->input('situacao') !== 'deferido') {
+            $data['motivo'] = $request->input('motivo');
+        }
+        $reserva->update($data);
+        return redirect(status: 201)->route('gestor.reservas.index')->with('success', 'Reserva avaliada com sucesso!');
     }
 
     /**

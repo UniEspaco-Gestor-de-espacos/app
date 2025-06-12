@@ -24,7 +24,7 @@ export default function MinhasReservas() {
             <Head title="Home" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
-                    <ReservasHeader />
+                    <ReservasHeader isGestor />
                     <ReservasFilters />
                     <Suspense fallback={<ReservasLoading />}>
                         <ReservasList fallback={<ReservasEmpty />} isGestor reservas={reservas} />

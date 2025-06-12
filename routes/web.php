@@ -73,7 +73,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Gestão de reservas
         Route::get('reservas', [GestorReservaController::class, 'index'])->name('reservas.index');
         Route::get('reservas/{reserva}', [GestorReservaController::class, 'show'])->name('reservas.show');
-        Route::patch('reserva/{reserva}/avaliar', [GestorReservaController::class, 'avaliar'])
+        Route::patch('reserva/{reserva}/avaliar', [GestorReservaController::class, 'update'])
             ->middleware(AvaliarReservaMiddleware::class)->name('reservas.avaliar'); // TODO: Criar regras de avaliar reserva
 
         // Gestão de espaços
