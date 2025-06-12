@@ -1,7 +1,8 @@
 import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
 import { FlashMessages, type BreadcrumbItem } from '@/types';
 import { usePage } from '@inertiajs/react';
-import { type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
+import { Toaster, toast } from 'sonner';
 
 interface AppLayoutProps {
     children: ReactNode;
@@ -11,12 +12,19 @@ interface AppLayoutProps {
 export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => {
     const { flash } = usePage<{ flash: FlashMessages }>().props;
 
+    useEffect(() => {
+        if (flash.success) {
+            toast.success(flash.success);
+        }
+
+        if (flash.error) {
+            toast.error(flash.error);
+        }
+    }, [flash]); // O efeito será executado sempre que o objeto 'flash' mudar
+
     return (
         <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
-            {/* Notificação */}
-            {flash.success && <div className="mb-4 rounded bg-green-500 p-4 text-white shadow">{flash.success}</div>}
-
-            {flash.error && <div className="mb-4 rounded bg-red-500 p-4 text-white shadow">{flash.error}</div>}
+            <Toaster richColors position="top-right" />
             {children}
         </AppLayoutTemplate>
     );

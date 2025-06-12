@@ -4,18 +4,16 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\EspacoController;
+use App\Http\Controllers\Gestor\GestorAndarController;
 use App\Http\Controllers\Gestor\GestorEspacoController;
 use App\Http\Controllers\Gestor\GestorReservaController;
 use App\Http\Controllers\Institucional\InstitucionalAndarController;
 use App\Http\Controllers\Institucional\InstitucionalEspacoController;
-use App\Http\Controllers\Institucional\InstituicaoController;
-use App\Http\Controllers\Institucional\ModuloController as InstitucionalModuloController;
-use App\Http\Controllers\Institucional\UnidadeController as InstitucionalUnidadeController;
-use App\Http\Controllers\Institucional\UsuarioController as InstitucionalUsuarioController;
-use App\Http\Controllers\ModuloController;
+use App\Http\Controllers\Institucional\InstitucionalInstituicaoController;
+use App\Http\Controllers\Institucional\InstitucionalModuloController;
+use App\Http\Controllers\Institucional\InstitucionalUnidadeController;
+use App\Http\Controllers\Institucional\InstitucionalUsuarioController;
 use App\Http\Controllers\ReservaController;
-use App\Http\Controllers\UnidadeController;
-use App\Http\Controllers\UsuarioController;
 use App\Http\Middleware\AtualizarUsuarioMiddleware;
 use App\Http\Middleware\AvaliarReservaMiddleware;
 use App\Http\Middleware\CadastrarUsuarioMiddleware;
@@ -68,7 +66,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
     // Rotas Usuario gestor
-    Route::prefix('gestor')->name('gestor.')->group(function () {
+    Route::middleware([])->prefix('gestor')->name('gestor.')->group(function () {
 
         // Gestão de reservas
         Route::get('reservas', [GestorReservaController::class, 'index'])->name('reservas.index');
@@ -88,6 +86,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware(EditarEspacoMiddleware::class)->name('espacos.update'); // TODO: Criar regras de editar espaço
         // Deleta
         Route::delete('espacos/{espaco}', [GestorEspacoController::class, 'destroy'])->name('espacos.destroy');
+
+        // Andares
+        Route::resource('andares', GestorAndarController::class);
     });
 
 
@@ -101,7 +102,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware(CadastrarUsuarioMiddleware::class)->name('usuario.store'); // TODO: Criar Validação
 
         // Instituicao
-        Route::resource('instituicoes', InstituicaoController::class);
+        Route::resource('instituicoes', InstitucionalInstituicaoController::class);
 
         // Unidades
         Route::resource('unidades', InstitucionalUnidadeController::class);

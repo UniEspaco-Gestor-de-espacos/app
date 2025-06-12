@@ -154,3 +154,22 @@ interface GestorTurno {
     departamento: string;
     agenda_id: number;
 }
+
+// Tipos
+type ReservaFormData = {
+    titulo: string;
+    descricao: string;
+    recorrencia: string;
+    data_inicial: Date;
+    data_final: Date;
+    user_id: number;
+    horarios_solicitados: Horario[];
+};
+
+// Tipos para recorrência
+type OpcaoRecorrencia = {
+    valor: string;
+    label: string;
+    descricao: string;
+    calcularDataFinal: (dataInicial: Date) => Date;
+};

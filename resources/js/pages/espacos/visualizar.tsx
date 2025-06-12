@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { Andar, Auth, BreadcrumbItem, Espaco, GestoresEspaco, Horario, Modulo, ReservasTurno } from '@/types';
+import { Andar, Auth, BreadcrumbItem, Espaco, GestoresEspaco, Horario, Modulo, OpcaoRecorrencia, ReservaFormData, ReservasTurno } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { addDays, addMonths, addWeeks, format, isSameDay, startOfWeek, subWeeks } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,24 +29,6 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/espaço/agenda',
     },
 ];
-// Tipos
-type ReservaFormData = {
-    titulo: string;
-    descricao: string;
-    recorrencia: string;
-    data_inicial: Date;
-    data_final: Date;
-    user_id: number;
-    horarios_solicitados: Horario[];
-};
-
-// Tipos para recorrência
-type OpcaoRecorrencia = {
-    valor: string;
-    label: string;
-    descricao: string;
-    calcularDataFinal: (dataInicial: Date) => Date;
-};
 
 export default function AgendaEspaço() {
     const { props } = usePage<{
@@ -66,7 +48,7 @@ export default function AgendaEspaço() {
     const [todosHorarios, setTodosHorarios] = useState<Horario[]>([]);
 
     // Inicializar o formulário com o hook useForm do Inertia
-    const { data, setData, post, processing, errors, reset } = useForm<ReservaFormData>({
+    const { data, setData, post, reset } = useForm<ReservaFormData>({
         titulo: '',
         descricao: '',
         recorrencia: 'unica',

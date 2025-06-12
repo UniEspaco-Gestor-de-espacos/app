@@ -81,11 +81,10 @@ export default function EspacosPage() {
                 <button
                     type="button"
                     onClick={() => {
-                        router.visit('/espacos/create');
+                        router.visit('/gestor/espacos/criar');
                     }}
                 >
-                    {' '}
-                    Cadastrar espaço{' '}
+                    Cadastrar espaço
                 </button>
             </div>
             {/* Todo o conteúdo a partir dos filtros até o final em uma única div */}

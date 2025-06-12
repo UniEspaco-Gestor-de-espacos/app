@@ -34,159 +34,63 @@ class EspacoController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $unidades = Unidade::all();
-        $modulos = Modulo::all();
-        $andares = Andar::all();
-        return Inertia::render('espacos/cadastrar', compact('unidades', 'modulos', 'andares'));
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $storedImagePaths = [];
-        $mainImagePath = null;
-        try {
-            if ($request->hasFile('imagens')) {
-                $uploadedImages = $request->file('imagens'); // Pega o array de UploadedFile
-
-                foreach ($uploadedImages as $index => $uploadedFile) {
-                    // Salva a imagem em no diretorio publico espacos_images
-                    $path = $uploadedFile->store('espacos_images', 'public');
-                    $storedImagePaths[] = $path;
-
-                    // Verifica se esta é a imagem principal baseada no índice enviado
-                    if (isset($form_validado['main_image_index']) && (int)$form_validado['main_image_index'] === $index) {
-                        $mainImagePath = $path;
-                    }
-                }
-                // Se mainImagePath não foi definido pelo índice (ex: índice inválido ou não enviado)
-                // e há imagens, defina a primeira como principal por padrão.
-                if (!$mainImagePath && !empty($storedImagePaths)) {
-                    $mainImagePath = $storedImagePaths[0];
-                }
-            }
-
-            $espaco = Espaco::create([
-                'nome' => $request['nome'],
-                'capacidade_pessoas' => $request['capacidade_pessoas'],
-                'descricao' => $request['descricao'],
-                'imagens' => $storedImagePaths, // Eloquent vai converter para JSON por causa do $casts
-                'main_image_index' => $mainImagePath,
-                'andar_id' => $request['andar_id'],
-            ]);
-            // Criar agenda
-            $agenda_manha = Agenda::create(['turno' => 'manha', 'espaco_id' => $espaco->id]);
-            $agenda_tarde = Agenda::create(['turno' => 'tarde', 'espaco_id' => $espaco->id]);
-            $agenda_noite = Agenda::create(['turno' => 'noite', 'espaco_id' => $espaco->id]);
-
-            return redirect()->route('espacos.index')->with('success', 'Espaco cadastrado com sucesso!');
-        } catch (QueryException $e) { // Captura erro no banco de dados
-            return redirect()->back()->with('error', 'Erro ao salvar no banco de dados: ' . $e->getMessage());
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Ocorreu um erro inesperado: ' . $e->getMessage());
-        }
-    }
-
-    /**
      * Display the specified resource.
      */
     public function show(Espaco $espaco)
     {
-        try {
-            $agendas = Agenda::whereEspacoId($espaco->id)->get();
-            $andar = $espaco->andar;
-            $modulo = $andar->modulo;
-            $gestores_espaco = [];
-            foreach ($agendas as $agenda) {
-                $horarios_reservados[$agenda->turno] = [];
+        // Carrega TUDO que vamos precisar em poucas queries
+        $espaco->load([
+            'andar.modulo', // Carrega o andar e seu módulo
+            'agendas' => function ($query) {
+                $query->with([
+                    'user.setor', // Carrega o gestor (user) da agenda e seu setor
+                    'horarios.reservas' => function ($q) {
+                        // Carrega as reservas dos horários, mas só as deferidas
+                        $q->where('situacao', 'deferida')->with('user'); // Carrega o autor (user) da reserva
+                    }
+                ]);
+            }
+        ]);
 
-                // Busca informações do gestor caso haja
-                if ($agenda->user_id != null) {
-                    $user = User::whereId($agenda->user_id)->get();
-                    $gestores_espaco[$agenda->turno] = [
-                        'nome' => $user->first()->name,
-                        'email' => $user->first()->email,
-                        'setor' => $user->first()->setor()->get()->first()->nome,
-                        'agenda_id' => $agenda->id
+        // Agora processamos os dados que já estão na memória, sem novas consultas
+        $gestores_espaco = [];
+        $horarios_reservados = ['manha' => [], 'tarde' => [], 'noite' => []];
+
+        foreach ($espaco->agendas as $agenda) {
+            // O gestor e o setor já foram carregados
+            if ($agenda->user) {
+                $gestores_espaco[$agenda->turno] = [
+                    'nome' => $agenda->user->name,
+                    'email' => $agenda->user->email,
+                    'setor' => $agenda->user->setor->nome ?? 'Não informado', // Usa ?? para evitar erro se setor for nulo
+                    'agenda_id' => $agenda->id
+                ];
+            }
+
+            foreach ($agenda->horarios as $horario) {
+                // A reserva e seu autor já foram carregados
+                if ($horario->reservas->isNotEmpty()) {
+                    // Como filtramos por 'deferida', pegamos a primeira
+                    $reserva = $horario->reservas->first();
+                    $horarios_reservados[$agenda->turno][] = [
+                        'horario' => $horario,
+                        'autor' => $reserva->user->name ?? 'Usuário removido'
                     ];
                 }
-                // Busca horarios reservados da agenda
-                foreach ($agenda->horarios as $horario) {
-                    $reserva = $horario->reservas()->where('situacao', 'deferida')->first();
-                    if ($reserva) {
-                        $user_name = User::find($reserva->user_id);
-                        array_push($horarios_reservados[$agenda->turno], ['horario' => $horario, 'autor' => $user_name->name]);
-                    }
-                };
             }
-            if (count($gestores_espaco) <= 0) {
-                throw new Exception();
-            }
-            return Inertia::render('espacos/visualizar', compact('espaco', 'agendas', 'modulo', 'andar', 'gestores_espaco', 'horarios_reservados'));
-        } catch (Exception $th) {
-            return redirect()->route('espacos.index')->with('error', 'Espaço sem gestor cadastrado - Aguardando cadastro');
         }
-    }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Espaco $espaco)
-    {
-        return Inertia::render('espacos/editar', compact('espaco'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Espaco $espaco)
-    {
-        $messages = [
-            'campus.required' => 'O campo campus é obrigatório.',
-            'modulo.required' => 'O campo módulo é obrigatório.',
-            'andar.required' => 'O campo andar é obrigatório.',
-            'nome.required' => 'O nome é obrigatório.',
-            'capacidadePessoas.required' => 'A capacidade de pessoas é obrigatória.',
-            'acessibilidade.required' => 'O campo acessibilidade é obrigatório.',
-            'descricao.required' => 'A descrição é obrigatória.',
-        ];
-        try {
-            $espaco->update($request->validate([
-                'campus' => 'required',
-                'modulo' => 'required',
-                'andar' => 'required',
-                'nome' => 'required',
-                'capacidadePessoas' => 'required',
-                'acessibilidade' => 'required',
-                'descricao' => 'required'
-            ], $messages));
-            return redirect()->route('espacos.index')->with('success', 'Espaço atualizado com sucesso!');
-        } catch (QueryException $e) {
-            // Aqui você captura erros específicos do banco de dados
-            // Exemplo: erro de chave estrangeira, erro de duplicidade, etc.
-            return redirect()->back()->with('error', 'Erro ao salvar no banco de dados: ' . $e->getMessage());
-        } catch (Exception $e) {
-            // Captura erros gerais
-            return redirect()->back()->with('warning', 'Ocorreu um erro inesperado: ' . $e->getMessage());
+        // Lógica de negócio (não uma exceção) para verificar se há gestor
+        if (empty($gestores_espaco)) {
+            return redirect()->route('espacos.index')->with('error', 'Este espaço ainda não possui um gestor definido.');
         }
-    }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Espaco $espaco)
-    {
-        try {
-            $espaco->delete();
-            return redirect()->route('espacos.index')->with('success', 'Espaço excluído com sucesso!');
-        } catch (Exception $error) {
-            return redirect()->back()->with('error', 'Erro ao excluir, favor tentar novamente');
-        }
+        return Inertia::render('espacos/visualizar', [
+            'espaco' => $espaco,
+            'andar' => $espaco->andar,
+            'modulo' => $espaco->andar->modulo,
+            'gestores_espaco' => $gestores_espaco,
+            'horarios_reservados' => $horarios_reservados,
+        ]);
     }
 }
