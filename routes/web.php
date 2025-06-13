@@ -7,6 +7,7 @@ use App\Http\Controllers\EspacoController;
 use App\Http\Controllers\Gestor\GestorAndarController;
 use App\Http\Controllers\Gestor\GestorEspacoController;
 use App\Http\Controllers\Gestor\GestorReservaController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Institucional\InstitucionalAndarController;
 use App\Http\Controllers\Institucional\InstitucionalEspacoController;
 use App\Http\Controllers\Institucional\InstitucionalInstituicaoController;
@@ -31,17 +32,7 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // Painel geral
-    Route::get('dashboard', function () {
-        $user = Auth::user();
-        switch ($user->permission_type_id) {
-            case 1: // Institucional
-                return Inertia::render('dashboard/institucional', compact('user'));
-            case 2: // Gestor
-                return Inertia::render('dashboard/gestor', compact('user'));
-            default: // Usuario Comum
-                return Inertia::render('dashboard/usuario', compact('user'));
-        }
-    })->name('dashboard');
+    Route::get('dashboard', [HomeController::class, 'index'])->name('dashboard');
 
     // Visualização de espaços
     Route::get('espacos', [EspacoController::class, 'index'])->name('espacos.index');

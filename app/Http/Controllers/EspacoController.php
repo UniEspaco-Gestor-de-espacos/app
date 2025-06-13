@@ -78,7 +78,7 @@ class EspacoController extends Controller
                     'user.setor', // Carrega o gestor (user) da agenda e seu setor
                     'horarios.reservas' => function ($q) {
                         // Carrega as reservas dos horários, mas só as deferidas
-                        $q->where('situacao', 'deferida')->with('user'); // Carrega o autor (user) da reserva
+                        $q->wherePivot('situacao', 'deferida')->with('user'); // Carrega o autor (user) da reserva
                     }
                 ]);
             }

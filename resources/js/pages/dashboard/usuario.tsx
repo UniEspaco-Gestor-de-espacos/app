@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { User, type BreadcrumbItem } from '@/types';
+import { DashboardStatusReservasType, Espaco, Reserva, User, type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { CalendarClock, Clock, History, Plus } from 'lucide-react';
 const breadcrumbs: BreadcrumbItem[] = [
@@ -19,12 +19,6 @@ const nextReservation = {
     date: '15/05/2023',
     startTime: '14:00',
     endTime: '16:00',
-};
-
-const reservationStatus = {
-    pending: 2,
-    approved: 3,
-    rejected: 1,
 };
 
 const reservationHistory = [
@@ -65,31 +59,47 @@ const reservationHistory = [
     },
 ];
 export default function Dashboard() {
-    const { props } = usePage<{ user: User }>();
-    const { user } = props;
-    console.log(user);
+    const { props } = usePage<{
+        user: User;
+        statusDasReservas: DashboardStatusReservasType;
+        proximaReserva: Reserva;
+        espacoDaProximaReserva: Espaco;
+    }>();
+    const { user, statusDasReservas, proximaReserva, espacoDaProximaReserva } = props;
+    console.log(statusDasReservas);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <Card className="col-span-1 sm:col-span-1">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Próxima Reserva</CardTitle>
-                            <CalendarClock className="text-muted-foreground h-4 w-4" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="truncate text-xl font-bold md:text-2xl">{nextReservation.spaceName}</div>
-                            <p className="text-muted-foreground text-xs">
-                                {nextReservation.date} • {nextReservation.startTime} às {nextReservation.endTime}
-                            </p>
-                        </CardContent>
-                        <CardFooter>
-                            <Button variant="outline" size="sm" className="w-full">
-                                Ver detalhes
-                            </Button>
-                        </CardFooter>
-                    </Card>
+                    {proximaReserva != null ? (
+                        <Card className="col-span-1 sm:col-span-1">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Próxima Reserva</CardTitle>
+                                <CalendarClock className="text-muted-foreground h-4 w-4" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="truncate text-xl font-bold md:text-2xl">{espacoDaProximaReserva.nome}</div>
+                                <p className="text-muted-foreground text-xs">
+                                    {nextReservation.date} • {nextReservation.startTime} às {nextReservation.endTime}
+                                </p>
+                            </CardContent>
+                            <CardFooter>
+                                <Button variant="outline" size="sm" className="w-full">
+                                    Ver detalhes
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    ) : (
+                        <Card className="col-span-1 sm:col-span-1">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Sem reservas proximas</CardTitle>
+                                <CalendarClock className="text-muted-foreground h-4 w-4" />
+                            </CardHeader>
+                            <CardContent></CardContent>
+                            <CardFooter></CardFooter>
+                        </Card>
+                    )}
 
                     <Card className="col-span-1 sm:col-span-1">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -99,15 +109,15 @@ export default function Dashboard() {
                         <CardContent>
                             <div className="flex justify-between">
                                 <div className="text-center">
-                                    <div className="text-xl font-bold md:text-2xl">{reservationStatus.pending}</div>
+                                    <div className="text-xl font-bold md:text-2xl">{statusDasReservas.em_analise}</div>
                                     <p className="text-muted-foreground text-xs">Aguardando</p>
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-xl font-bold md:text-2xl">{reservationStatus.approved}</div>
+                                    <div className="text-xl font-bold md:text-2xl">{statusDasReservas.deferida}</div>
                                     <p className="text-muted-foreground text-xs">Aprovadas</p>
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-xl font-bold md:text-2xl">{reservationStatus.rejected}</div>
+                                    <div className="text-xl font-bold md:text-2xl">{statusDasReservas.indeferida}</div>
                                     <p className="text-muted-foreground text-xs">Recusadas</p>
                                 </div>
                             </div>

@@ -1,20 +1,59 @@
 import { LucideIcon } from 'lucide-react';
 import type { Config } from 'ziggy-js';
 
+// =============================================================================
+// 1. TIPOS GERAIS DA APLICAÇÃO E AUTENTICAÇÃO
+// Definições básicas para usuário, autenticação, mensagens e navegação.
+// =============================================================================
+
+/**
+ * Dados compartilhados pelo Inertia em todas as páginas.
+ */
+export interface SharedData {
+    auth: Auth;
+    ziggy: Config & { location: string };
+    flash: FlashMessages;
+    sidebarOpen: boolean;
+    [key: string]: unknown;
+}
+
+/**
+ * Estrutura do objeto de autenticação.
+ */
 export interface Auth {
     user: User;
 }
 
-export interface BreadcrumbItem {
-    title: string;
-    href: string;
+/**
+ * Modelo de Usuário, conforme o banco de dados.
+ */
+export interface User {
+    id: number;
+    name: string;
+    email: string;
+    email_verified_at: string | null;
+    telefone: string;
+    profile_pic?: string;
+    permission_type_id: number;
+    setor_id: number;
+    setor?: Setor; // Opcional, carregar com with('setor')
+    created_at: string;
+    updated_at: string;
 }
 
-export interface NavGroup {
-    title: string;
-    items: NavItem[];
+/**
+ * Mensagens de feedback (success, error) enviadas pelo backend.
+ */
+export interface FlashMessages {
+    success?: string;
+    error?: string;
+    info?: string;
+    warning?: string;
 }
 
+/**
+ * Itens de navegação para a sidebar ou menus.
+ */
 export interface NavItem {
     title: string;
     href: string;
@@ -22,45 +61,27 @@ export interface NavItem {
     isActive?: boolean;
 }
 
-export interface SharedData {
-    name: string;
-    quote: { message: string; author: string };
-    auth: Auth;
-    ziggy: Config & { location: string };
-    sidebarOpen: boolean;
-    [key: string]: unknown;
+/**
+ * Grupo de itens de navegação.
+ */
+export interface NavGroup {
+    title: string;
+    items: NavItem[];
 }
 
-export interface User {
-    id: number;
-    name: string;
-    email: string;
-    email_verified_at: string | null;
-    password: string;
-    telefone: string;
-    profile_pic?: string;
-    permission_type_id: number;
-    setor_id: number;
-    created_at: string;
-    updated_at: string;
-}
-export type TipoUsuario = 'setor' | 'professor' | 'aluno' | 'externo';
-export interface Espaco {
-    id: number;
-    nome: string;
-    capacidade_pessoas: number;
-    descricao: string;
-    imagens: [];
-    main_image_index: string;
-    andar_id: number;
+/**
+ * Item para breadcrumbs de navegação.
+ */
+export interface BreadcrumbItem {
+    title: string;
+    href: string;
 }
 
-export interface Agenda {
-    id: number;
-    turno: 'manha' | 'tarde' | 'noite';
-    espaco_id: string;
-    user_id: string;
-}
+// =============================================================================
+// 2. TIPOS DA HIERARQUIA DE LOCALIZAÇÃO (MODELOS DO LARAVEL)
+// Estrutura física da instituição, em ordem hierárquica.
+// =============================================================================
+
 export interface Instituicao {
     id: number;
     nome: string;
@@ -73,6 +94,7 @@ export interface Unidade {
     nome: string;
     sigla: string;
     instituicao_id: number;
+    instituicao?: Instituicao; // Relação aninhada
 }
 
 export interface Setor {
@@ -80,12 +102,14 @@ export interface Setor {
     nome: string;
     sigla: string;
     unidade_id: number;
+    unidade?: Unidade; // Relação aninhada
 }
 
 export interface Modulo {
     id: number;
     nome: string;
     unidade_id: number;
+    unidade?: Unidade; // Relação aninhada
 }
 
 export interface Andar {
@@ -93,83 +117,109 @@ export interface Andar {
     nome: string;
     tipo_acesso: [];
     modulo_id: string;
+    modulo?: Modulo; // Relação aninhada
 }
 
-export interface FlashMessages {
-    success?: string;
-    error?: string;
-    info?: string;
-    warning?: string;
+export interface Espaco {
+    id: number;
+    nome: string;
+    capacidade_pessoas: number;
+    descricao: string;
+    imagens: string[];
+    main_image_index: number;
+    andar_id: number;
+    andar?: Andar; // Relação aninhada
 }
 
-type Horario = {
-    id?: string;
-    data: Date;
+// =============================================================================
+// 3. TIPOS DO SISTEMA DE RESERVAS (MODELOS E LÓGICA)
+// O coração do sistema: Reservas, Horários, Agendas e seus status.
+// =============================================================================
+
+/**
+ * Representa os possíveis status de uma reserva ou de um horário.
+ * Adicionado 'parcialmente_deferido' para o status geral da reserva.
+ */
+export type SituacaoReserva = 'em_analise' | 'deferida' | 'indeferida' | 'parcialmente_deferido';
+
+/**
+ * Dados da tabela pivô `reserva_horario`, crucial para o status individual.
+ */
+export interface Pivot {
+    reserva_id: number;
+    horario_id: number;
+    situacao: 'em_analise' | 'deferido' | 'indeferido';
+}
+
+/**
+ * Modelo de Agenda, que define turnos e gestores para um Espaço.
+ */
+export interface Agenda {
+    id: number;
+    turno: 'manha' | 'tarde' | 'noite';
+    espaco_id: number;
+    user_id: number;
+    espaco?: Espaco; // Relação aninhada
+    user?: User; // Relação com o gestor da agenda
+}
+
+/**
+ * Modelo de Horário. Contém a referência para a Agenda e os dados da tabela pivô.
+ */
+export interface Horario {
+    id: number;
+    data: string; // Datas do Laravel chegam como strings no JSON
     horario_inicio: string;
     horario_fim: string;
+    dia: 'seg' | 'ter' | 'qua' | 'qui' | 'sex' | 'sab' | 'dom';
     agenda_id: number;
-    status: string;
-    autor: string;
-};
-
-interface GestoresEspaco {
-    manha: GestorTurno;
-    tarde: GestorTurno;
-    noite: GestorTurno;
+    agenda?: Agenda; // Relação aninhada
+    pivot?: Pivot; // Dados da tabela pivô `reserva_horario`
 }
 
-interface ReservasTurno {
-    manha: { horario: Horario; autor: string }[];
-    tarde: { horario: Horario; autor: string }[];
-    noite: { horario: Horario; autor: string }[];
-}
-
-type Reserva = {
+/**
+ * Modelo de Reserva. Esta é a estrutura principal que será usada nas páginas
+ * 'minhasReservas' e 'gerenciarReservas', contendo todas as relações aninhadas.
+ */
+export interface Reserva {
     id: number;
     titulo: string;
     descricao: string;
-    situacao: SituacaoReserva;
-    data_inicial: Date;
-    data_final: Date;
-    observacao: string;
+    situacao: SituacaoReserva; // O status geral da reserva
+    data_inicial: string;
+    data_final: string;
+    observacao: string | null;
     user_id: number;
-    created_at: Date;
-    updated_at: Date;
-};
-
-type ReservaHorarios = {
-    reserva: Reserva;
-    horarios: Horario[];
-    agenda: Agenda;
-    espaco: Espaco;
-    andar: Andar;
-    modulo: Modulo;
-};
-
-type SituacaoReserva = 'em_analise' | 'deferida' | 'indeferida';
-
-interface GestorTurno {
-    nome: string;
-    email: string;
-    departamento: string;
-    agenda_id: number;
+    created_at: string;
+    updated_at: string;
+    usuario?: User; // O usuário que fez a reserva (carregar com with('usuario'))
+    horarios: Horario[]; // O array de horários pertencentes a esta reserva
 }
 
-// Tipos
-type ReservaFormData = {
+// =============================================================================
+// 4. TIPOS PARA FORMULÁRIOS E DADOS DE PÁGINAS ESPECÍFICAS
+// Tipos auxiliares usados em formulários, dashboards, etc.
+// =============================================================================
+
+/**
+ * Tipo para o formulário de criação/edição de uma reserva.
+ */
+export type ReservaFormData = {
     titulo: string;
     descricao: string;
-    recorrencia: string;
-    data_inicial: Date;
-    data_final: Date;
-    user_id: number;
-    horarios_solicitados: Horario[];
+    data_inicial: Date | null;
+    data_final: Date | null;
+    // user_id é pego no backend
+    horarios_solicitados: Partial<Horario>[]; // Horários que o usuário seleciona
 };
 
-// Tipos para recorrência
-type OpcaoRecorrencia = {
-    valor: string;
-    label: string;
-    descricao: string;
-    calcularDataFinal: (dataInicial: Date) => Date;
+/**
+ * Tipo para o painel de controle que mostra o resumo dos status.
+ */
+export type DashboardStatusReservasType = {
+    em_analise: number;
+    deferida: number;
+    indeferida: number;
 };
+
+// ... outros tipos específicos de componentes podem ser adicionados aqui.

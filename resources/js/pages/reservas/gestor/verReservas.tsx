@@ -10,6 +10,10 @@ import { ReservasLoading } from '../fragments/reservasLoading';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
+        title: 'Reservas',
+        href: '/gestor/reservas',
+    },
+    {
         title: 'Gerenciar Reservas',
         href: '/gestor/reservas',
     },
@@ -18,7 +22,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function MinhasReservas() {
     const { props } = usePage<{ user: User; reservasGestor: ReservaHorarios[] }>();
     const reservas = props.reservasGestor;
-    console.log(reservas);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />

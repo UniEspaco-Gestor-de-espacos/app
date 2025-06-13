@@ -36,7 +36,7 @@ const reservationStats = {
     rejected: 55,
 };
 export default function Dashboard() {
-    const { props } = usePage<{ user: User }>();
+    const { props } = usePage<{ user: User}>();
     const { user } = props;
     console.log(user);
     return (

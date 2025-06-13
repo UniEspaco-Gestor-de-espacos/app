@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDate, formatDateTime, getTurnoText, pegarPrimeiroHorario, pegarUltimoHorario } from '@/lib/utils';
-import { ReservaHorarios } from '@/types';
+import  from '@/types';
 import { router } from '@inertiajs/react';
 import { CheckCircle, ChevronLeft, ChevronRight, Clock, Edit, Eye, XCircle, XSquare } from 'lucide-react';
 import type React from 'react';
