@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade');
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->enum('situacao', ['em_analise', 'deferida', 'indeferida'])->default('em_analise');
+            $table->text('justificativa')->nullable();
             $table->timestamps();
             $table->primary(['reserva_id', 'horario_id']);
         });

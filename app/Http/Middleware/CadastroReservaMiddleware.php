@@ -17,7 +17,7 @@ class CadastroReservaMiddleware
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
-    {
+    {/*
         $validatedData = $request->validate([
             'titulo' => 'required|string|max:255',
             'descricao' => 'nullable|string',
@@ -91,7 +91,7 @@ class CadastroReservaMiddleware
                     return redirect(status: 409)->route('espacos.index')->with('error', $mensagemErro);
                 }
             }
-        }
+        }*/
         return $next($request);
     }
 }

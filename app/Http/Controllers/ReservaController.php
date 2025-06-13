@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreReservaRequest;
 use App\Models\Agenda;
 use App\Models\Andar;
 use App\Models\Espaco;
@@ -58,23 +59,24 @@ class ReservaController extends Controller
      */
 
 
-    public function store(Request $request)
+    public function store(StoreReservaRequest $request)
     {
+        dd($request['data_inicial']);
         // A validação já foi executada pela Form Request.
         // Usamos uma transação para garantir que tudo seja salvo, ou nada.
         try {
             DB::transaction(function () use ($request) {
                 // 1. Cria a reserva com o status inicial 'em_analise'.
                 $reserva = Reserva::create([
-                    'titulo' => $request->input('titulo'),
-                    'descricao' => $request->input('descricao'),
-                    'data_inicial' => $request->input('data_inicial'),
-                    'data_final' => $request->input('data_final'),
+                    'titulo' => $request->validated('titulo'),
+                    'descricao' => $request->validated('descricao'),
+                    'data_inicial' => $request->validated('data_inicial'),
+                    'data_final' => $request->validated('data_final'),
                     'user_id' => Auth::id(),
                     'situacao' => 'em_analise', // Status geral inicial
                 ]);
 
-                $horariosData = $request->input('horarios_solicitados');
+                $horariosData = $request->validated('horarios_solicitados');
 
                 // Prepara os dados para inserção em massa e os IDs para o anexo.
                 $horariosParaAnexar = [];

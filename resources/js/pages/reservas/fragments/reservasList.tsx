@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDate, formatDateTime, getTurnoText, pegarPrimeiroHorario, pegarUltimoHorario } from '@/lib/utils';
-import  from '@/types';
+import { Reserva, SituacaoReserva } from '@/types';
 import { router } from '@inertiajs/react';
 import { CheckCircle, ChevronLeft, ChevronRight, Clock, Edit, Eye, XCircle, XSquare } from 'lucide-react';
 import type React from 'react';
@@ -11,16 +11,22 @@ import { useState } from 'react';
 import { ReservaCard, SituacaoIndicator } from './reservaCard';
 
 // Tipos baseados no modelo de dados fornecido
-type Situacao = 'em_analise' | 'deferida' | 'indeferida';
 
 // Componente para exibir o status da reserva com cores e ícones apropriados
-function SituacaoBadge({ situacao }: { situacao: Situacao }) {
+function SituacaoBadge({ situacao }: { situacao: SituacaoReserva }) {
     switch (situacao) {
         case 'em_analise':
             return (
                 <Badge variant="outline" className="flex items-center gap-1 border-yellow-200 bg-yellow-50 text-yellow-700">
                     <Clock className="h-3 w-3" />
                     Em analise
+                </Badge>
+            );
+        case 'parcialmente_deferida':
+            return (
+                <Badge variant="outline" className="flex items-center gap-1 border-green-200 bg-green-50 text-green-700">
+                    <CheckCircle className="h-3 w-3" />
+                    Parcialmente Deferida
                 </Badge>
             );
         case 'deferida':
@@ -43,20 +49,12 @@ function SituacaoBadge({ situacao }: { situacao: Situacao }) {
 }
 
 // Componente principal da lista de reservas
-export function ReservasList({
-    fallback,
-    reservas,
-    isGestor = false,
-}: {
-    fallback: React.ReactNode;
-    reservas: ReservaHorarios[];
-    isGestor?: boolean;
-}) {
+export function ReservasList({ fallback, reservas, isGestor = false }: { fallback: React.ReactNode; reservas: Reserva[]; isGestor?: boolean }) {
     const [page, setPage] = useState(1);
     const [view, setView] = useState<'table' | 'cards'>('table');
 
     // 1. O estado agora guarda a reserva SELECIONADA, ou null se nenhuma estiver.
-    const [selectedReserva, setSelectedReserva] = useState<ReservaHorarios | null>(null);
+    const [selectedReserva, setSelectedReserva] = useState<Reserva | null>(null);
 
     if (reservas.length === 0) {
         return fallback;
@@ -93,30 +91,31 @@ export function ReservasList({
                         </TableHeader>
                         <TableBody>
                             {reservas.map((reserva) => (
-                                <TableRow key={reserva.reserva.id}>
+                                <TableRow key={reserva.id}>
                                     <TableCell className="font-medium">
                                         <div>
-                                            {reserva.reserva.titulo}
+                                            {reserva.titulo}
                                             <p className="text-muted-foreground hidden text-sm sm:block">
-                                                {reserva.reserva.descricao.substring(0, 60)}
-                                                {reserva.reserva.descricao.length > 60 ? '...' : ''}
+                                                {reserva.descricao.substring(0, 60)}
+                                                {reserva.descricao.length > 60 ? '...' : ''}
                                             </p>
                                         </div>
                                     </TableCell>
                                     <TableCell className="hidden md:table-cell">
-                                        <SituacaoBadge situacao={reserva.reserva.situacao} />
+                                        <SituacaoBadge situacao={reserva.situacao} />
                                     </TableCell>
                                     <TableCell className="hidden md:table-cell">
                                         <div>
                                             <p>
-                                                Espaço: {reserva.espaco.nome} / {reserva.andar.nome} / {reserva.modulo.nome} /{' '}
-                                                {getTurnoText(reserva.agenda.turno)}
+                                                Espaço: {reserva.horarios[0].agenda?.espaco?.nome} / {reserva.horarios[0].agenda?.espaco?.andar?.nome}
+                                                / {reserva.horarios[0].agenda?.espaco?.andar?.modulo?.nome} / {' '}
+                                                {getTurnoText(reserva.horarios[0].agenda!.turno)}
                                             </p>
                                         </div>
                                     </TableCell>
 
-                                    <TableCell className="hidden lg:table-cell">{formatDate(reserva.reserva.data_inicial)}</TableCell>
-                                    <TableCell className="hidden lg:table-cell"> {formatDate(reserva.reserva.data_final)}</TableCell>
+                                    <TableCell className="hidden lg:table-cell">{formatDate(reserva.data_inicial)}</TableCell>
+                                    <TableCell className="hidden lg:table-cell"> {formatDate(reserva.data_final)}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2 pt-2">
                                             {/* 2. O botão de detalhes agora define a reserva selecionada no estado */}
@@ -125,12 +124,12 @@ export function ReservasList({
                                                 Detalhes
                                             </Button>
 
-                                            {reserva.reserva.situacao === 'em_analise' && (
+                                            {reserva.situacao === 'em_analise' && (
                                                 <>
                                                     {isGestor ? (
                                                         <div>
                                                             <Button
-                                                                onClick={() => handleAvaliarButton(reserva.reserva.id)}
+                                                                onClick={() => handleAvaliarButton(reserva.id)}
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 className="h-8 w-8"
@@ -164,7 +163,7 @@ export function ReservasList({
             ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {reservas.map((reserva) => (
-                        <ReservaCard key={reserva.reserva.id} {...reserva} />
+                        <ReservaCard key={reserva.id} {...reserva} />
                     ))}
                 </div>
             )}
@@ -181,15 +180,15 @@ export function ReservasList({
                 >
                     <DialogContent className="sm:max-w-md">
                         <DialogHeader>
-                            <DialogTitle>{selectedReserva.reserva.titulo}</DialogTitle>
+                            <DialogTitle>{selectedReserva.titulo}</DialogTitle>
                             <DialogDescription asChild>
-                                <SituacaoIndicator situacao={selectedReserva.reserva.situacao} />
+                                <SituacaoIndicator situacao={selectedReserva.situacao} />
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                             <div className="space-y-2">
                                 <h4 className="text-sm font-medium">Descrição</h4>
-                                <p className="text-muted-foreground text-sm">{selectedReserva.reserva.descricao}</p>
+                                <p className="text-muted-foreground text-sm">{selectedReserva.descricao}</p>
                             </div>
 
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -203,19 +202,19 @@ export function ReservasList({
                                 </div>
                             </div>
 
-                            {selectedReserva.reserva.observacao && (
+                            {selectedReserva.observacao && (
                                 <div className="space-y-2">
                                     <h4 className="text-sm font-medium">Observações</h4>
-                                    <p className="text-muted-foreground text-sm">{selectedReserva.reserva.observacao}</p>
+                                    <p className="text-muted-foreground text-sm">{selectedReserva.observacao}</p>
                                 </div>
                             )}
 
                             <div className="text-muted-foreground grid grid-cols-1 gap-4 text-xs sm:grid-cols-2">
                                 <div>
-                                    <p>Criado em: {formatDateTime(selectedReserva.reserva.created_at)}</p>
+                                    <p>Criado em: {formatDateTime(selectedReserva.created_at)}</p>
                                 </div>
                                 <div>
-                                    <p>Atualizado em: {formatDateTime(selectedReserva.reserva.updated_at)}</p>
+                                    <p>Atualizado em: {formatDateTime(selectedReserva.updated_at)}</p>
                                 </div>
                             </div>
                         </div>
@@ -223,14 +222,14 @@ export function ReservasList({
                             <Button variant="outline" onClick={() => setSelectedReserva(null)}>
                                 Fechar
                             </Button>
-                            {selectedReserva.reserva.situacao === 'em_analise' && (
+                            {selectedReserva.situacao === 'em_analise' && (
                                 <>
                                     {isGestor ? (
                                         <div>
                                             <Button
                                                 variant="outline"
                                                 onClick={() => {
-                                                    router.visit(`/gestor/reservas/${selectedReserva.reserva.id}`);
+                                                    router.visit(`/gestor/reservas/${selectedReserva.id}`);
                                                 }}
                                             >
                                                 <Edit className="mr-1 h-4 w-4" />

@@ -14,6 +14,9 @@ use App\Models\Andar;
 use App\Models\Espaco;
 use App\Models\Modulo;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redirect;
 
 class GestorReservaController extends Controller
 {
@@ -22,31 +25,35 @@ class GestorReservaController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
-        $agendas = Agenda::whereUserId($user->id)->get(); // Busca agendas em que o usuario é gestor
-        $todasReservas = Reserva::all();
-        $reservasGestor = [];
+        $gestor = Auth::user();
+        $agendasDoGestorIds = Agenda::where('user_id', $gestor->id)->pluck('id');
 
-        foreach ($todasReservas as $reserva) {
-            foreach ($agendas as $agenda) { // Verifica se a reserva tem horario da agenda
-                $horariosReservaAgenda = $reserva->horarios->whereIn('agenda_id', $agenda->id);
-                $espaco = Espaco::whereId($agenda->espaco_id)->first();
-                $andar = Andar::whereId($espaco->andar_id)->first();
-                $modulo = Modulo::whereId($andar->modulo_id)->first();
-                if ($horariosReservaAgenda->isNotEmpty()) {
-                    $reservasGestor[] = [
-                        'reserva' => $reserva,
-                        'horarios' => $horariosReservaAgenda,
-                        'agenda' => $agenda,
-                        'espaco' => $espaco,
-                        'andar' => $andar,
-                        'modulo' => $modulo
-                    ];
-                }
-                continue;
-            }
+        if ($agendasDoGestorIds->isEmpty()) {
+            return Inertia::render('reservas/gestor/verReservas', [
+                'reservas' => collect(), // Envia uma coleção vazia
+            ]);
         }
-        return Inertia::render('reservas/gestor/verReservas', compact('reservasGestor'));
+
+        $reservaIds = DB::table('reserva_horario')
+            ->join('horarios', 'reserva_horario.horario_id', '=', 'horarios.id')
+            ->whereIn('horarios.agenda_id', $agendasDoGestorIds)
+            ->distinct()
+            ->pluck('reserva_horario.reserva_id');
+        if ($reservaIds->isEmpty()) {
+            return Inertia::render('reservas/gestor/verReservas', [
+                'reservas' => collect(),
+            ]);
+        }
+        $reservasParaAvaliar = Reserva::whereIn('id', $reservaIds)
+            ->with([
+                'user', // O usuário que solicitou a reserva
+                'horarios.agenda.espaco.andar.modulo.unidade.instituicao'
+            ])
+            ->latest()
+            ->get();
+        return Inertia::render('reservas/gestor/verReservas', [
+            'reservas' => $reservasParaAvaliar,
+        ]);
     }
 
     /**
@@ -70,43 +77,29 @@ class GestorReservaController extends Controller
      */
     public function show(Reserva $reserva)
     {
-        // 1. Eager Loading: Carrega todas as relações necessárias em poucas queries.
+        $gestor = Auth::user();
+        // Carrega a reserva com todos os dados necessários para a tela de detalhes do gestor.
+        $agendasDoGestorIds = Agenda::where('user_id', $gestor->id)->pluck('id');
+
+        // Se o gestor não gerencia agendas, não deveria estar aqui.
+        // Podemos retornar um erro ou redirecionar.
+        if ($agendasDoGestorIds->isEmpty()) {
+            abort(403, 'Acesso não autorizado.');
+        }
         $reserva->load([
-            'user', // Carrega o usuário que fez a reserva
-            'horarios.agenda.espaco.andar.modulo' // Carrega toda a árvore de dependências
+            'user',
+            'horarios' => function ($query) use ($agendasDoGestorIds) {
+                // Condição: O 'agenda_id' do horário DEVE estar na lista de IDs do gestor.
+                $query->whereIn('agenda_id', $agendasDoGestorIds)
+                    ->orderBy('data')
+                    ->orderBy('horario_inicio');
+            },
+            'horarios.agenda.espaco.andar.modulo.unidade.instituicao'
         ]);
 
-        // 2. Pega o gestor.
-        $gestor = Auth::user();
-
-        // 3. Filtra os horários já carregados e usa ->values() para reindexar.
-        $horariosDoGestor = $reserva->horarios->filter(function ($horario) use ($gestor) {
-            return $horario->agenda && $horario->agenda->user_id === $gestor->id;
-        })->values();
-
-        // 4. Verificação de segurança: O que acontece se nenhum horário pertencer a este gestor?
-        if ($horariosDoGestor->isEmpty()) {
-            // Você pode retornar um erro 403 (Proibido) ou redirecionar com uma mensagem de erro.
-            return redirect(403)->route('gestor.reservas.index')->with('error', 'Você não tem permissão para avaliar os horários desta reserva.');
-        }
-
-        // 5. Acessa os dados já carregados, sem novas consultas ao banco.
-        // Pega a agenda do primeiro horário filtrado.
-        $agenda = $horariosDoGestor->first()->agenda;
-        $espaco = $agenda->espaco;
-        $andar = $espaco->andar;
-        $modulo = $andar->modulo;
 
         return Inertia::render('reservas/gestor/avaliarReserva', [
-            'reserva' => [
-                'reserva' => $reserva,
-                'horarios' => $horariosDoGestor, // Horários reindexados e corretos
-                'agenda' => $agenda,
-                'espaco' => $espaco,
-                'andar' => $andar,
-                'modulo' => $modulo
-            ],
-            'usuario' => $reserva->user // Usuário também já carregado
+            'reserva' => $reserva
         ]);
     }
 
@@ -123,13 +116,54 @@ class GestorReservaController extends Controller
      */
     public function update(Request $request, Reserva $reserva)
     {
-        $data = ['situacao' => $request->input('situacao')];
-        // Se a situação NÃO for 'deferido', adicionamos o motivo ao array.
-        if ($request->input('situacao') !== 'deferido') {
-            $data['motivo'] = $request->input('motivo');
+        // 1. Validação da entrada: garante que a situação seja 'deferido' ou 'indeferido'.
+        $request->validate([
+            'situacao' => 'required|in:deferida,indeferia',
+        ]);
+
+        $gestor = Auth::user();
+        $novaSituacao = $request->input('situacao');
+
+        // 2. Obter um array com os IDs de todas as agendas gerenciadas pelo gestor.
+        $agendasDoGestorIds = Agenda::where('user_id', $gestor->id)->pluck('id');
+
+        // Se o gestor não gerencia nenhuma agenda, ele não pode avaliar nada.
+        if ($agendasDoGestorIds->isEmpty()) {
+            return back()->with('error', 'Você não é gestor de nenhuma agenda.');
         }
-        $reserva->update($data);
-        return redirect(status: 201)->route('gestor.reservas.index')->with('success', 'Reserva avaliada com sucesso!');
+
+        DB::beginTransaction();
+        try {
+            // 3. Encontrar os IDs dos horários DENTRO DESTA RESERVA que:
+            //    a) Pertencem a uma das agendas do gestor.
+            //    b) Ainda estão com o status 'em_analise'.
+            $horariosIdsParaAvaliar = $reserva->horarios()
+                ->whereIn('agenda_id', $agendasDoGestorIds)
+                ->wherePivot('situacao', 'em_analise')
+                ->pluck('horarios.id');
+
+            // Se não houver horários pendentes para este gestor nesta reserva, informa e sai.
+            if ($horariosIdsParaAvaliar->isEmpty()) {
+                DB::rollBack(); // Não há nada para fazer, então desfazemos a transação.
+                return redirect()->route('gestor.reservas.index')->with('error', 'Reserva já avaliada!');
+            }
+
+            // 4. Atualiza a 'situacao' na tabela pivô APENAS para os horários encontrados.
+            $reserva->horarios()->updateExistingPivot($horariosIdsParaAvaliar, [
+                'situacao' => $novaSituacao,
+                'user_id' => $gestor->id
+            ]);
+
+            // 5. Atualiza o status GERAL da reserva (para 'deferido', 'indeferido', 'parcialmente_deferido').
+            $this->atualizarStatusGeralDaReserva($reserva);
+
+            DB::commit(); // Confirma todas as alterações no banco.
+            return Redirect::route('gestor.reservas.index')->with('success', 'solicitação avaliada com sucesso!');
+        } catch (Exception $e) {
+            DB::rollBack(); // Em caso de erro, desfaz tudo.
+            Log::error("Erro ao avaliar reserva {$reserva->id}: " . $e->getMessage());
+            return back()->with('error', 'Ocorreu um erro inesperado ao avaliar a reserva.');
+        }
     }
 
     /**
@@ -138,5 +172,25 @@ class GestorReservaController extends Controller
     public function destroy(Reserva $reserva)
     {
         //
+    }
+
+
+    protected function atualizarStatusGeralDaReserva(Reserva $reserva)
+    {
+        // Recarrega os status da tabela pivô para ter os dados mais recentes.
+        $statusDosHorarios = $reserva->horarios()->get()->pluck('pivot.situacao');
+        if ($statusDosHorarios->every(fn($status) => $status === 'deferida')) {
+            $reserva->situacao = 'deferida';
+        } elseif ($statusDosHorarios->every(fn($status) => $status === 'indeferida')) {
+            $reserva->situacao = 'indeferida';
+        } elseif ($statusDosHorarios->contains('deferida')) {
+            // Se pelo menos um foi deferido (e não todos), é parcial.
+            $reserva->situacao = 'parcialmente_deferida';
+        } else {
+            // Se nenhum foi deferido ainda, mas nem todos foram indeferidos, continua em análise.
+            $reserva->situacao = 'em_analise';
+        }
+
+        $reserva->save();
     }
 }

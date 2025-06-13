@@ -70,59 +70,32 @@ class EspacoController extends Controller
      */
     public function show(Espaco $espaco)
     {
-        // Carrega TUDO que vamos precisar em poucas queries
+        // 1. Carrega todos os dados necessários de forma aninhada.
+        // A sua consulta aqui já estava correta!
         $espaco->load([
-            'andar.modulo', // Carrega o andar e seu módulo
+            'andar.modulo.unidade.instituicao', // Carrega a hierarquia completa
             'agendas' => function ($query) {
                 $query->with([
                     'user.setor', // Carrega o gestor (user) da agenda e seu setor
                     'horarios.reservas' => function ($q) {
-                        // Carrega as reservas dos horários, mas só as deferidas
-                        $q->wherePivot('situacao', 'deferida')->with('user'); // Carrega o autor (user) da reserva
+                        // Carrega as reservas dos horários APROVADOS (deferidos)
+                        $q->wherePivot('situacao', 'deferida')->with('user');
                     }
                 ]);
             }
         ]);
 
-        // Agora processamos os dados que já estão na memória, sem novas consultas
-        $gestores_espaco = [];
-        $horarios_reservados = ['manha' => [], 'tarde' => [], 'noite' => []];
-
-        foreach ($espaco->agendas as $agenda) {
-            // O gestor e o setor já foram carregados
-            if ($agenda->user) {
-                $gestores_espaco[$agenda->turno] = [
-                    'nome' => $agenda->user->name,
-                    'email' => $agenda->user->email,
-                    'setor' => $agenda->user->setor->nome ?? 'Não informado', // Usa ?? para evitar erro se setor for nulo
-                    'agenda_id' => $agenda->id
-                ];
-            }
-
-            foreach ($agenda->horarios as $horario) {
-                // A reserva e seu autor já foram carregados
-                if ($horario->reservas->isNotEmpty()) {
-                    // Como filtramos por 'deferida', pegamos a primeira
-                    $reserva = $horario->reservas->first();
-                    $horarios_reservados[$agenda->turno][] = [
-                        'horario' => $horario,
-                        'autor' => $reserva->user->name ?? 'Usuário removido'
-                    ];
-                }
-            }
-        }
-
-        // Lógica de negócio (não uma exceção) para verificar se há gestor
-        if (empty($gestores_espaco)) {
+        // 2. Verifica se o espaço tem pelo menos uma agenda (e, portanto, um gestor).
+        // Esta é uma regra de negócio válida para o backend.
+        if ($espaco->agendas->isEmpty()) {
             return redirect()->route('espacos.index')->with('error', 'Este espaço ainda não possui um gestor definido.');
         }
 
+        //dd($espaco);
+        // 3. Renderiza a view, passando APENAS o objeto 'espaco'.
+        // O frontend agora é responsável por processar e exibir os dados aninhados.
         return Inertia::render('espacos/visualizar', [
             'espaco' => $espaco,
-            'andar' => $espaco->andar,
-            'modulo' => $espaco->andar->modulo,
-            'gestores_espaco' => $gestores_espaco,
-            'horarios_reservados' => $horarios_reservados,
         ]);
     }
 }

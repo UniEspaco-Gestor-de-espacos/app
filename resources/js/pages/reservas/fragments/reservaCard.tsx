@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { formatDate, formatDateTime, getStatusReservaColor, getStatusReservaText, pegarPrimeiroHorario, pegarUltimoHorario } from '@/lib/utils';
-import { ReservaHorarios, SituacaoReserva } from '@/types';
+import { Reserva, SituacaoReserva } from '@/types';
 import { Calendar, Clock, Edit, Eye, XCircle } from 'lucide-react';
 import { useState } from 'react';
 
@@ -16,9 +16,8 @@ export function SituacaoIndicator({ situacao }: { situacao: SituacaoReserva }) {
     );
 }
 
-export function ReservaCard(reservaHorarios: ReservaHorarios) {
+export function ReservaCard(reserva: Reserva) {
     const [dialogOpen, setDialogOpen] = useState(false);
-    const { reserva, horarios } = reservaHorarios;
     return (
         <Card>
             <CardHeader className="pb-2">
@@ -40,7 +39,7 @@ export function ReservaCard(reservaHorarios: ReservaHorarios) {
                     <div className="flex items-center text-sm">
                         <Clock className="text-muted-foreground mr-2 h-4 w-4" />
                         <span>
-                            {pegarPrimeiroHorario(horarios).horario_inicio} - {pegarUltimoHorario(horarios).horario_fim}
+                            {pegarPrimeiroHorario(reserva.horarios).horario_inicio} - {pegarUltimoHorario(reserva.horarios).horario_fim}
                         </span>
                     </div>
                 </div>
@@ -76,11 +75,11 @@ export function ReservaCard(reservaHorarios: ReservaHorarios) {
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div className="space-y-2">
                                     <h4 className="text-sm font-medium">Data de Início</h4>
-                                    <p className="text-sm">{pegarPrimeiroHorario(horarios).horario_inicio}</p>
+                                    <p className="text-sm">{pegarPrimeiroHorario(reserva.horarios).horario_inicio}</p>
                                 </div>
                                 <div className="space-y-2">
                                     <h4 className="text-sm font-medium">Data de Término</h4>
-                                    <p className="text-sm">{pegarUltimoHorario(horarios).horario_fim}</p>
+                                    <p className="text-sm">{pegarUltimoHorario(reserva.horarios).horario_fim}</p>
                                 </div>
                             </div>
 

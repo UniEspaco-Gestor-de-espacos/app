@@ -129,6 +129,7 @@ export interface Espaco {
     main_image_index: number;
     andar_id: number;
     andar?: Andar; // Relação aninhada
+    agendas?: Agenda[];
 }
 
 // =============================================================================
@@ -140,7 +141,7 @@ export interface Espaco {
  * Representa os possíveis status de uma reserva ou de um horário.
  * Adicionado 'parcialmente_deferido' para o status geral da reserva.
  */
-export type SituacaoReserva = 'em_analise' | 'deferida' | 'indeferida' | 'parcialmente_deferido';
+export type SituacaoReserva = 'em_analise' | 'deferida' | 'indeferida' | 'parcialmente_deferida';
 
 /**
  * Dados da tabela pivô `reserva_horario`, crucial para o status individual.
@@ -148,7 +149,7 @@ export type SituacaoReserva = 'em_analise' | 'deferida' | 'indeferida' | 'parcia
 export interface Pivot {
     reserva_id: number;
     horario_id: number;
-    situacao: 'em_analise' | 'deferido' | 'indeferido';
+    situacao: 'em_analise' | 'deferida' | 'indeferida';
 }
 
 /**
@@ -161,6 +162,7 @@ export interface Agenda {
     user_id: number;
     espaco?: Espaco; // Relação aninhada
     user?: User; // Relação com o gestor da agenda
+    horarios?: Horario[];
 }
 
 /**
@@ -168,12 +170,11 @@ export interface Agenda {
  */
 export interface Horario {
     id: number;
-    data: string; // Datas do Laravel chegam como strings no JSON
+    data: Date; // Datas do Laravel chegam como strings no JSON
     horario_inicio: string;
     horario_fim: string;
-    dia: 'seg' | 'ter' | 'qua' | 'qui' | 'sex' | 'sab' | 'dom';
-    agenda_id: number;
     agenda?: Agenda; // Relação aninhada
+    reservas?: Reserva[];
     pivot?: Pivot; // Dados da tabela pivô `reserva_horario`
 }
 
@@ -186,13 +187,12 @@ export interface Reserva {
     titulo: string;
     descricao: string;
     situacao: SituacaoReserva; // O status geral da reserva
-    data_inicial: string;
-    data_final: string;
+    data_inicial: Date;
+    data_final: Date;
     observacao: string | null;
-    user_id: number;
     created_at: string;
     updated_at: string;
-    usuario?: User; // O usuário que fez a reserva (carregar com with('usuario'))
+    user?: User; // O usuário que fez a reserva (carregar com with('usuario'))
     horarios: Horario[]; // O array de horários pertencentes a esta reserva
 }
 
@@ -204,14 +204,14 @@ export interface Reserva {
 /**
  * Tipo para o formulário de criação/edição de uma reserva.
  */
-export type ReservaFormData = {
+export interface ReservaFormData {
     titulo: string;
     descricao: string;
     data_inicial: Date | null;
     data_final: Date | null;
-    // user_id é pego no backend
     horarios_solicitados: Partial<Horario>[]; // Horários que o usuário seleciona
-};
+    [key: string]: any;
+}
 
 /**
  * Tipo para o painel de controle que mostra o resumo dos status.
@@ -222,4 +222,34 @@ export type DashboardStatusReservasType = {
     indeferida: number;
 };
 
-// ... outros tipos específicos de componentes podem ser adicionados aqui.
+// =============================================================================
+// 5. Tipoas para "View Model"
+// Tipos auxiliares usados em construção da interface de usuario, dashboards, etc.
+// =============================================================================
+
+export interface SlotCalendario {
+    id: string; // ID único gerado para o frontend (ex: "2025-06-13|09:00:00")
+    status: 'livre' | 'reservado' | 'selecionado';
+    data: Date;
+    horario_inicio: string;
+    horario_fim: string;
+
+    // Se o status for 'reservado', conterá os dados originais do backend.
+    dadosReserva?: {
+        horarioDB: Horario; // O objeto Horario original do banco
+        autor: string;
+        reserva_titulo: string;
+    };
+
+    // Se o status for 'livre', conterá o ID da agenda para criar uma nova reserva.
+    agenda_id?: number;
+}
+
+export interface OpcoesRecorrencia {
+    valor: ValorOcorrenciaType;
+    label: string;
+    descricao: string;
+    calcularDataFinal: (dataInicial: Date) => Date;
+}
+
+export type ValorOcorrenciaType = 'unica' | '15dias' | '1mes' | 'personalizado';

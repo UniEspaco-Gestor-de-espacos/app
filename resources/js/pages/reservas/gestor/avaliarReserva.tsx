@@ -7,10 +7,11 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { diasSemanaParser, formatDate, getStatusReservaColor, getStatusReservaText, getTurnoText } from '@/lib/utils';
-import { BreadcrumbItem, ReservaHorarios, SituacaoReserva, User as UserType } from '@/types';
+import { BreadcrumbItem, Reserva, SituacaoReserva } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { AlertCircle, CalendarDays, CheckCircle, Clock, FileText, User, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -25,15 +26,13 @@ type FormAvaliacaoType = {
 };
 
 export default function AvaliarReserva() {
-    const { props } = usePage<{ reserva: ReservaHorarios; usuario: UserType }>();
-    const { reserva, horarios, agenda, espaco, andar, modulo } = props.reserva;
-    const usuario = props.usuario;
+    const { props } = usePage<{ reserva: Reserva }>();
+    const reserva = props.reserva;
     const { setData, patch } = useForm<FormAvaliacaoType>({
         situacao: reserva.situacao,
         motivo: '',
     });
 
-    console.log(horarios);
     const [decisao, setDecisao] = useState<SituacaoReserva>(reserva.situacao);
     const [motivo, setMotivo] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,7 +68,8 @@ export default function AvaliarReserva() {
                 console.log(data);
             },
             onError: (error) => {
-                console.log(error);
+                const firstError = Object.values(error)[0];
+                toast.error(firstError || 'Ocorreu um erro de validação. Verifique os campos');
             },
         });
         setIsSubmitting(false);
@@ -85,7 +85,8 @@ export default function AvaliarReserva() {
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900">Avaliar Reserva</h1>
                             <p className="mt-1 text-gray-600">
-                                Espaço: {espaco.nome} | {andar.nome} | {modulo.nome} | {getTurnoText(agenda.turno)}
+                                Espaço: {reserva.horarios[0].agenda?.espaco?.nome} / {reserva.horarios[0].agenda?.espaco?.andar?.nome}/{' '}
+                                {reserva.horarios[0].agenda?.espaco?.andar?.modulo?.nome} / {getTurnoText(reserva.horarios[0].agenda!.turno)}{' '}
                             </p>
                         </div>
                         <Badge className={`${getStatusReservaColor(reserva.situacao)} flex items-center gap-1`}>
@@ -103,7 +104,7 @@ export default function AvaliarReserva() {
                             </CardTitle>
                             <CardDescription className="flex items-center gap-2">
                                 <User className="h-4 w-4" />
-                                Solicitado por: {usuario.name}
+                                Solicitado por: {reserva.user?.name}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -134,7 +135,7 @@ export default function AvaliarReserva() {
                                     Horários Solicitados
                                 </h4>
                                 <div className="grid gap-2">
-                                    {horarios.map((horario) => {
+                                    {reserva.horarios.map((horario) => {
                                         const dia = new Date(horario.data);
                                         return (
                                             <div key={horario.id} className="flex items-center justify-between rounded-lg bg-blue-50 p-3">
