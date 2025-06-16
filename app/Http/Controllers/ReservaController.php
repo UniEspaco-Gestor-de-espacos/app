@@ -61,7 +61,6 @@ class ReservaController extends Controller
 
     public function store(StoreReservaRequest $request)
     {
-        dd($request['data_inicial']);
         // A validação já foi executada pela Form Request.
         // Usamos uma transação para garantir que tudo seja salvo, ou nada.
         try {

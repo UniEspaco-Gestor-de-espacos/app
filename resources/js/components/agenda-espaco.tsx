@@ -54,7 +54,6 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
     const [recorrencia, setRecorrencia] = useState<ValorOcorrenciaType>('unica');
     const [dataInicial, setDataInicial] = useState<Date>(hoje);
     const [dataFinal, setDataFinal] = useState<Date>(addMonths(hoje, 1));
-
     const { setData, post, put, reset } = useForm<ReservaFormData>({
         titulo: isEditMode ? reserva!.titulo : titulo,
         descricao: isEditMode ? reserva!.descricao : descricao,
@@ -120,10 +119,11 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
                         (reserva) => reserva.situacao === 'deferida' || reserva.situacao === 'parcialmente_deferida',
                     ); // Pegamos a primeira reserva para este horário
                     if (isEditMode && reservaDoHorario.find((r) => r.id == reserva?.id)) {
+                        console.log('pulou');
                         return; // Pula este horário, para que ele apareça como 'livre' ou 'selecionado'
                     }
                     // A chave do Map combina data e hora para uma busca O(1)
-                    const chave = `${format(new Date(horario.data), 'yyyy-MM-dd')}|${horario.horario_inicio}`;
+                    const chave = `${format(horario.data, 'yyyy-MM-dd')}|${horario.horario_inicio}`;
                     reservadosMap.set(chave, {
                         horario: horario,
                         autor: reservaDoHorario[0].user?.name ?? 'Indefinido',
@@ -140,7 +140,6 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
         const slotsGerados: SlotCalendario[] = [];
         const horaInicio = 7;
         const horaFim = 22;
-        console.log(horariosReservadosMap);
 
         for (let diaOffset = 0; diaOffset < 7; diaOffset++) {
             // Segunda a Domingo
@@ -155,7 +154,6 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
                 // Busca no nosso Map de horários reservados
                 const chave = `${diaFormatado}|${inicio}`;
                 const horarioReservado = horariosReservadosMap.get(chave);
-
                 if (horarioReservado) {
                     // Se está RESERVADO, cria um SlotCalendario com os dados da reserva.
                     slotsGerados.push({

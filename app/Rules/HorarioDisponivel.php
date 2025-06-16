@@ -51,7 +51,7 @@ class HorarioDisponivel implements ValidationRule, DataAwareRule
             ->where('horarios.data', $data)
             ->where('horarios.horario_inicio', $horario_inicio)
             ->where('horarios.agenda_id', $agenda_id)
-            ->whereIn('reserva_horario.situacao', ['em_analise', 'deferido'])
+            ->whereIn('reserva_horario.situacao', ['deferido'])
             ->exists();
 
         // Se houver um conflito, chamamos a função $fail com a mensagem de erro.
