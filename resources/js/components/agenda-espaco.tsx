@@ -123,7 +123,7 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
                         return; // Pula este horário, para que ele apareça como 'livre' ou 'selecionado'
                     }
                     // A chave do Map combina data e hora para uma busca O(1)
-                    const chave = `${format(horario.data, 'yyyy-MM-dd')}|${horario.horario_inicio}`;
+                    const chave = `${horario.data}|${horario.horario_inicio}`;
                     reservadosMap.set(chave, {
                         horario: horario,
                         autor: reservaDoHorario[0].user?.name ?? 'Indefinido',
