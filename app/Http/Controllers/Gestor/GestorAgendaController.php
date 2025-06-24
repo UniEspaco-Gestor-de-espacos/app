@@ -1,18 +1,17 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Gestor;
 
+use App\Http\Controllers\Controller;
+use App\Models\Agenda;
 use Illuminate\Http\Request;
 
-class InstituicaoController extends Controller
+class GestorAgendaController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
-    }
+    public function index() {}
 
     /**
      * Show the form for creating a new resource.
@@ -33,15 +32,12 @@ class InstituicaoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        //
-    }
+    public function show(Agenda $agendaTurno) {}
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Agenda $agendaTurno)
     {
         //
     }
@@ -49,7 +45,7 @@ class InstituicaoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Agenda $agendaTurno)
     {
         //
     }
@@ -57,7 +53,7 @@ class InstituicaoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Agenda $agendaTurno)
     {
         //
     }

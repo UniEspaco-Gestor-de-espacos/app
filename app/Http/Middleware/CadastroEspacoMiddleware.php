@@ -16,7 +16,7 @@ class CadastroEspacoMiddleware
     public function handle(Request $request, Closure $next): Response
     {
 
-        $messages = [
+        /*$messages = [
             'nome.required' => 'O nome é obrigatório.',
             'capacidade_pessoas.required' => 'A capacidade de pessoas é obrigatória.',
             'descricao.required' => 'A descrição é obrigatória.',
@@ -36,7 +36,7 @@ class CadastroEspacoMiddleware
             'main_image_index' => 'nullable|integer', // Ou 'required_with:imagens|integer'
         ], $messages); // Valida se todos os campos foram preenchidos corretamente.
 
-
+*/
         return $next($request);
     }
 }

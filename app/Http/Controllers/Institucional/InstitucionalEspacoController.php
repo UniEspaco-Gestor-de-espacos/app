@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Institucional;
 
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreEspacoRequest;
 use App\Models\Agenda;
 use App\Models\Andar;
 use App\Models\Espaco;
@@ -14,7 +16,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class InstitucionalEspacoController extends Controller
 {
@@ -39,55 +42,62 @@ class InstitucionalEspacoController extends Controller
         $unidades = Unidade::all();
         $modulos = Modulo::all();
         $andares = Andar::all();
-        return Inertia::render('espacos/cadastrar', compact('unidades', 'modulos', 'andares'));
+        return Inertia::render('espacos/institucional/cadastrar', compact('unidades', 'modulos', 'andares'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreEspacoRequest $request)
     {
-        $storedImagePaths = [];
-        $mainImagePath = null;
+        // A validação já foi feita pela Form Request!
+        $validated = $request->validated();
         try {
-            if ($request->hasFile('imagens')) {
-                $uploadedImages = $request->file('imagens'); // Pega o array de UploadedFile
+            // Envolve toda a lógica em uma transação. Ou tudo funciona, ou nada é salvo.
+            $espaco = DB::transaction(function () use ($validated, $request) {
 
-                foreach ($uploadedImages as $index => $uploadedFile) {
-                    // Salva a imagem em no diretorio publico espacos_images
-                    $path = $uploadedFile->store('espacos_images', 'public');
-                    $storedImagePaths[] = $path;
+                $storedImagePaths = [];
+                $mainImagePath = null;
 
-                    // Verifica se esta é a imagem principal baseada no índice enviado
-                    if (isset($form_validado['main_image_index']) && (int)$form_validado['main_image_index'] === $index) {
-                        $mainImagePath = $path;
+                if ($request->hasFile('imagens')) {
+                    foreach ($request->file('imagens') as $index => $file) {
+                        $path = $file->store('espacos_images', 'public');
+                        $storedImagePaths[] = $path;
+
+                        // Corrigido: usa o dado validado 'main_image_index'
+                        if (isset($validated['main_image_index']) && (int)$validated['main_image_index'] === $index) {
+                            $mainImagePath = $path;
+                        }
+                    }
+                    if (!$mainImagePath && !empty($storedImagePaths)) {
+                        $mainImagePath = $storedImagePaths[0];
                     }
                 }
-                // Se mainImagePath não foi definido pelo índice (ex: índice inválido ou não enviado)
-                // e há imagens, defina a primeira como principal por padrão.
-                if (!$mainImagePath && !empty($storedImagePaths)) {
-                    $mainImagePath = $storedImagePaths[0];
-                }
-            }
 
-            $espaco = Espaco::create([
-                'nome' => $request['nome'],
-                'capacidade_pessoas' => $request['capacidade_pessoas'],
-                'descricao' => $request['descricao'],
-                'imagens' => $storedImagePaths, // Eloquent vai converter para JSON por causa do $casts
-                'main_image_index' => $mainImagePath,
-                'andar_id' => $request['andar_id'],
-            ]);
-            // Criar agenda
-            $agenda_manha = Agenda::create(['turno' => 'manha', 'espaco_id' => $espaco->id]);
-            $agenda_tarde = Agenda::create(['turno' => 'tarde', 'espaco_id' => $espaco->id]);
-            $agenda_noite = Agenda::create(['turno' => 'noite', 'espaco_id' => $espaco->id]);
+                // Cria o Espaço
+                $espaco = Espaco::create([
+                    'nome' => $validated['nome'],
+                    'capacidade_pessoas' => $validated['capacidade_pessoas'],
+                    'descricao' => $validated['descricao'],
+                    'andar_id' => $validated['andar_id'],
+                    'imagens' => $storedImagePaths,
+                    'main_image_index' => $mainImagePath,
+                ]);
 
-            return redirect()->route('espacos.index')->with('success', 'Espaco cadastrado com sucesso!');
-        } catch (QueryException $e) { // Captura erro no banco de dados
-            return redirect()->back()->with('error', 'Erro ao salvar no banco de dados: ' . $e->getMessage());
+                // Cria as 3 agendas de forma mais eficiente usando o relacionamento
+                $espaco->agendas()->createMany([
+                    ['turno' => 'manha', 'user_id' => null], // Adicionado user_id nulo por padrão
+                    ['turno' => 'tarde', 'user_id' => null],
+                    ['turno' => 'noite', 'user_id' => null],
+                ]);
+
+                return $espaco;
+            });
+
+            return redirect()->route('espacos.index')->with('success', 'Espaço cadastrado com sucesso!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Ocorreu um erro inesperado: ' . $e->getMessage());
+            Log::error("Erro ao criar espaço: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocorreu um erro inesperado ao criar o espaço.')->withInput();
         }
     }
 

@@ -15,6 +15,11 @@ class AvaliarReservaMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $request->validate([
+            'situacao'   => 'required|in:deferida,indeferida', // Garante que o valor seja um dos esperados
+            'motivo'     => 'required_if:situacao,indeferida|nullable',
+        ]);
+
         return $next($request);
     }
 }

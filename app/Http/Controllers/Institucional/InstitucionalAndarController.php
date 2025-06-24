@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Institucional;
 
+use App\Http\Controllers\Controller;
 use App\Models\Andar;
-use App\Rules\UniqueNormalizedFloorName;
 use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
-class GestorAndarController extends Controller
+class InstitucionalAndarController extends Controller
 {
     /**
      * Display a listing of the resource.

@@ -14,6 +14,9 @@ return new class extends Migration
         Schema::create('reserva_horario', function (Blueprint $table) {
             $table->foreignId('reserva_id')->constrained('reservas')->onDelete('cascade');
             $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->enum('situacao', ['em_analise', 'deferida', 'indeferida'])->default('em_analise');
+            $table->text('justificativa')->nullable();
             $table->timestamps();
             $table->primary(['reserva_id', 'horario_id']);
         });

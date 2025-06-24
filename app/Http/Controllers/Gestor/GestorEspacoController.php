@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Gestor;
 
-use App\Http\Middleware\EspacoMiddleware;
 use App\Models\Agenda;
 use App\Models\Andar;
 use App\Models\Espaco;
@@ -15,8 +14,10 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
-
-use function PHPUnit\Framework\isEmpty;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreEspacoRequest;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class GestorEspacoController extends Controller
 {
@@ -47,7 +48,62 @@ class GestorEspacoController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+
+    public function store(StoreEspacoRequest $request)
+    {
+        // A validação já foi feita pela Form Request!
+        $validated = $request->validated();
+        try {
+            // Envolve toda a lógica em uma transação. Ou tudo funciona, ou nada é salvo.
+            $espaco = DB::transaction(function () use ($validated, $request) {
+
+                $storedImagePaths = [];
+                $mainImagePath = null;
+
+                if ($request->hasFile('imagens')) {
+                    foreach ($request->file('imagens') as $index => $file) {
+                        $path = $file->store('espacos_images', 'public');
+                        $storedImagePaths[] = $path;
+
+                        // Corrigido: usa o dado validado 'main_image_index'
+                        if (isset($validated['main_image_index']) && (int)$validated['main_image_index'] === $index) {
+                            $mainImagePath = $path;
+                        }
+                    }
+                    if (!$mainImagePath && !empty($storedImagePaths)) {
+                        $mainImagePath = $storedImagePaths[0];
+                    }
+                }
+
+                // Cria o Espaço
+                $espaco = Espaco::create([
+                    'nome' => $validated['nome'],
+                    'capacidade_pessoas' => $validated['capacidade_pessoas'],
+                    'descricao' => $validated['descricao'],
+                    'andar_id' => $validated['andar_id'],
+                    'imagens' => $storedImagePaths,
+                    'main_image_index' => $mainImagePath,
+                ]);
+
+                // Cria as 3 agendas de forma mais eficiente usando o relacionamento
+                $espaco->agendas()->createMany([
+                    ['turno' => 'manha', 'user_id' => null], // Adicionado user_id nulo por padrão
+                    ['turno' => 'tarde', 'user_id' => null],
+                    ['turno' => 'noite', 'user_id' => null],
+                ]);
+
+                return $espaco;
+            });
+
+            return redirect()->route('espacos.index')->with('success', 'Espaço cadastrado com sucesso!');
+        } catch (\Exception $e) {
+            Log::error("Erro ao criar espaço: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocorreu um erro inesperado ao criar o espaço.')->withInput();
+        }
+    }
+
+
+    /*public function store(Request $request)
     {
         $storedImagePaths = [];
         $mainImagePath = null;
@@ -91,7 +147,7 @@ class GestorEspacoController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Ocorreu um erro inesperado: ' . $e->getMessage());
         }
-    }
+    }*/
 
     /**
      * Display the specified resource.

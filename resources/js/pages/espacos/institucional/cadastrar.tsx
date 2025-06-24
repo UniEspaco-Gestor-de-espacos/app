@@ -20,11 +20,16 @@ import { Head, router, useForm, usePage } from '@inertiajs/react'; // Importaç�
 import { Loader2, Plus, X } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 const breadcrumbs = [
     {
-        title: 'Cadastrar espaço',
-        href: '/espacos/create',
+        title: 'Espaço',
+        href: '/institucional/espacos',
+    },
+    {
+        title: 'Cadastrar',
+        href: '/espacos/criar',
     },
 ];
 
@@ -48,6 +53,7 @@ interface ImageWithPreview {
 
 export default function CadastroEspacoPage() {
     const tiposDeAcesso = ['terreo', 'escada', 'elevador', 'rampa'];
+    const andaresPredefinidos = ['Térreo', ...Array.from({ length: 10 }, (_, i) => `${i + 1}º Andar`)];
     const { props } = usePage<{ unidades: Unidade[]; modulos: Modulo[]; andares: Andar[] }>();
     const { unidades, modulos, andares } = props;
     const [unidadeSelecionada, setUnidadeSelecionada] = useState<number | undefined>(undefined);
@@ -95,7 +101,7 @@ export default function CadastroEspacoPage() {
         if (!nomeNovoAndar.trim() || !moduloSelecionado) return;
 
         router.post(
-            '/andar',
+            route('institucional.andares.store'),
             {
                 nome: nomeNovoAndar,
                 tipo_acesso: tipoAcessoNovoAndar,
@@ -104,6 +110,10 @@ export default function CadastroEspacoPage() {
             {
                 onSuccess: () => {
                     setIsAddAndarDialogOpen(false); // Fechar o diálogo
+                },
+                onError: (error) => {
+                    const firstError = Object.values(error)[0];
+                    toast.error(firstError || 'Ocorreu um erro de validação no cadastro do andar. Verifique os campos');
                 },
             },
         );
@@ -219,7 +229,7 @@ export default function CadastroEspacoPage() {
         setData('imagens', updatedImages);
 
         // Se não houver imagem principal definida e temos imagens, definir a primeira como principal
-        if (data.main_image_index === null && updatedImages.length > 0) {
+        if ((data.main_image_index === null || data.main_image_index === undefined) && updatedImages.length > 0) {
             setData('main_image_index', 0);
         }
     };
@@ -260,7 +270,7 @@ export default function CadastroEspacoPage() {
     function onSubmit(e: React.FormEvent) {
         e.preventDefault();
 
-        post(route('espacos.store'), {
+        post(route('institucional.espacos.store'), {
             onSuccess: () => {
                 // Limpar as URLs de preview para evitar vazamento de memória
                 imagesWithPreviews.forEach((img) => URL.revokeObjectURL(img.preview));
@@ -269,6 +279,11 @@ export default function CadastroEspacoPage() {
                 setModuloSelecionado(undefined);
                 setImagesWithPreviews([]);
                 setData('main_image_index', undefined);
+            },
+            onError: (error) => {
+                console.log(new Object(error));
+                const firstError = Object.values(error)[0];
+                toast.error(firstError || 'Ocorreu um erro de validação. Verifique os campos');
             },
         });
     }
@@ -377,19 +392,21 @@ export default function CadastroEspacoPage() {
                                                 <DialogHeader>
                                                     <DialogTitle>Adicionar Novo Andar</DialogTitle>
                                                 </DialogHeader>
-                                                <div className="grid gap-4 py-4">
-                                                    <div className="grid grid-cols-4 items-center gap-4">
-                                                        <Label htmlFor="novo-andar" className="text-right">
-                                                            Nome
-                                                        </Label>
-                                                        <Input
-                                                            id="novo-andar"
-                                                            value={nomeNovoAndar}
-                                                            onChange={(e) => setNomeNovoAndar(e.target.value)}
-                                                            className="col-span-3"
-                                                            placeholder="Ex: 3º Andar, Mezanino"
-                                                        />
-                                                    </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="novo-andar-select">Nome do Andar</Label>
+                                                    <SelectUI value={nomeNovoAndar} onValueChange={setNomeNovoAndar}>
+                                                        <SelectUITrigger id="novo-andar-select">
+                                                            <SelectUIValue placeholder="Selecione um andar" />
+                                                        </SelectUITrigger>
+                                                        <SelectUIContent>
+                                                            {/* Lista de andares pré-definidos */}
+                                                            {andaresPredefinidos.map((andar) => (
+                                                                <SelectUIItem key={andar} value={andar}>
+                                                                    {andar}
+                                                                </SelectUIItem>
+                                                            ))}
+                                                        </SelectUIContent>
+                                                    </SelectUI>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <div>
