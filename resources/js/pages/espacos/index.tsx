@@ -77,17 +77,6 @@ export default function EspacosPage() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Espacos" />
-            <div>
-                <button
-                    type="button"
-                    onClick={() => {
-                        router.visit('/espacos/create');
-                    }}
-                >
-                    {' '}
-                    Cadastrar espaço{' '}
-                </button>
-            </div>
             {/* Todo o conteúdo a partir dos filtros até o final em uma única div */}
             <div className="m-8">
                 {/* Filtros e Busca */}
@@ -145,7 +134,18 @@ export default function EspacosPage() {
                         </div>
                     </CardContent>
                 </Card>
-
+                <div>
+                    <div className="flex justify-end">
+                        <Button
+                            onClick={() => {
+                                router.visit('/espacos/create');
+                            }}
+                            className="mb-4" // Add some bottom margin
+                        >
+                            Cadastrar espaço
+                        </Button>
+                    </div>
+                </div>
                 {/* Alternador de visualização */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
                     {filteredespacos.map((espaco) => (
