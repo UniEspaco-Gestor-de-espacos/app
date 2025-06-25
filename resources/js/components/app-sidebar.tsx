@@ -2,10 +2,9 @@
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { PermissionId } from '@/constants/permissions';
 import { Link, usePage } from '@inertiajs/react';
 import AppLogo from './app-logo';
-
-import { PermissionId } from '@/constants/permissions';
 
 /* Ícones ---------------------------------------------------------------- */
 import {
@@ -13,16 +12,13 @@ import {
     BookOpen,
     Building,
     Calendar,
-    ClipboardList,
     Eye,
     LayoutGrid,
     Library,
-    List,
-    Settings,
+    /*   Settings, */
     ShieldCheck,
     Star,
     Users,
-    Wrench,
 } from 'lucide-react';
 
 /* ------------- Tipo local de item de menu (não exportado) ------------- */
@@ -40,20 +36,19 @@ const commonNav: MenuItem[] = [
     { title: 'Consultar Espaços', href: '/espacos', icon: Calendar },
     { title: 'Notificações', href: '/notificacoes', icon: Bell },
     { title: 'Minhas Reservas', href: '/minhas-reservas', icon: BookOpen },
-    { title: 'Solicitar Manutenção', href: '/manutencao', icon: Wrench },
+    /*  { title: 'Solicitar Manutenção', href: '/manutencao', icon: Wrench }, */
     { title: 'Espaços Favoritos', href: '/favoritos', icon: Star },
 ];
 
 const gestorExtras: MenuItem[] = [
-    { title: 'Consultar Serviços', href: '/servico', icon: ClipboardList },
-    { title: 'Alterar Status de Manutenção', href: '/servico/status', icon: Settings },
+    /* { title: 'Consultar Serviços', href: '/servico', icon: ClipboardList }, */
+    /*   { title: 'Alterar Status de Manutenção', href: '/servico/status', icon: Settings }, */
     { title: 'Visualizar Ocorrências', href: '/servico/ocorrencias', icon: Eye },
 ];
 
 const institucionalExtras: MenuItem[] = [
     { title: 'Cadastrar Espaços', href: '/admin/espacos/novo', icon: Building },
     { title: 'Cadastrar Professores / Setores', href: '/admin/professores/novo', icon: Users },
-    { title: 'Listar Professores / Setores / Gestores', href: '/admin/professores', icon: List },
     { title: 'Listar Todos os Espaços', href: '/admin/espacos', icon: Library },
     { title: 'Gerenciar Permissões', href: '/admin/permissoes', icon: ShieldCheck },
 ];
