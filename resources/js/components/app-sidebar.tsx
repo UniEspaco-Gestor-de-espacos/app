@@ -1,4 +1,4 @@
-/* AppSidebar.tsx -------------------------------------------------------- */
+// src/Layouts/AppSidebar.tsx
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
@@ -19,7 +19,10 @@ import {
     ShieldCheck,
     Star,
     Users,
+ /*     Wrench, */
 } from 'lucide-react';
+   
+// Adicione 'Users' para um ícone mais adequado
 
 /* ------------- Tipo local de item de menu (não exportado) ------------- */
 import type { LucideIcon } from 'lucide-react';
@@ -48,7 +51,10 @@ const gestorExtras: MenuItem[] = [
 
 const institucionalExtras: MenuItem[] = [
     { title: 'Cadastrar Espaços', href: '/admin/espacos/novo', icon: Building },
-    { title: 'Cadastrar Professores / Setores', href: '/admin/professores/novo', icon: Users },
+    // ALTERADO: Aponta para a listagem/gerenciamento de usuários
+    { title: 'Gerenciar Usuários', href: '/institucional/usuarios', icon: Users }, // Ícone 'Users' é mais adequado para gerenciamento de usuários
+   /*  { title: 'Listar Professores / Setores / Gestores', href: '/admin/professores', icon: List }, // Verifique se essa rota é necessária, pode ser substituída por "Gerenciar Usuários"
+    { title: 'Listar Todos os Espaços', href: '/admin/espacos', icon: Library }, */
     { title: 'Gerenciar Permissões', href: '/admin/permissoes', icon: ShieldCheck },
     /*   { title: 'Gerenciar Serviços', href: '/admin/servicos', icon: BookOpen }, */
 ];
