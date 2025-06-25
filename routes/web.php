@@ -22,32 +22,41 @@ use App\Http\Middleware\CadastroEspacoMiddleware;
 use App\Http\Middleware\CadastroReservaMiddleware;
 use App\Http\Middleware\EditarEspacoMiddleware;
 
+// Página inicial: redireciona para dashboard se autenticado, senão para login
 Route::get('/', function () {
     return Auth::check()
         ? redirect()->route('dashboard')
         : redirect()->route('login');
 })->name('home');
 
-
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // Painel geral
+    // ---------------------------
+    // Painel Geral
+    // ---------------------------
     Route::get('dashboard', [HomeController::class, 'index'])->name('dashboard');
 
-    // Visualização de espaços
+    // ---------------------------
+    // Visualização de Espaços
+    // ---------------------------
     Route::get('espacos', [EspacoController::class, 'index'])->name('espacos.index');
     Route::get('espacos/{espaco}', [EspacoController::class, 'show'])->name('espacos.show');
 
+    // ---------------------------
     // Reservas
-    // Visualizar
+    // ---------------------------
+
+    // Visualizar reservas do usuário
     Route::get('minhas-reservas', [ReservaController::class, 'index'])->name('reservas.index');
     Route::get('minhas-reservas/{reserva}', [ReservaController::class, 'show'])->name('reservas.show'); // Não usada
-    // Cadastrar
+
+    // Cadastrar nova reserva
     Route::get('reservas/criar', [ReservaController::class, 'create'])->name('reservas.create'); // Não usada
     Route::post('reservas', [ReservaController::class, 'store'])
         ->middleware(CadastroReservaMiddleware::class)->name('reservas.store');
-    // Editar antes de avaliada
-    Route::middleware([])->group(function () { // Aplicar regra para ver se reserva ja foi avaliada
+
+    // Editar reserva (antes de ser avaliada)
+    Route::middleware([])->group(function () {
         Route::get('reservas/{reserva}/editar', [ReservaController::class, 'edit'])->name('reserva.edit');
         Route::patch('reserva/{reserva}', [ReservaController::class, 'update'])->name('reservas.avaliar');
     });
@@ -83,8 +92,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Excluir
     Route::delete('minhas-reservas/{reserva}', [ReservaController::class, 'destroy'])->name('reservas.destroy');
 
-
-    // Rotas Usuario gestor
+    // ---------------------------
+    // Rotas para Usuário Gestor
+    // ---------------------------
     Route::middleware([])->prefix('gestor')->name('gestor.')->group(function () {
 
         // Gestão de reservas
@@ -97,23 +107,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('espacos', [GestorEspacoController::class, 'index'])->name('espacos.index');
     });
 
-
+    // ---------------------------
+    // Rotas Institucionais
+    // ---------------------------
     Route::prefix('institucional')->name('institucional.')->group(function () {
 
-        // Usuarios
+        // Usuários
         Route::resource('usuarios', InstitucionalUsuarioController::class)->except(['store', 'update']);
         Route::patch('usuarios/{usuario}', [InstitucionalUsuarioController::class, 'update'])
             ->middleware(AtualizarUsuarioMiddleware::class)->name('usuario.update'); // TODO: Criar Validação
         Route::post('usuarios', [InstitucionalUsuarioController::class, 'store'])
             ->middleware(CadastrarUsuarioMiddleware::class)->name('usuario.store'); // TODO: Criar Validação
 
-        // Instituicao
+        // Tela de criação de usuário
+        Route::get('usuarios/criar', [InstitucionalUsuarioController::class, 'create'])->name('usuarios.create');
+        // Tela de edição de usuário
+        Route::get('usuarios/{usuario}/edit', [InstitucionalUsuarioController::class, 'edit'])->name('usuarios.edit');
+
+        // Instituições
         Route::resource('instituicoes', InstitucionalInstituicaoController::class);
 
         // Unidades
         Route::resource('unidades', InstitucionalUnidadeController::class);
 
-        // Modulos
+        // Módulos
         Route::resource('modulos', InstitucionalModuloController::class);
 
         // Andares
@@ -127,7 +144,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware(CadastroEspacoMiddleware::class)->name('espacos.store');
     });
 });
-
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
