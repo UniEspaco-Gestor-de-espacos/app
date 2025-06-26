@@ -14,7 +14,7 @@ class EspacoController extends Controller
 {
 
     /**
-     * Display a listing of the resource.
+     * Exibe uma lista dos recursos.
      */
     public function index()
     {
@@ -57,21 +57,20 @@ class EspacoController extends Controller
 
         return Inertia::render('espacos/index', [
             'espacos' => $espacos, // Agora é um objeto paginador
-            'andares' => Andar::all(), // Você ainda precisa de todos para popular os selects
+            'andares' => Andar::all(), // Ainda precisa de todos para popular os selects
             'modulos' => Modulo::all(),
             'unidades' => Unidade::all(),
-            'filters' => $filters, // Envie os filtros de volta para a view
+            'filters' => $filters, // Envia os filtros de volta para a view
             'user' => $user
         ]);
     }
 
     /**
-     * Display the specified resource.
+     * Exibe o recurso especificado.
      */
     public function show(Espaco $espaco)
     {
         // 1. Carrega todos os dados necessários de forma aninhada.
-        // A sua consulta aqui já estava correta!
         $espaco->load([
             'andar.modulo.unidade.instituicao', // Carrega a hierarquia completa
             'agendas' => function ($query) {
@@ -86,16 +85,34 @@ class EspacoController extends Controller
         ]);
 
         // 2. Verifica se o espaço tem pelo menos uma agenda (e, portanto, um gestor).
-        // Esta é uma regra de negócio válida para o backend.
         if ($espaco->agendas->isEmpty()) {
             return redirect()->route('espacos.index')->with('error', 'Este espaço ainda não possui um gestor definido.');
         }
 
-        //dd($espaco);
         // 3. Renderiza a view, passando APENAS o objeto 'espaco'.
         // O frontend agora é responsável por processar e exibir os dados aninhados.
         return Inertia::render('espacos/visualizar', [
             'espaco' => $espaco,
         ]);
     }
+
+    /* 
+    <?php
+// ...existing code...
+
+// Visualizar espaço
+Route::get('/espacos/{espaco}', [EspacoController::class, 'show'])->name('espacos.show');
+
+// Editar espaço (formulário)
+Route::get('/espacos/{espaco}/editar', [EspacoController::class, 'edit'])->name('espacos.edit');
+
+// Atualizar espaço (envio do formulário)
+Route::put('/espacos/{espaco}', [EspacoController::class, 'update'])->name('espacos.update');
+
+// Favoritar espaço (exemplo usando POST)
+Route::post('/espacos/{espaco}/favoritar', [EspacoController::class, 'favoritar'])->name('espacos.favoritar');
+
+// ...existing code...
+    
+    */
 }
