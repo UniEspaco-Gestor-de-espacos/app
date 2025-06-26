@@ -128,7 +128,15 @@ export function ReservasList({ fallback, reservas, isGestor = false }: { fallbac
                                                     </div>
                                                 ) : (
                                                     <div>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Editar">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8"
+                                                            title="Editar"
+                                                            onClick={() => {
+                                                                router.visit(`reservas/${reserva.id}/editar`);
+                                                            }}
+                                                        >
                                                             <Edit className="h-4 w-4" />
                                                             <span className="sr-only">Editar</span>
                                                         </Button>

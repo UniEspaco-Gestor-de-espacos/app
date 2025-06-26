@@ -57,7 +57,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Editar reserva (antes de ser avaliada) Criar middleware para verificar se a reserva não foi avaliada
     Route::middleware([])->group(function () {
         Route::get('reservas/{reserva}/editar', [ReservaController::class, 'edit'])->name('reservas.edit');
-        Route::patch('reservas/{reserva}', [ReservaController::class, 'update'])->name('reservas.avaliar');
+        Route::patch('reservas/{reserva}', [ReservaController::class, 'update'])->name('reservas.update');
     });
         // Excluir
     Route::delete('minhas-reservas/{reserva}', [ReservaController::class, 'destroy'])->name('reservas.destroy');

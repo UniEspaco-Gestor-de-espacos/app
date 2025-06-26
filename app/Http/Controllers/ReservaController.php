@@ -112,7 +112,44 @@ class ReservaController extends Controller
      */
     public function edit(Reserva $reserva)
     {
-        //
+        $reserva->load([
+            'user',
+            'horarios' => function ($query) {
+                // Ordena os horários para exibição consistente.
+                $query->orderBy('data')->orderBy('horario_inicio');
+            },
+            // Carrega a cadeia de relacionamentos de forma aninhada.
+            'horarios.agenda.espaco'
+        ]);
+
+        $espaco = $reserva->horarios->first()->agenda->espaco;
+
+        // 1. Carrega todos os dados necessários de forma aninhada.
+        $espaco->load([
+            'andar.modulo.unidade.instituicao', // Carrega a hierarquia completa
+            'agendas' => function ($query) {
+                $query->with([
+                    'user.setor', // Carrega o gestor (user) da agenda e seu setor
+                    'horarios.reservas' => function ($q) {
+                        // Carrega as reservas dos horários APROVADOS (deferidos)
+                        $q->wherePivot('situacao', 'deferida')->with('user');
+                    }
+                ]);
+            }
+        ]);
+
+
+        // 2. Verifica se o espaço tem pelo menos uma agenda (e, portanto, um gestor).
+        if ($espaco->agendas->isEmpty()) {
+            return redirect()->route('espacos.index')->with('error', 'Este espaço ainda não possui um gestor definido.');
+        }
+
+        // 3. Renderiza a view, passando APENAS o objeto 'espaco'.
+        // O frontend agora é responsável por processar e exibir os dados aninhados.
+        return Inertia::render('espacos/visualizar', [
+            'espaco' => $espaco,
+            'reserva' => $reserva
+        ]);
     }
 
     /**
@@ -120,7 +157,7 @@ class ReservaController extends Controller
      */
     public function update(Request $request, Reserva $reserva)
     {
-        //
+        dd($request, $reserva);
     }
 
     /**
