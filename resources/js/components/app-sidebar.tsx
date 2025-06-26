@@ -45,7 +45,8 @@ const commonNav: MenuItem[] = [
 const gestorExtras: MenuItem[] = [
     /* { title: 'Consultar Serviços', href: '/servico', icon: ClipboardList }, */
     /*   { title: 'Alterar Status de Manutenção', href: '/servico/status', icon: Settings }, */
-    { title: 'Visualizar Reservas', href: '/gestor/reservas', icon: Eye },
+    { title: 'Gerir Reservas', href: '/gestor/reservas', icon: Eye },
+    { title: 'Gerir Espacos', href: '/gestor/espacos', icon: Eye },
 ];
 
 const institucionalExtras: MenuItem[] = [

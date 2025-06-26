@@ -46,51 +46,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Reservas
     // ---------------------------
 
-    // Visualizar reservas do usuário
+        // Visualizar reservas do usuário
     Route::get('minhas-reservas', [ReservaController::class, 'index'])->name('reservas.index');
     Route::get('minhas-reservas/{reserva}', [ReservaController::class, 'show'])->name('reservas.show'); // Não usada
 
-    // Cadastrar nova reserva
-    Route::get('reservas/criar', [ReservaController::class, 'create'])->name('reservas.create'); // Não usada
+        // Cadastrar nova reserva
     Route::post('reservas', [ReservaController::class, 'store'])
         ->middleware(CadastroReservaMiddleware::class)->name('reservas.store');
 
-    // Editar reserva (antes de ser avaliada)
+        // Editar reserva (antes de ser avaliada) Criar middleware para verificar se a reserva não foi avaliada
     Route::middleware([])->group(function () {
-        Route::get('reservas/{reserva}/editar', [ReservaController::class, 'edit'])->name('reserva.edit');
-        Route::patch('reserva/{reserva}', [ReservaController::class, 'update'])->name('reservas.avaliar');
+        Route::get('reservas/{reserva}/editar', [ReservaController::class, 'edit'])->name('reservas.edit');
+        Route::patch('reservas/{reserva}', [ReservaController::class, 'update'])->name('reservas.avaliar');
     });
-
-    // Editar e a sala para favoritar.
-    Route::middleware([])->group(function () { // Aplicar regra para ver se reserva ja foi avaliada
-        /* 
-        Obs: Essa informações pode apagar se quiser, só foi para ter uma noção 
-        de como estava a estrutura antes de criar o controller de reservas.
-
-        Get para favoritar a reserva, exibir o botão de favoritar.
-        Patch para atualizar o status de favoritar a reserva.
-        Isso é útil para que o usuário possa favoritar uma reserva e depois desfavoritar.
-        */
-        /*  
-        Agora [ReservaController::class, 'favoritar'] e [ReservaController::class, 'updateFavoritar']
-        são usados para lidar com a lógica de favoritar e desfavoritar reservas.
-        O primeiro exibe o botão de favoritar, enquanto o segundo atualiza o status de favoritar.
-        Isso permite que o usuário possa favoritar uma reserva e depois desfavoritar,
-        mantendo a flexibilidade de interação com as reservas.
-        Isso é útil para que o usuário possa favoritar uma reserva e depois desfavoritar.
-
-        Vamos mandar essa parte do CRUD para o controller de reservas,
-        pois é uma ação que envolve o usuário e a reserva, e não apenas o espaço.
-        */
-
-        Route::get('espacos/{espaco}/favoritar', [EspacoController::class, 'favoritar'])->name('espacos.favoritar');
-        Route::patch('espacos/{espaco}/favoritar', [EspacoController::class, 'updateFavoritar'])
-            ->name('espacos.update.favoritar');
-    });
-
-
-    // Excluir
+        // Excluir
     Route::delete('minhas-reservas/{reserva}', [ReservaController::class, 'destroy'])->name('reservas.destroy');
+
 
     // ---------------------------
     // Rotas para Usuário Gestor

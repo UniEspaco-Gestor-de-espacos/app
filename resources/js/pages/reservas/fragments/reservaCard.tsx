@@ -16,7 +16,8 @@ export function SituacaoIndicator({ situacao }: { situacao: SituacaoReserva }) {
     );
 }
 
-export function ReservaCard(reserva: Reserva) {
+export function ReservaCard(props: { reserva: Reserva }) {
+    const { reserva } = props;
     const [dialogOpen, setDialogOpen] = useState(false);
     return (
         <Card>

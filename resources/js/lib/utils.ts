@@ -78,7 +78,7 @@ export const getStatusReservaText = (situacao: SituacaoReserva) => {
     }
 };
 
-export const getTurnoText = (turno: 'manha' | 'tarde' | 'noite') => {
+export const getTurnoText = (turno: 'manha' | 'tarde' | 'noite' | undefined) => {
     switch (turno) {
         case 'manha':
             return 'Manhã';
