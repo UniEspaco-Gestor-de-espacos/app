@@ -105,3 +105,15 @@ export function useDebounce(value: string, delay: number) {
 
     return debouncedValue;
 }
+
+
+export function getPrimeirosDoisNomes(nomeCompleto: string | undefined): string {
+    // 1. Verifica se o nome não é nulo ou vazio
+    if (!nomeCompleto) {
+      return 'N/A';
+    }
+
+    // 2. Divide o nome em palavras, pega as duas primeiras e junta de volta
+    const palavras = nomeCompleto.trim().split(' ');
+    return palavras.slice(0, 2).join(' ');
+  }

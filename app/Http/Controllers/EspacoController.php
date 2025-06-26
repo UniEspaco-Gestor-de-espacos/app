@@ -50,6 +50,12 @@ class EspacoController extends Controller
             })
             // Seleciona as colunas de espacos para evitar conflitos de 'id'
             ->select('espacos.*')
+            ->with([
+                'andar.modulo.unidade', // Carrega a unidade do módulo do andar
+                'agendas' => function ($query) {
+                    $query->with('user'); // Carrega o gestor da agenda
+                }
+            ])
             ->latest('espacos.created_at')
             ->paginate(15)
             // Adiciona a query string à paginação para que os filtros sejam mantidos ao mudar de página
@@ -96,7 +102,7 @@ class EspacoController extends Controller
         ]);
     }
 
-    /* 
+    /*
     <?php
 // ...existing code...
 
@@ -113,6 +119,6 @@ Route::put('/espacos/{espaco}', [EspacoController::class, 'update'])->name('espa
 Route::post('/espacos/{espaco}/favoritar', [EspacoController::class, 'favoritar'])->name('espacos.favoritar');
 
 // ...existing code...
-    
+
     */
 }
