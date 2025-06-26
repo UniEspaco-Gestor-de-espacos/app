@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
-class ReservaMiddleware
+class CadastroReservaMiddleware
 {
     /**
      * Handle an incoming request.
@@ -17,7 +17,7 @@ class ReservaMiddleware
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
-    {
+    {/*
         $validatedData = $request->validate([
             'titulo' => 'required|string|max:255',
             'descricao' => 'nullable|string',
@@ -91,7 +91,7 @@ class ReservaMiddleware
                     return redirect(status: 409)->route('espacos.index')->with('error', $mensagemErro);
                 }
             }
-        }
+        }*/
         return $next($request);
     }
 }

@@ -1,25 +1,32 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatDate, formatDateTime, pegarPrimeiroHorario, pegarUltimoHorario } from '@/lib/utils';
-import { ReservaHorarios } from '@/types';
+import { formatDate, formatDateTime, getTurnoText, pegarPrimeiroHorario, pegarUltimoHorario } from '@/lib/utils';
+import { Reserva, SituacaoReserva } from '@/types';
+import { router } from '@inertiajs/react';
 import { CheckCircle, ChevronLeft, ChevronRight, Clock, Edit, Eye, XCircle, XSquare } from 'lucide-react';
 import type React from 'react';
 import { useState } from 'react';
-import { ReservaCard, SituacaoIndicator } from './reservaCard';
+import { SituacaoIndicator } from './reservaCard';
 
 // Tipos baseados no modelo de dados fornecido
-type Situacao = 'em_analise' | 'deferida' | 'indeferida';
 
 // Componente para exibir o status da reserva com cores e ícones apropriados
-function SituacaoBadge({ situacao }: { situacao: Situacao }) {
+function SituacaoBadge({ situacao }: { situacao: SituacaoReserva }) {
     switch (situacao) {
         case 'em_analise':
             return (
                 <Badge variant="outline" className="flex items-center gap-1 border-yellow-200 bg-yellow-50 text-yellow-700">
                     <Clock className="h-3 w-3" />
                     Em analise
+                </Badge>
+            );
+        case 'parcialmente_deferida':
+            return (
+                <Badge variant="outline" className="flex items-center gap-1 border-green-200 bg-green-50 text-green-700">
+                    <CheckCircle className="h-3 w-3" />
+                    Parcialmente Deferida
                 </Badge>
             );
         case 'deferida':
@@ -42,152 +49,194 @@ function SituacaoBadge({ situacao }: { situacao: Situacao }) {
 }
 
 // Componente principal da lista de reservas
-export function ReservasList({ fallback, reservas }: { fallback: React.ReactNode; reservas: ReservaHorarios[] }) {
+export function ReservasList({ fallback, reservas, isGestor = false }: { fallback: React.ReactNode; reservas: Reserva[]; isGestor?: boolean }) {
     const [page, setPage] = useState(1);
-    const [view, setView] = useState<'table' | 'cards'>('table');
-    const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+    // 1. O estado agora guarda a reserva SELECIONADA, ou null se nenhuma estiver.
+    const [selectedReserva, setSelectedReserva] = useState<Reserva | null>(null);
+
     if (reservas.length === 0) {
         return fallback;
     }
+    const handleAvaliarButton = (id: number) => {
+        router.get(route('gestor.reservas.show', id));
+    };
+
     return (
         <div className="space-y-4">
-            <div className="flex justify-end">
-                <div className="flex items-center space-x-2">
-                    <Button variant={view === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setView('table')} className="hidden sm:flex">
-                        Tabela
-                    </Button>
-                    <Button variant={view === 'cards' ? 'default' : 'outline'} size="sm" onClick={() => setView('cards')}>
-                        Cartões
-                    </Button>
-                </div>
-            </div>
+            <div className="overflow-hidden rounded-md border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Título</TableHead>
+                            <TableHead className="hidden md:table-cell">Situação</TableHead>
+                            <TableHead className="hidden md:table-cell">Local</TableHead>
+                            <TableHead className="hidden lg:table-cell">Data de Início</TableHead>
+                            <TableHead className="hidden lg:table-cell">Data de Término</TableHead>
+                            <TableHead className="text-right">Ações</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {reservas.map((reserva) => (
+                            <TableRow key={reserva.id}>
+                                <TableCell className="font-medium">
+                                    <div>
+                                        {reserva.titulo}
+                                        <p className="text-muted-foreground hidden text-sm sm:block">
+                                            {reserva.descricao.substring(0, 60)}
+                                            {reserva.descricao.length > 60 ? '...' : ''}
+                                        </p>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="hidden md:table-cell">
+                                    <SituacaoBadge situacao={reserva.situacao} />
+                                </TableCell>
+                                <TableCell className="hidden md:table-cell">
+                                    <div>
+                                        <p>
+                                            Espaço: {reserva.horarios[0]?.agenda?.espaco?.nome ?? ' '} /{' '}
+                                            {reserva.horarios[0]?.agenda?.espaco?.andar?.nome ?? ' '} /{' '}
+                                            {reserva.horarios[0]?.agenda?.espaco?.andar?.modulo?.nome ?? ' '} /{' '}
+                                            {reserva.horarios[0]?.agenda!.turno ? getTurnoText(reserva.horarios[0].agenda?.turno) : null}
+                                        </p>
+                                    </div>
+                                </TableCell>
 
-            {view === 'table' ? (
-                <div className="overflow-hidden rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Título</TableHead>
-                                <TableHead className="hidden md:table-cell">Situação</TableHead>
-                                <TableHead className="hidden lg:table-cell">Data de Início</TableHead>
-                                <TableHead className="hidden lg:table-cell">Data de Término</TableHead>
-                                <TableHead className="text-right">Ações</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {reservas.map((reserva) => (
-                                <TableRow key={reserva.reserva.id}>
-                                    <TableCell className="font-medium">
-                                        <div>
-                                            {reserva.reserva.titulo}
-                                            <p className="text-muted-foreground hidden text-sm sm:block">
-                                                {reserva.reserva.descricao.substring(0, 60)}
-                                                {reserva.reserva.descricao.length > 60 ? '...' : ''}
-                                            </p>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="hidden md:table-cell">
-                                        <SituacaoBadge situacao={reserva.reserva.situacao} />
-                                    </TableCell>
-                                    <TableCell className="hidden lg:table-cell">
-                                        {formatDate(reserva.reserva.data_inicial)} - {pegarPrimeiroHorario(reserva.horarios).horario_inicio}
-                                    </TableCell>
-                                    <TableCell className="hidden lg:table-cell"> {formatDate(reserva.reserva.data_final)} - {pegarUltimoHorario(reserva.horarios).horario_fim}</TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2 pt-2">
-                                            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                                                <DialogTrigger asChild>
-                                                    <Button variant="ghost" size="sm">
-                                                        <Eye className="mr-1 h-4 w-4" />
-                                                        Detalhes
-                                                    </Button>
-                                                </DialogTrigger>
-                                                <DialogContent className="sm:max-w-md">
-                                                    <DialogHeader>
-                                                        <DialogTitle>{reserva.reserva.titulo}</DialogTitle>
-                                                        <DialogDescription asChild>
-                                                            <SituacaoIndicator situacao={reserva.reserva.situacao} />
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-                                                    <div className="space-y-4 py-4">
-                                                        <div className="space-y-2">
-                                                            <h4 className="text-sm font-medium">Descrição</h4>
-                                                            <p className="text-muted-foreground text-sm">{reserva.reserva.descricao}</p>
-                                                        </div>
+                                <TableCell className="hidden lg:table-cell">{formatDate(reserva.data_inicial)}</TableCell>
+                                <TableCell className="hidden lg:table-cell"> {formatDate(reserva.data_final)}</TableCell>
+                                <TableCell className="text-right">
+                                    <div className="flex justify-end gap-2 pt-2">
+                                        {/* 2. O botão de detalhes agora define a reserva selecionada no estado */}
+                                        <Button variant="ghost" size="sm" onClick={() => setSelectedReserva(reserva)}>
+                                            <Eye className="mr-1 h-4 w-4" />
+                                            Detalhes
+                                        </Button>
 
-                                                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                                            <div className="space-y-2">
-                                                                <h4 className="text-sm font-medium">Data de Início</h4>
-                                                                <p className="text-sm">{pegarPrimeiroHorario(reserva.horarios).horario_inicio}</p>
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <h4 className="text-sm font-medium">Data de Término</h4>
-                                                                <p className="text-sm">{pegarUltimoHorario(reserva.horarios).horario_fim}</p>
-                                                            </div>
-                                                        </div>
-
-                                                        {reserva.reserva.observacao && (
-                                                            <div className="space-y-2">
-                                                                <h4 className="text-sm font-medium">Observações</h4>
-                                                                <p className="text-muted-foreground text-sm">{reserva.reserva.observacao}</p>
-                                                            </div>
-                                                        )}
-
-                                                        <div className="text-muted-foreground grid grid-cols-1 gap-4 text-xs sm:grid-cols-2">
-                                                            <div>
-                                                                <p>Criado em: {formatDateTime(reserva.reserva.created_at)}</p>
-                                                            </div>
-                                                            <div>
-                                                                <p>Atualizado em: {formatDateTime(reserva.reserva.updated_at)}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <DialogFooter>
-                                                        <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                                                            Fechar
+                                        {reserva.situacao === 'em_analise' && (
+                                            <>
+                                                {isGestor ? (
+                                                    <div>
+                                                        <Button
+                                                            onClick={() => handleAvaliarButton(reserva.id)}
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8"
+                                                            title="Avaliar"
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                            <span className="sr-only">Avaliar</span>
                                                         </Button>
-                                                        {reserva.reserva.situacao === 'em_analise' && (
-                                                            <>
-                                                                <Button variant="outline">
-                                                                    <Edit className="mr-1 h-4 w-4" />
-                                                                    Editar
-                                                                </Button>
-                                                                <Button variant="destructive">
-                                                                    <XCircle className="mr-1 h-4 w-4" />
-                                                                    Cancelar
-                                                                </Button>
-                                                            </>
-                                                        )}
-                                                    </DialogFooter>
-                                                </DialogContent>
-                                            </Dialog>
-                                            {reserva.reserva.situacao === 'em_analise' && (
-                                                <>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Editar">
-                                                        <Edit className="h-4 w-4" />
-                                                        <span className="sr-only">Editar</span>
-                                                    </Button>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" title="Cancelar">
-                                                        <XCircle className="h-4 w-4" />
-                                                        <span className="sr-only">Cancelar</span>
-                                                    </Button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {reservas.map((reserva: ReservaHorarios, index: number) => (
-                        <ReservaCard key={index} reserva={reserva.reserva} horarios={reserva.horarios} />
-                    ))}
-                </div>
-            )}
+                                                    </div>
+                                                ) : (
+                                                    <div>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Editar">
+                                                            <Edit className="h-4 w-4" />
+                                                            <span className="sr-only">Editar</span>
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" title="Cancelar">
+                                                            <XCircle className="h-4 w-4" />
+                                                            <span className="sr-only">Cancelar</span>
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+            {/* 3. O Dialog foi movido para FORA do loop. Ele só vai renderizar se houver uma reserva selecionada */}
+            {selectedReserva && (
+                <Dialog
+                    open={!!selectedReserva}
+                    onOpenChange={(isOpen) => {
+                        if (!isOpen) {
+                            setSelectedReserva(null); // Fecha o dialog limpando o estado
+                        }
+                    }}
+                >
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>{selectedReserva.titulo}</DialogTitle>
+                            <DialogDescription asChild>
+                                <SituacaoIndicator situacao={selectedReserva.situacao} />
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <h4 className="text-sm font-medium">Descrição</h4>
+                                <p className="text-muted-foreground text-sm">{selectedReserva.descricao}</p>
+                            </div>
 
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="space-y-2">
+                                    <h4 className="text-sm font-medium">Data de Início</h4>
+                                    <p className="text-sm">
+                                        {selectedReserva.horarios[0] != null ? pegarPrimeiroHorario(selectedReserva.horarios).horario_inicio : null}
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="text-sm font-medium">Data de Término</h4>
+                                    <p className="text-sm">
+                                        {selectedReserva.horarios[0] != null ? pegarUltimoHorario(selectedReserva.horarios).horario_fim : null}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {selectedReserva.observacao && (
+                                <div className="space-y-2">
+                                    <h4 className="text-sm font-medium">Observações</h4>
+                                    <p className="text-muted-foreground text-sm">{selectedReserva.observacao}</p>
+                                </div>
+                            )}
+
+                            <div className="text-muted-foreground grid grid-cols-1 gap-4 text-xs sm:grid-cols-2">
+                                <div>
+                                    <p>Criado em: {formatDateTime(selectedReserva.created_at)}</p>
+                                </div>
+                                <div>
+                                    <p>Atualizado em: {formatDateTime(selectedReserva.updated_at)}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setSelectedReserva(null)}>
+                                Fechar
+                            </Button>
+                            {selectedReserva.situacao === 'em_analise' && (
+                                <>
+                                    {isGestor ? (
+                                        <div>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => {
+                                                    router.visit(`/gestor/reservas/${selectedReserva.id}`);
+                                                }}
+                                            >
+                                                <Edit className="mr-1 h-4 w-4" />
+                                                Avaliar
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <Button variant="outline">
+                                                <Edit className="mr-1 h-4 w-4" />
+                                                Editar
+                                            </Button>
+                                            <Button variant="destructive">
+                                                <XCircle className="mr-1 h-4 w-4" />
+                                                Cancelar
+                                            </Button>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
             <div className="flex items-center justify-center space-x-2 py-4">
                 <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page === 1}>
                     <ChevronLeft className="h-4 w-4" />

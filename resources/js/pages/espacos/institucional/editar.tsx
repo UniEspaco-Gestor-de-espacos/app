@@ -20,7 +20,7 @@ export default function EditarEspaco() {
     const espaco = props.espaco;
 
     const { data, setData, put, processing, errors } = useForm({
-        modulo: espaco.modulo_id|| '',
+        modulo: espaco.modulo_id || '',
         nome: espaco.nome || '',
         capacidadePessoas: espaco.capacidadePessoas || '',
         acessibilidade: espaco.acessibilidade || false,
@@ -162,14 +162,14 @@ export default function EditarEspaco() {
                                 <button
                                     type="button"
                                     onClick={() => router.visit('/espacos')}
-                                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${processing ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+                                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none ${processing ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}
                                 >
                                     {processing ? 'Salvando...' : 'Salvar Alterações'}
                                 </button>
@@ -181,12 +181,12 @@ export default function EditarEspaco() {
 
             {/* Modal de Confirmação */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+                <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
                     <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
                         <h3 className="mb-4 text-lg font-medium text-gray-900">Confirmar Exclusão</h3>
                         <p className="mb-6 text-gray-600">
-                            Tem certeza que deseja excluir permanentemente o espaço <strong className="font-semibold">{espaco.nome}</strong>?
-                            Esta ação não pode ser desfeita.
+                            Tem certeza que deseja excluir permanentemente o espaço <strong className="font-semibold">{espaco.nome}</strong>? Esta
+                            ação não pode ser desfeita.
                         </p>
                         <div className="flex justify-end space-x-3">
                             <button

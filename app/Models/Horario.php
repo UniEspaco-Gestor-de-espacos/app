@@ -18,11 +18,12 @@ class Horario extends Model
 
     public function reservas()
     {
-        return $this->belongsToMany(Reserva::class, 'reserva_horario')->withTimestamps();
+        return $this->belongsToMany(Reserva::class, 'reserva_horario')
+            ->withPivot('situacao')
+            ->withTimestamps();
     }
     public function agenda()
     {
         return $this->belongsTo(Agenda::class);
     }
-
 }

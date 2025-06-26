@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { ReservaHorarios, User, type BreadcrumbItem } from '@/types';
+import { Reserva, User, type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { Suspense } from 'react';
 import { ReservasEmpty } from './fragments/reservasEmpty';
@@ -16,7 +16,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function MinhasReservas() {
-    const { props } = usePage<{ user: User; reservas: ReservaHorarios[] }>();
+    const { props } = usePage<{ user: User; reservas: Reserva[] }>();
     const { reservas } = props;
 
     return (

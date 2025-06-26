@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreReservaRequest;
+use App\Models\Agenda;
+use App\Models\Andar;
+use App\Models\Espaco;
 use App\Models\Horario;
+use App\Models\Modulo;
 use App\Models\Reserva;
 use Exception;
-use Illuminate\Foundation\Exceptions\Renderer\Renderer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class ReservaController extends Controller
@@ -18,14 +23,27 @@ class ReservaController extends Controller
      */
     public function index()
     {
+
         $user = Auth::user();
-        $reservasUsuario = Reserva::whereUserId($user->id)->get();
-        $reservas = [];
-        foreach ($reservasUsuario as $reserva) {
-            $horarios_reserva = $reserva->horarios()->get();
-            array_push($reservas, ['reserva' => $reserva, 'horarios' => $horarios_reserva]);
-        }
-        return Inertia::render('reservas/index', compact('reservas'));
+
+        // VERSÃO OTIMIZADA:
+        // Carrega as reservas do usuário com todos os relacionamentos necessários em uma única consulta.
+        // Isso evita o problema N+1, onde múltiplas queries são feitas dentro de um loop.
+        $reservas = Reserva::where('user_id', $user->id)
+            ->with([
+                'horarios' => function ($query) {
+                    // Ordena os horários para exibição consistente.
+                    $query->orderBy('data')->orderBy('horario_inicio');
+                },
+                // Carrega a cadeia de relacionamentos de forma aninhada.
+                'horarios.agenda.espaco.andar.modulo.unidade.instituicao'
+            ])
+            ->latest() // Ordena as reservas da mais nova para a mais antiga.
+            ->get();
+
+        return Inertia::render('reservas/minhasReservas', [
+            'reservas' => $reservas
+        ]);
     }
 
     /**
@@ -39,29 +57,45 @@ class ReservaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+
+
+    public function store(StoreReservaRequest $request)
     {
+        // A validação já foi executada pela Form Request.
+        // Usamos uma transação para garantir que tudo seja salvo, ou nada.
         try {
-            // Cria primeiro a reserva para depois vincular ao horario
-            $reserva = Reserva::create([
-                'titulo' => $request['titulo'],
-                'descricao' => $request['descricao'],
-                'data_inicial' => $request['data_inicial'],
-                'data_final' => $request['data_final'],
-                'user_id' => $request['user_id']
-            ]);
-            foreach ($request['horarios_solicitados'] as $horario) {
-                $temp_horario = Horario::create([
-                    'agenda_id' => $horario['agenda_id'],
-                    'horario_inicio' => $horario['horario_inicio'],
-                    'horario_fim' => $horario['horario_fim'],
-                    'data' => $horario['data']
+            DB::transaction(function () use ($request) {
+                // 1. Cria a reserva com o status inicial 'em_analise'.
+                $reserva = Reserva::create([
+                    'titulo' => $request->validated('titulo'),
+                    'descricao' => $request->validated('descricao'),
+                    'data_inicial' => $request->validated('data_inicial'),
+                    'data_final' => $request->validated('data_final'),
+                    'user_id' => Auth::id(),
+                    'situacao' => 'em_analise', // Status geral inicial
                 ]);
-                $reserva->horarios()->attach($temp_horario->id);
-            };
-            return redirect(status: 201)->route('espacos.index')->with('success', 'Reserva solicitada com sucesso! Aguarde avaliação');
+
+                $horariosData = $request->validated('horarios_solicitados');
+
+                // Prepara os dados para inserção em massa e os IDs para o anexo.
+                $horariosParaAnexar = [];
+                foreach ($horariosData as $horarioInfo) {
+                    // Cria cada horário individualmente
+                    $horario = Horario::create($horarioInfo);
+                    // Prepara o array para anexar com o status 'em_analise' na tabela pivô
+                    $horariosParaAnexar[$horario->id] = ['situacao' => 'em_analise'];
+                }
+
+                // 3. Anexa TODOS os horários à reserva com o status pivô correto.
+                $reserva->horarios()->attach($horariosParaAnexar);
+
+                return $reserva;
+            });
+
+            return to_route('espacos.index')->with('success', 'Reserva solicitada com sucesso! Aguarde avaliação.');
         } catch (Exception $error) {
-            return redirect(status: 501)->route('espacos.index')->with('error', 'Erro ao solicitar reserva, favor verificar com administrador do sistema');
+            Log::error('Erro ao solicitar reserva: ' . $error->getMessage());
+            return to_route('espacos.index')->with('error', 'Erro ao solicitar reserva. Tente novamente.');
         }
     }
 
