@@ -19,9 +19,8 @@ import {
     ShieldCheck,
     Star,
     Users,
- /*     Wrench, */
 } from 'lucide-react';
-   
+
 // Adicione 'Users' para um ícone mais adequado
 
 /* ------------- Tipo local de item de menu (não exportado) ------------- */
@@ -46,14 +45,14 @@ const commonNav: MenuItem[] = [
 const gestorExtras: MenuItem[] = [
     /* { title: 'Consultar Serviços', href: '/servico', icon: ClipboardList }, */
     /*   { title: 'Alterar Status de Manutenção', href: '/servico/status', icon: Settings }, */
-    { title: 'Visualizar Ocorrências', href: '/servico/ocorrencias', icon: Eye },
+    { title: 'Visualizar Reservas', href: '/gestor/reservas', icon: Eye },
 ];
 
 const institucionalExtras: MenuItem[] = [
     { title: 'Cadastrar Espaços', href: '/admin/espacos/novo', icon: Building },
     // ALTERADO: Aponta para a listagem/gerenciamento de usuários
     { title: 'Gerenciar Usuários', href: '/institucional/usuarios', icon: Users }, // Ícone 'Users' é mais adequado para gerenciamento de usuários
-   /*  { title: 'Listar Professores / Setores / Gestores', href: '/admin/professores', icon: List }, // Verifique se essa rota é necessária, pode ser substituída por "Gerenciar Usuários"
+    /*  { title: 'Listar Professores / Setores / Gestores', href: '/admin/professores', icon: List }, // Verifique se essa rota é necessária, pode ser substituída por "Gerenciar Usuários"
     { title: 'Listar Todos os Espaços', href: '/admin/espacos', icon: Library }, */
     { title: 'Gerenciar Permissões', href: '/admin/permissoes', icon: ShieldCheck },
     /*   { title: 'Gerenciar Serviços', href: '/admin/servicos', icon: BookOpen }, */

@@ -193,7 +193,7 @@ export default function EspacosPage() {
                     <div className="flex justify-end">
                         <Button
                             onClick={() => {
-                                router.visit('/espacos/create');
+                                router.visit('/institucional/espacos/create');
                             }}
                             className="mb-4" // Add some bottom margin
                         >
