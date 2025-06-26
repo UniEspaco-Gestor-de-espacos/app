@@ -14,7 +14,7 @@ import {
     Calendar,
     Eye,
     LayoutGrid,
-    Library,
+    /*  Library, */
     /*   Settings, */
     ShieldCheck,
     Star,
@@ -49,8 +49,8 @@ const gestorExtras: MenuItem[] = [
 const institucionalExtras: MenuItem[] = [
     { title: 'Cadastrar Espaços', href: '/admin/espacos/novo', icon: Building },
     { title: 'Cadastrar Professores / Setores', href: '/admin/professores/novo', icon: Users },
-    { title: 'Listar Todos os Espaços', href: '/admin/espacos', icon: Library },
     { title: 'Gerenciar Permissões', href: '/admin/permissoes', icon: ShieldCheck },
+    /*   { title: 'Gerenciar Serviços', href: '/admin/servicos', icon: BookOpen }, */
 ];
 
 /* Rotulagem da seção extra --------------------------------------------- */
