@@ -114,13 +114,14 @@ export default function UserController() {
                                     <tr key={u.id} className="hover:bg-muted/50 border-t">
                                         <td className="max-w-[120px] p-3 break-words">{u.name}</td>
                                         <td className="max-w-[140px] p-3 break-words">{u.email}</td>
-                                        <td className="p-3 capitalize"> {getPermissionName(u.permission_type_id)}</td>
+                                        <td className="p-3">
+                                            <span className="max-w-[140px] bg-blue-100 px-2 py-1 text-xs text-blue-800">
+                                                {getPermissionName(u.permission_type_id)}
+                                            </span>
+                                        </td>
                                         <td className="p-3 capitalize">{u.permission_type_id}</td>
                                         <td className="p-3">
-                                            <Link
-                                                href={route('institucional.usuarios.edit', u.id)}
-                                                className="text-primary font-medium underline"
-                                            >
+                                            <Link href={route('institucional.usuarios.edit', u.id)} className="text-primary font-medium underline">
                                                 Editar
                                             </Link>
                                         </td>
@@ -175,7 +176,12 @@ export default function UserController() {
 
                         <div>
                             <label className="mb-1 block font-medium">Status</label>
-                            <Select name="status" value={data.status} onValueChange={(value) => setData('status', value)} required>
+                            <Select
+                                name="status"
+                                value={String(data.status)}
+                                onValueChange={(value) => setData('status', value)}
+                                required
+                            >
                                 <option value="">Selecione</option>
                                 {statuses.map((status) => (
                                     <option key={status} value={status}>
