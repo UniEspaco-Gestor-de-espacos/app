@@ -39,7 +39,7 @@ const commonNav: MenuItem[] = [
     { title: 'Notificações', href: '/notificacoes', icon: Bell },
     { title: 'Minhas Reservas', href: '/minhas-reservas', icon: BookOpen },
     /*  { title: 'Solicitar Manutenção', href: '/manutencao', icon: Wrench }, */
-    { title: 'Espaços Favoritos', href: '/favoritos', icon: Star },
+    { title: 'Espaços Favoritos', href: '/espacos/Favoritos', icon: Star },
 ];
 
 const gestorExtras: MenuItem[] = [
@@ -95,12 +95,10 @@ export function AppSidebar() {
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
-
             {/* Conteúdo -------------------------------------------------------- */}
             <SidebarContent>
                 {/* Itens comuns */}
                 <NavMain items={commonNav} />
-
                 {/* Seção do cargo */}
                 {extraItems.length > 0 && (
                     <div className="my-2 border-t pt-2">
@@ -109,7 +107,6 @@ export function AppSidebar() {
                     </div>
                 )}
             </SidebarContent>
-
             {/* Rodapé ---------------------------------------------------------- */}
             <SidebarFooter>
                 <NavUser />
