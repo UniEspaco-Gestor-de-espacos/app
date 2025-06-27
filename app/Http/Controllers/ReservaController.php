@@ -103,10 +103,10 @@ class ReservaController extends Controller
                 return $reserva;
             });
 
-            return to_route('espacos.index')->with('success', 'Reserva solicitada com sucesso! Aguarde avaliação.');
+            return redirect()->route('espacos.index')->with('success', 'Reserva solicitada com sucesso! Aguarde avaliação.');
         } catch (Exception $error) {
             Log::error('Erro ao solicitar reserva: ' . $error->getMessage());
-            return to_route('espacos.index')->with('error', 'Erro ao solicitar reserva. Tente novamente.');
+            return redirect()->route('espacos.index')->with('error', 'Erro ao solicitar reserva. Tente novamente.');
         }
     }
 
@@ -127,7 +127,6 @@ class ReservaController extends Controller
                     'data_final' => $request->validated('data_final'),
                     // O user_id não deve mudar, e a situação é gerenciada em outro lugar.
                 ]);
-
                 // 2. Pega os IDs dos horários antigos para depois deletá-los.
                 $horariosAntigosIds = $reserva->horarios()->pluck('horarios.id');
 
@@ -152,10 +151,10 @@ class ReservaController extends Controller
                 $reserva->horarios()->attach($horariosParaAnexar);
             });
 
-            return to_route('reservas.index')->with('success', 'Reserva atualizada com sucesso! Aguarde nova avaliação.');
+            return redirect()->route('reservas.index')->with('success', 'Reserva atualizada com sucesso! Aguarde nova avaliação.');
         } catch (Exception $error) {
             Log::error('Erro ao atualizar reserva: ' . $error->getMessage());
-            return to_route('reservas.index')->with('error', 'Erro ao atualizar reserva. Tente novamente.');
+            return redirect()->route('reservas.index')->with('error', 'Erro ao atualizar reserva. Tente novamente.');
         }
     }
 
@@ -208,7 +207,8 @@ class ReservaController extends Controller
         // O frontend agora é responsável por processar e exibir os dados aninhados.
         return Inertia::render('espacos/visualizar', [
             'espaco' => $espaco,
-            'reserva' => $reserva
+            'reserva' => $reserva,
+            'isEditMode' => true,
         ]);
     }
 
