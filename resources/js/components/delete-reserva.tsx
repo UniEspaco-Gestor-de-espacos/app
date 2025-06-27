@@ -10,7 +10,7 @@ import HeadingSmall from '@/components/heading-small';
 
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
-export default function DeleteReserva(props: { id: number; callback?: () => void }) {
+export default function DeleteReserva(props: { id: number; isOpen?: (open: boolean) => void }) {
     const passwordInput = useRef<HTMLInputElement>(null);
     const { data, setData, delete: destroy, processing, reset, errors, clearErrors } = useForm<Required<{ password: string }>>({ password: '' });
 
@@ -26,6 +26,7 @@ export default function DeleteReserva(props: { id: number; callback?: () => void
     };
 
     const closeModal = () => {
+        props.isOpen?.(false);
         clearErrors();
         reset();
     };

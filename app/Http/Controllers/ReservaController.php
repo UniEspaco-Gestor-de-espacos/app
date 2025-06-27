@@ -3,11 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreReservaRequest;
-use App\Models\Agenda;
-use App\Models\Andar;
-use App\Models\Espaco;
 use App\Models\Horario;
-use App\Models\Modulo;
 use App\Models\Reserva;
 use Exception;
 use Illuminate\Http\Request;
@@ -21,28 +17,44 @@ class ReservaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request) // Recebe a Request
     {
-
         $user = Auth::user();
 
-        // VERSÃO OTIMIZADA:
-        // Carrega as reservas do usuário com todos os relacionamentos necessários em uma única consulta.
-        // Isso evita o problema N+1, onde múltiplas queries são feitas dentro de um loop.
-        $reservas = Reserva::where('user_id', $user->id)
+        // Pega os parâmetros de filtro da URL (query string), exatamente como no outro controller
+        $filters = $request->only(['search', 'situacao']);
+
+        $reservas = Reserva::query()
+            ->where('user_id', $user->id) // Query base para as reservas do usuário logado
+            // Aplica os filtros de forma condicional
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('titulo', 'like', '%' . $search . '%')
+                        ->orWhere('descricao', 'like', '%' . $search . '%');
+                });
+                $query->orderByRaw(
+                    "CASE WHEN titulo LIKE ? THEN 1 ELSE 2 END",
+                    ['%' . $search . '%']
+                );
+            })
+            ->when($filters['situacao'] ?? null, function ($query, $situacao) {
+                $query->where('situacao', $situacao);
+            })
+            // Carrega todos os relacionamentos necessários em uma única consulta.
             ->with([
+                'user',
                 'horarios' => function ($query) {
-                    // Ordena os horários para exibição consistente.
                     $query->orderBy('data')->orderBy('horario_inicio');
                 },
-                // Carrega a cadeia de relacionamentos de forma aninhada.
                 'horarios.agenda.espaco.andar.modulo.unidade.instituicao'
             ])
             ->latest() // Ordena as reservas da mais nova para a mais antiga.
-            ->get();
+            ->paginate(10) // Pagina os resultados
+            ->withQueryString(); // Anexa os filtros aos links de paginação
 
         return Inertia::render('reservas/minhasReservas', [
-            'reservas' => $reservas
+            'reservas' => $reservas, // Envia o objeto paginador completo
+            'filters' => $filters,   // Envia os filtros de volta para a view
         ]);
     }
 

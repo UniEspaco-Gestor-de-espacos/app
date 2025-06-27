@@ -1,7 +1,8 @@
 import AppLayout from '@/layouts/app-layout';
-import { Reserva, type BreadcrumbItem } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
-import { Suspense } from 'react';
+import { useDebounce } from '@/lib/utils';
+import { Paginator, Reserva, User, type BreadcrumbItem } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
+import { Suspense, useEffect, useState } from 'react';
 import { ReservasEmpty } from '../fragments/reservasEmpty';
 import { ReservasFilters } from '../fragments/reservasFilters';
 import { ReservasHeader } from '../fragments/reservasHeader';
@@ -20,17 +21,45 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function MinhasReservas() {
-    const { props } = usePage<{ reservas: Reserva[] }>();
-    const reservas = props.reservas;
+    // 1. Pegamos o paginador completo e os filtros iniciais das props
+    const { props } = usePage<{ user: User; reservas: Paginator<Reserva>; filters: { search?: string; situacao?: string } }>();
+    const { reservas: paginator, filters } = props;
+    // 2. O estado dos filtros agora "mora" aqui, no componente pai
+    const [searchTerm, setSearchTerm] = useState(filters.search || '');
+    const [selectedSituacao, setSelectedSituacao] = useState(filters.situacao || '');
+    const [data, setData] = useState<Date | undefined>(undefined);
+    // 3. Debounce para o campo de busca
+    const [debouncedSearch] = useDebounce(searchTerm, 500);
+    // 4. useEffect para buscar os dados quando os filtros mudam
+    useEffect(() => {
+        const params = {
+            search: debouncedSearch || undefined,
+            situacao: selectedSituacao || undefined,
+        };
+
+        router.get(route('gestor.reservas.index'), params, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    }, [debouncedSearch, selectedSituacao]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
-                    <ReservasHeader isGestor />
-                    <ReservasFilters />
+                    <ReservasHeader />
+                    <ReservasFilters
+                        searchTerm={searchTerm}
+                        onSearchTermChange={setSearchTerm}
+                        selectedSituacao={selectedSituacao}
+                        onSituacaoChange={setSelectedSituacao}
+                        selectedDate={data}
+                        onDateChange={setData}
+                    />
                     <Suspense fallback={<ReservasLoading />}>
-                        <ReservasList fallback={<ReservasEmpty />} isGestor reservas={reservas} />
+                        <ReservasList fallback={<ReservasEmpty />} paginator={paginator} isGestor={true} />
                     </Suspense>
                 </div>
             </div>
