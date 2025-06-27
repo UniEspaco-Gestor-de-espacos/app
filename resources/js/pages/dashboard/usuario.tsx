@@ -26,12 +26,7 @@ export default function Dashboard() {
     // Função utilitária para pegar nome do espaço de uma reserva
     function getEspacoNome(reserva: Reserva) {
         // Se já vier populado do backend, use direto
-        if (
-            reserva.horarios &&
-            reserva.horarios.length > 0 &&
-            reserva.horarios[0].agenda &&
-            reserva.horarios[0].agenda.espaco
-        ) {
+        if (reserva.horarios && reserva.horarios.length > 0 && reserva.horarios[0].agenda && reserva.horarios[0].agenda.espaco) {
             return reserva.horarios[0].agenda.espaco.nome;
         }
         return '-';
@@ -63,11 +58,14 @@ export default function Dashboard() {
                                 <CalendarClock className="text-muted-foreground h-4 w-4" />
                             </CardHeader>
                             <CardContent>
-                                <div className="truncate text-xl font-bold md:text-2xl">{espacoDaProximaReserva?.nome ?? getEspacoNome(proximaReserva)}</div>
+                                <div className="truncate text-xl font-bold md:text-2xl">
+                                    {espacoDaProximaReserva?.nome ?? getEspacoNome(proximaReserva)}
+                                </div>
                                 <p className="text-muted-foreground text-xs">
                                     {typeof proximaReserva.data_inicial === 'string'
                                         ? proximaReserva.data_inicial
-                                        : proximaReserva.data_inicial?.toLocaleDateString()} • {getHorario(proximaReserva)}
+                                        : proximaReserva.data_inicial?.toLocaleDateString()}{' '}
+                                    • {getHorario(proximaReserva)}
                                 </p>
                             </CardContent>
                             <CardFooter>
@@ -150,7 +148,11 @@ export default function Dashboard() {
                                         {reservas.map((reserva) => (
                                             <TableRow key={reserva.id}>
                                                 <TableCell className="font-medium">{getEspacoNome(reserva)}</TableCell>
-                                                <TableCell className="hidden sm:table-cell">{typeof reserva.data_inicial === 'string' ? reserva.data_inicial : reserva.data_inicial?.toLocaleDateString()}</TableCell>
+                                                <TableCell className="hidden sm:table-cell">
+                                                    {typeof reserva.data_inicial === 'string'
+                                                        ? reserva.data_inicial
+                                                        : reserva.data_inicial?.toLocaleDateString()}
+                                                </TableCell>
                                                 <TableCell className="hidden md:table-cell">{getHorario(reserva)}</TableCell>
                                                 <TableCell>
                                                     {getStatus(reserva) === 'approved' && (
