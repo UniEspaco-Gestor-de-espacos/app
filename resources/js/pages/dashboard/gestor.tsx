@@ -4,8 +4,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { User, type BreadcrumbItem } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Bell, CheckCircle, Clock, History, Home, Plus, XCircle } from 'lucide-react';
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: '🏠 Painel Inicial',
@@ -13,89 +14,71 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Dados de exemplo
-const pendingRequests = 8;
-
-const managedSpaces = [
-    {
-        id: '1',
-        name: 'Laboratório de Informática 3',
-        status: 'available',
-    },
-    {
-        id: '2',
-        name: 'Laboratório de Informática 4',
-        status: 'reserved',
-    },
-    {
-        id: '3',
-        name: 'Sala de Videoconferência',
-        status: 'unavailable',
-    },
-    {
-        id: '4',
-        name: 'Laboratório de Redes',
-        status: 'available',
-    },
-];
-
-const scheduledUnavailability = [
-    {
-        id: '1',
-        spaceName: 'Laboratório de Informática 3',
-        startDate: '20/05/2023',
-        endDate: '25/05/2023',
-        reason: 'Manutenção de Equipamentos',
-    },
-    {
-        id: '2',
-        spaceName: 'Sala de Videoconferência',
-        startDate: '15/05/2023',
-        endDate: '16/05/2023',
-        reason: 'Atualização de Software',
-    },
-];
-
-const decisionHistory = [
-    {
-        id: '1',
-        spaceName: 'Laboratório de Informática 3',
-        requester: 'Prof. Carlos Silva',
-        date: '12/05/2023',
-        time: '14:00 - 16:00',
-        decision: 'approved',
-    },
-    {
-        id: '2',
-        spaceName: 'Laboratório de Redes',
-        requester: 'Prof. Ana Oliveira',
-        date: '11/05/2023',
-        time: '10:00 - 12:00',
-        decision: 'rejected',
-        reason: 'Conflito de horário',
-    },
-    {
-        id: '3',
-        spaceName: 'Sala de Videoconferência',
-        requester: 'Prof. Marcos Santos',
-        date: '10/05/2023',
-        time: '15:00 - 17:00',
-        decision: 'approved',
-    },
-    {
-        id: '4',
-        spaceName: 'Laboratório de Informática 4',
-        requester: 'Prof. Juliana Costa',
-        date: '09/05/2023',
-        time: '08:00 - 10:00',
-        decision: 'approved',
-    },
-];
-
 export default function Dashboard() {
-    const { props } = usePage<{ user: User }>();
-    const { user } = props;
-    console.log(user);
+    // Props com valores padrão para robustez
+    const { props } = usePage<{
+        user?: User;
+        pendingRequests?: number
+        espacos?: Array<{ id: string | number; nome: string; status: string }>;
+        indisponibilidades?: Array<{ id: string | number; espaco_nome: string; data_inicio: string; data_fim: string; motivo: string }>;
+        decisoes?: Array<{
+            id: string | number;
+            horarios: Array<{ horario_inicio: string; horario_fim: string; agenda?: { espaco?: { nome: string } } }>;
+            user?: { name: string };
+            data_inicial: string;
+            situacao: string;
+        }>;
+    }>();
+    const pendingRequests: number = props.pendingRequests ?? 0;
+    const espacos: Array<{ id: string | number; nome: string; status: string }> = props.espacos ?? [];
+    const indisponibilidades: Array<{ id: string | number; espaco_nome: string; data_inicio: string; data_fim: string; motivo: string }> =
+        props.indisponibilidades ?? [];
+    const decisoes: Array<{
+        id: string | number;
+        horarios: Array<{ horario_inicio: string; horario_fim: string; agenda?: { espaco?: { nome: string } } }>;
+        user?: { name: string };
+        data_inicial: string;
+        situacao: string;
+    }> = props.decisoes ?? [];
+
+    function getStatusBadge(status: string) {
+        if (status === 'available') return 'bg-green-500 hover:bg-green-600';
+        if (status === 'reserved') return 'bg-amber-500 hover:bg-amber-600';
+        return 'bg-red-500 hover:bg-red-600';
+    }
+    function formatarData(data: string | Date | undefined) {
+        if (!data) return '-';
+        if (typeof data === 'string') {
+            const d = new Date(data);
+            if (!isNaN(d.getTime())) return d.toLocaleDateString();
+            return data;
+        }
+        if (data instanceof Date) return data.toLocaleDateString();
+        return '-';
+    }
+    function formatarHorario(horarios: Array<{ horario_inicio: string; horario_fim: string }>) {
+        if (horarios && horarios[0]) {
+            return `${horarios[0].horario_inicio} - ${horarios[0].horario_fim}`;
+        }
+        return '-';
+    }
+    // Navegação dos botões
+    function handleVerSolicitacoes() {
+        router.visit('/espacos/index');
+    }
+    function handleGerenciarEspacos() {
+        router.visit('/gestor/espacos');
+    }
+    function handleVerIndisponibilidades() {
+        router.visit('/gestor/indisponibilidades');
+    }
+    function handleNovaIndisponibilidade() {
+        router.visit('/gestor/indisponibilidades/nova');
+    }
+    function handleVerHistorico() {
+        router.visit('/gestor/decisoes/historico');
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />
@@ -111,7 +94,9 @@ export default function Dashboard() {
                             <p className="text-muted-foreground text-xs">Aguardando sua análise</p>
                         </CardContent>
                         <CardFooter>
-                            <Button className="w-full">Ver Solicitações</Button>
+                            <Button className="w-full" onClick={handleVerSolicitacoes}>
+                                Ver Solicitações
+                            </Button>
                         </CardFooter>
                     </Card>
 
@@ -122,18 +107,13 @@ export default function Dashboard() {
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
-                                {managedSpaces.map((space) => (
+                                {espacos.length === 0 && (
+                                    <div className="text-muted-foreground col-span-2 text-center">Nenhum espaço encontrado.</div>
+                                )}
+                                {espacos.map((space) => (
                                     <div key={space.id} className="flex items-center justify-between rounded-lg border p-2">
-                                        <div className="mr-2 truncate font-medium">{space.name}</div>
-                                        <Badge
-                                            className={
-                                                space.status === 'available'
-                                                    ? 'bg-green-500 hover:bg-green-600'
-                                                    : space.status === 'reserved'
-                                                      ? 'bg-amber-500 hover:bg-amber-600'
-                                                      : 'bg-red-500 hover:bg-red-600'
-                                            }
-                                        >
+                                        <div className="mr-2 truncate font-medium">{space.nome}</div>
+                                        <Badge className={getStatusBadge(space.status)}>
                                             {space.status === 'available' ? 'Livre' : space.status === 'reserved' ? 'Reservado' : 'Indisponível'}
                                         </Badge>
                                     </div>
@@ -141,7 +121,7 @@ export default function Dashboard() {
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button variant="outline" size="sm" className="w-full">
+                            <Button variant="outline" size="sm" className="w-full" onClick={handleGerenciarEspacos}>
                                 Gerenciar Espaços
                             </Button>
                         </CardFooter>
@@ -154,22 +134,25 @@ export default function Dashboard() {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-2">
-                                {scheduledUnavailability.map((unavailability) => (
-                                    <div key={unavailability.id} className="rounded-lg border p-2">
-                                        <div className="truncate font-medium">{unavailability.spaceName}</div>
+                                {indisponibilidades.length === 0 && (
+                                    <div className="text-muted-foreground text-center">Nenhuma indisponibilidade agendada.</div>
+                                )}
+                                {indisponibilidades.map((ind) => (
+                                    <div key={ind.id} className="rounded-lg border p-2">
+                                        <div className="truncate font-medium">{ind.espaco_nome}</div>
                                         <div className="text-muted-foreground text-xs">
-                                            {unavailability.startDate} até {unavailability.endDate}
+                                            {formatarData(ind.data_inicio)} até {formatarData(ind.data_fim)}
                                         </div>
-                                        <div className="text-xs">{unavailability.reason}</div>
+                                        <div className="text-xs">{ind.motivo}</div>
                                     </div>
                                 ))}
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-between">
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={handleVerIndisponibilidades}>
                                 Ver Todas
                             </Button>
-                            <Button size="sm">
+                            <Button size="sm" onClick={handleNovaIndisponibilidade}>
                                 <Plus className="mr-1 h-4 w-4" /> Nova
                             </Button>
                         </CardFooter>
@@ -193,14 +176,23 @@ export default function Dashboard() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {decisionHistory.map((decision) => (
+                                        {decisoes.length === 0 && (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="text-muted-foreground text-center">
+                                                    Nenhuma decisão encontrada.
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                        {decisoes.map((decision) => (
                                             <TableRow key={decision.id}>
-                                                <TableCell className="font-medium">{decision.spaceName}</TableCell>
-                                                <TableCell className="hidden sm:table-cell">{decision.requester}</TableCell>
-                                                <TableCell className="hidden md:table-cell">{decision.date}</TableCell>
-                                                <TableCell className="hidden lg:table-cell">{decision.time}</TableCell>
+                                                <TableCell className="font-medium">
+                                                    {(decision.horarios && decision.horarios[0]?.agenda?.espaco?.nome) ?? '-'}
+                                                </TableCell>
+                                                <TableCell className="hidden sm:table-cell">{decision.user?.name ?? '-'}</TableCell>
+                                                <TableCell className="hidden md:table-cell">{formatarData(decision.data_inicial)}</TableCell>
+                                                <TableCell className="hidden lg:table-cell">{formatarHorario(decision.horarios)}</TableCell>
                                                 <TableCell>
-                                                    {decision.decision === 'approved' ? (
+                                                    {decision.situacao === 'deferida' ? (
                                                         <div className="flex items-center">
                                                             <CheckCircle className="mr-1 h-4 w-4 text-green-500" />
                                                             <span className="text-green-500">Aprovada</span>
@@ -219,7 +211,7 @@ export default function Dashboard() {
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button variant="outline" size="sm" className="w-full">
+                            <Button variant="outline" size="sm" className="w-full" onClick={handleVerHistorico}>
                                 Ver histórico completo
                             </Button>
                         </CardFooter>
