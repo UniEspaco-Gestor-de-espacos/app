@@ -19,7 +19,8 @@ class HomeController extends Controller
                 return Inertia::render('dashboard/gestor', compact('user'));
             default: // Usuario Comum
                 $baseUserReservasQuery = Reserva::where('user_id', $user->id);
-                $reservas = (clone $baseUserReservasQuery)->get();
+
+                $reservas = (clone $baseUserReservasQuery)->with('horarios.agenda.espaco')->get();
                 $statusDasReservas = [
                     'em_analise' => (clone $baseUserReservasQuery)->where('situacao', 'em_analise')->count(),
                     'deferida'   => (clone $baseUserReservasQuery)->where('situacao', 'deferida')->count(),

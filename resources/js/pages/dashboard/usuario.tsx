@@ -13,60 +13,44 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Dados de exemplo
-const nextReservation = {
-    spaceName: 'Laboratório de Informática 3',
-    date: '15/05/2023',
-    startTime: '14:00',
-    endTime: '16:00',
-};
-
-const reservationHistory = [
-    {
-        id: '1',
-        spaceName: 'Auditório Principal',
-        date: '10/05/2023',
-        time: '09:00 - 11:00',
-        status: 'approved',
-    },
-    {
-        id: '2',
-        spaceName: 'Sala de Reuniões 2',
-        date: '05/05/2023',
-        time: '13:00 - 14:00',
-        status: 'approved',
-    },
-    {
-        id: '3',
-        spaceName: 'Laboratório de Química',
-        date: '03/05/2023',
-        time: '15:00 - 17:00',
-        status: 'rejected',
-    },
-    {
-        id: '4',
-        spaceName: 'Sala 101',
-        date: '28/04/2023',
-        time: '08:00 - 10:00',
-        status: 'approved',
-    },
-    {
-        id: '5',
-        spaceName: 'Sala de Videoconferência',
-        date: '25/04/2023',
-        time: '14:00 - 15:00',
-        status: 'pending',
-    },
-];
 export default function Dashboard() {
     const { props } = usePage<{
         user: User;
         statusDasReservas: DashboardStatusReservasType;
-        proximaReserva: Reserva;
-        espacoDaProximaReserva: Espaco;
+        proximaReserva: Reserva | null;
+        reservas: Reserva[];
+        espacoDaProximaReserva: Espaco | null;
     }>();
-    const { user, statusDasReservas, proximaReserva, espacoDaProximaReserva } = props;
-    console.log(statusDasReservas);
+    const { statusDasReservas, proximaReserva, reservas, espacoDaProximaReserva } = props;
+
+    // Função utilitária para pegar nome do espaço de uma reserva
+    function getEspacoNome(reserva: Reserva) {
+        // Se já vier populado do backend, use direto
+        if (
+            reserva.horarios &&
+            reserva.horarios.length > 0 &&
+            reserva.horarios[0].agenda &&
+            reserva.horarios[0].agenda.espaco
+        ) {
+            return reserva.horarios[0].agenda.espaco.nome;
+        }
+        return '-';
+    }
+    // Função para pegar horário formatado
+    function getHorario(reserva: Reserva) {
+        if (reserva.horarios && reserva.horarios.length > 0) {
+            const h = reserva.horarios[0];
+            return `${h.horario_inicio} - ${h.horario_fim}`;
+        }
+        return '-';
+    }
+    // Função para pegar status
+    function getStatus(reserva: Reserva) {
+        if (reserva.situacao === 'deferida') return 'approved';
+        if (reserva.situacao === 'em_analise') return 'pending';
+        if (reserva.situacao === 'indeferida') return 'rejected';
+        return reserva.situacao;
+    }
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />
@@ -79,9 +63,11 @@ export default function Dashboard() {
                                 <CalendarClock className="text-muted-foreground h-4 w-4" />
                             </CardHeader>
                             <CardContent>
-                                <div className="truncate text-xl font-bold md:text-2xl">{espacoDaProximaReserva.nome}</div>
+                                <div className="truncate text-xl font-bold md:text-2xl">{espacoDaProximaReserva?.nome ?? getEspacoNome(proximaReserva)}</div>
                                 <p className="text-muted-foreground text-xs">
-                                    {nextReservation.date} • {nextReservation.startTime} às {nextReservation.endTime}
+                                    {typeof proximaReserva.data_inicial === 'string'
+                                        ? proximaReserva.data_inicial
+                                        : proximaReserva.data_inicial?.toLocaleDateString()} • {getHorario(proximaReserva)}
                                 </p>
                             </CardContent>
                             <CardFooter>
@@ -161,21 +147,21 @@ export default function Dashboard() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {reservationHistory.map((reservation) => (
-                                            <TableRow key={reservation.id}>
-                                                <TableCell className="font-medium">{reservation.spaceName}</TableCell>
-                                                <TableCell className="hidden sm:table-cell">{reservation.date}</TableCell>
-                                                <TableCell className="hidden md:table-cell">{reservation.time}</TableCell>
+                                        {reservas.map((reserva) => (
+                                            <TableRow key={reserva.id}>
+                                                <TableCell className="font-medium">{getEspacoNome(reserva)}</TableCell>
+                                                <TableCell className="hidden sm:table-cell">{typeof reserva.data_inicial === 'string' ? reserva.data_inicial : reserva.data_inicial?.toLocaleDateString()}</TableCell>
+                                                <TableCell className="hidden md:table-cell">{getHorario(reserva)}</TableCell>
                                                 <TableCell>
-                                                    {reservation.status === 'approved' && (
+                                                    {getStatus(reserva) === 'approved' && (
                                                         <Badge className="bg-green-500 hover:bg-green-600">Aprovada</Badge>
                                                     )}
-                                                    {reservation.status === 'pending' && (
+                                                    {getStatus(reserva) === 'pending' && (
                                                         <Badge variant="outline" className="border-amber-500 text-amber-500">
                                                             Pendente
                                                         </Badge>
                                                     )}
-                                                    {reservation.status === 'rejected' && <Badge variant="destructive">Recusada</Badge>}
+                                                    {getStatus(reserva) === 'rejected' && <Badge variant="destructive">Recusada</Badge>}
                                                 </TableCell>
                                             </TableRow>
                                         ))}
