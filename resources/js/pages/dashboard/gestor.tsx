@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { User, type BreadcrumbItem } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { type BreadcrumbItem } from '@/types';
+import { Head } from '@inertiajs/react';
 import { Bell, CheckCircle, Clock, History, Home, Plus, XCircle } from 'lucide-react';
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -93,9 +93,8 @@ const decisionHistory = [
 ];
 
 export default function Dashboard() {
-    const { props } = usePage<{ user: User }>();
-    const { user } = props;
-    console.log(user);
+    //const { props } = usePage<{ user: User }>();
+    // const { user } = props;
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />

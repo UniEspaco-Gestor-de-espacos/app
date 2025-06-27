@@ -1,4 +1,3 @@
-// src/Layouts/AppSidebar.tsx
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
@@ -14,8 +13,6 @@ import {
     Calendar,
     Eye,
     LayoutGrid,
-    /*  Library, */
-    /*   Settings, */
     ShieldCheck,
     Star,
     Users,
@@ -38,25 +35,19 @@ const commonNav: MenuItem[] = [
     { title: 'Consultar Espaços', href: '/espacos', icon: Calendar },
     { title: 'Notificações', href: '/notificacoes', icon: Bell },
     { title: 'Minhas Reservas', href: '/minhas-reservas', icon: BookOpen },
-    /*  { title: 'Solicitar Manutenção', href: '/manutencao', icon: Wrench }, */
     { title: 'Espaços Favoritos', href: '/favoritos', icon: Star },
 ];
 
 const gestorExtras: MenuItem[] = [
-    /* { title: 'Consultar Serviços', href: '/servico', icon: ClipboardList }, */
-    /*   { title: 'Alterar Status de Manutenção', href: '/servico/status', icon: Settings }, */
+
     { title: 'Gerir Reservas', href: '/gestor/reservas', icon: Eye },
-    { title: 'Gerir Espacos', href: '/gestor/espacos', icon: Eye },
+    { title: 'Gerir Espacos', href: '/gestor/espacos', icon: Star },
 ];
 
 const institucionalExtras: MenuItem[] = [
     { title: 'Cadastrar Espaços', href: '/admin/espacos/novo', icon: Building },
-    // ALTERADO: Aponta para a listagem/gerenciamento de usuários
     { title: 'Gerenciar Usuários', href: '/institucional/usuarios', icon: Users }, // Ícone 'Users' é mais adequado para gerenciamento de usuários
-    /*  { title: 'Listar Professores / Setores / Gestores', href: '/admin/professores', icon: List }, // Verifique se essa rota é necessária, pode ser substituída por "Gerenciar Usuários"
-    { title: 'Listar Todos os Espaços', href: '/admin/espacos', icon: Library }, */
     { title: 'Gerenciar Permissões', href: '/admin/permissoes', icon: ShieldCheck },
-    /*   { title: 'Gerenciar Serviços', href: '/admin/servicos', icon: BookOpen }, */
 ];
 
 /* Rotulagem da seção extra --------------------------------------------- */
@@ -99,7 +90,7 @@ export function AppSidebar() {
             {/* Conteúdo -------------------------------------------------------- */}
             <SidebarContent>
                 {/* Itens comuns */}
-                <NavMain items={commonNav} />
+                {<NavMain items={commonNav} />}
 
                 {/* Seção do cargo */}
                 {extraItems.length > 0 && (

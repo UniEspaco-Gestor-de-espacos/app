@@ -1,3 +1,4 @@
+import DeleteReserva from '@/components/delete-reserva';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -53,6 +54,7 @@ export function ReservasList({ fallback, reservas, isGestor = false }: { fallbac
     const [page, setPage] = useState(1);
     // 1. O estado agora guarda a reserva SELECIONADA, ou null se nenhuma estiver.
     const [selectedReserva, setSelectedReserva] = useState<Reserva | null>(null);
+    const [removerReserva, setRemoverReserva] = useState<Reserva | null>(null);
 
     if (reservas.length === 0) {
         return fallback;
@@ -140,7 +142,13 @@ export function ReservasList({ fallback, reservas, isGestor = false }: { fallbac
                                                             <Edit className="h-4 w-4" />
                                                             <span className="sr-only">Editar</span>
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" title="Cancelar">
+                                                        <Button
+                                                            onClick={() => setRemoverReserva(reserva)}
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-red-600"
+                                                            title="Cancelar"
+                                                        >
                                                             <XCircle className="h-4 w-4" />
                                                             <span className="sr-only">Cancelar</span>
                                                         </Button>
@@ -156,6 +164,7 @@ export function ReservasList({ fallback, reservas, isGestor = false }: { fallbac
                 </Table>
             </div>
             {/* 3. O Dialog foi movido para FORA do loop. Ele só vai renderizar se houver uma reserva selecionada */}
+            {removerReserva && <DeleteReserva id={removerReserva.id} />}
             {selectedReserva && (
                 <Dialog
                     open={!!selectedReserva}

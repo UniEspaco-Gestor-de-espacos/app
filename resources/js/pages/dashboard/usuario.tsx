@@ -65,8 +65,7 @@ export default function Dashboard() {
         proximaReserva: Reserva;
         espacoDaProximaReserva: Espaco;
     }>();
-    const { user, statusDasReservas, proximaReserva, espacoDaProximaReserva } = props;
-    console.log(statusDasReservas);
+    const { statusDasReservas, proximaReserva, espacoDaProximaReserva } = props;
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />

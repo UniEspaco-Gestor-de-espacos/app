@@ -129,7 +129,7 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
             });
         });
         return { gestoresPorTurno: gestores, horariosReservadosMap: reservadosMap };
-    }, [agendas]); // Recalcular apenas se a prop 'agenda' mudar
+    }, [agendas, isEditMode, reserva?.id]); // Recalcular apenas se a prop 'agenda' mudar
 
     // Função para gerar slots de horário para a semana
     const gerarSlotsParaSemana = (semanaInicio: Date) => {
@@ -231,7 +231,7 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
     useEffect(() => {
         const horariosParaEnvio: Partial<Horario>[] = slotsSelecao.map((slot) => {
             return {
-                data: slot.data,
+                data: format(slot.data, 'yyyy-MM-dd'),
                 horario_inicio: slot.horario_inicio,
                 horario_fim: slot.horario_fim,
                 agenda_id: slot.agenda_id,
@@ -266,7 +266,7 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
             // Ordenar slots por dia e hora
             const novaSelecao = [...slotsSelecao, slot].sort(
                 (a, b) =>
-                    a.data.getTime() - b.data.getTime() || // Compara dias primeiro
+                    new Date(a.data).getTime() - new Date(b.data).getTime() || // Compara dias primeiro
                     a.horario_inicio.localeCompare(b.horario_inicio), // Se dias iguais, compara horaInicio como string "HH:MM:SS"
             );
 
@@ -276,13 +276,15 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
 
     // Função para enviar o formulário
     function onSubmit(e: React.FormEvent) {
+        console.log(data);
+
         e.preventDefault();
         // Obter a opção de recorrência selecionada
         const opcaoRecorrencia = opcoesRecorrencia.find((opcao) => opcao.valor === recorrencia);
         if (!opcaoRecorrencia) return;
 
         // Calcular a data final com base na recorrência
-        const dataInicial = new Date(Math.min(...slotsSelecao.map((slotSelect) => slotSelect.data.getTime())));
+        const dataInicial = new Date(Math.min(...slotsSelecao.map((slotSelect) => new Date(slotSelect.data).getTime())));
 
         if (recorrencia !== 'personalizado') {
             setData((prevData) => ({ ...prevData, data_final: opcaoRecorrencia.calcularDataFinal(dataInicial) }));
@@ -834,7 +836,7 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
                                 </div>
 
                                 <DialogFooter>
-                                    <Button variant="outline" onClick={() => setDialogAberto(false)}>
+                                    <Button type="reset" variant="outline" onClick={() => setDialogAberto(false)}>
                                         Cancelar
                                     </Button>
                                     <Button type="submit" disabled={!data.titulo.trim()}>

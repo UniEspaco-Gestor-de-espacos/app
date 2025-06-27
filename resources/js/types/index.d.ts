@@ -170,7 +170,7 @@ export interface Agenda {
  */
 export interface Horario {
     id: number;
-    data: Date; // Datas do Laravel chegam como strings no JSON
+    data: string; // Datas do Laravel chegam como strings no JSON
     horario_inicio: string;
     horario_fim: string;
     agenda?: Agenda; // Relação aninhada

@@ -76,7 +76,6 @@ class ReservaController extends Controller
                 ]);
 
                 $horariosData = $request->validated('horarios_solicitados');
-
                 // Prepara os dados para inserção em massa e os IDs para o anexo.
                 $horariosParaAnexar = [];
                 foreach ($horariosData as $horarioInfo) {
@@ -96,6 +95,55 @@ class ReservaController extends Controller
         } catch (Exception $error) {
             Log::error('Erro ao solicitar reserva: ' . $error->getMessage());
             return to_route('espacos.index')->with('error', 'Erro ao solicitar reserva. Tente novamente.');
+        }
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(StoreReservaRequest $request, Reserva $reserva)
+    {
+        // A validação já foi executada pela Form Request.
+        // Usamos uma transação para garantir que tudo seja salvo, ou nada.
+        try {
+            DB::transaction(function () use ($request, $reserva) {
+                // 1. Atualiza os dados da reserva.
+                $reserva->update([
+                    'titulo' => $request->validated('titulo'),
+                    'descricao' => $request->validated('descricao'),
+                    'data_inicial' => $request->validated('data_inicial'),
+                    'data_final' => $request->validated('data_final'),
+                    // O user_id não deve mudar, e a situação é gerenciada em outro lugar.
+                ]);
+
+                // 2. Pega os IDs dos horários antigos para depois deletá-los.
+                $horariosAntigosIds = $reserva->horarios()->pluck('horarios.id');
+
+                // 3. Desvincula todos os horários antigos.
+                $reserva->horarios()->detach();
+
+                // 4. Deleta os horários antigos que não estão mais associados a nenhuma reserva.
+                Horario::whereIn('id', $horariosAntigosIds)->whereDoesntHave('reservas')->delete();
+
+
+                // 5. Prepara e anexa os novos horários.
+                $horariosData = $request->validated('horarios_solicitados');
+                $horariosParaAnexar = [];
+                foreach ($horariosData as $horarioInfo) {
+                    // Cria cada horário individualmente
+                    $horario = Horario::create($horarioInfo);
+                    // Prepara o array para anexar com o status 'em_analise' na tabela pivô
+                    $horariosParaAnexar[$horario->id] = ['situacao' => 'em_analise'];
+                }
+
+                // 6. Anexa os novos horários à reserva.
+                $reserva->horarios()->attach($horariosParaAnexar);
+            });
+
+            return to_route('reservas.index')->with('success', 'Reserva atualizada com sucesso! Aguarde nova avaliação.');
+        } catch (Exception $error) {
+            Log::error('Erro ao atualizar reserva: ' . $error->getMessage());
+            return to_route('reservas.index')->with('error', 'Erro ao atualizar reserva. Tente novamente.');
         }
     }
 
@@ -153,18 +201,29 @@ class ReservaController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Reserva $reserva)
-    {
-        dd($request, $reserva);
-    }
-
-    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Reserva $reserva)
     {
-        //
+        try {
+            DB::transaction(function () use ($reserva) {
+                // 1. Pega os IDs dos horários associados à reserva
+                $horariosIds = $reserva->horarios()->pluck('horarios.id');
+
+                // 2. Desvincula todos os horários da reserva
+                $reserva->horarios()->detach();
+
+                // 3. Deleta os horários que não estão mais associados a nenhuma reserva
+                Horario::whereIn('id', $horariosIds)->whereDoesntHave('reservas')->delete();
+
+                // 4. Deleta a reserva
+                $reserva->delete();
+            });
+
+            return back()->with('success', 'Reserva cancelada com sucesso!');
+        } catch (Exception $error) {
+            Log::error('Erro ao cancelar reserva: ' . $error->getMessage());
+            return back()->with('error', 'Erro ao cancelar reserva. Tente novamente.');
+        }
     }
 }
