@@ -170,7 +170,7 @@ export interface Agenda {
  */
 export interface Horario {
     id: number;
-    data: Date; // Datas do Laravel chegam como strings no JSON
+    data: string; // Datas do Laravel chegam como strings no JSON
     horario_inicio: string;
     horario_fim: string;
     agenda?: Agenda; // Relação aninhada
@@ -253,3 +253,31 @@ export interface OpcoesRecorrencia {
 }
 
 export type ValorOcorrenciaType = 'unica' | '15dias' | '1mes' | 'personalizado';
+
+
+
+
+// Define a estrutura de um único link da paginação do Laravel
+interface PaginatorLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+// Define a estrutura completa do objeto paginador do Laravel
+// O <T> o torna genérico, para que possamos usá-lo para Reservas, Espaços, etc.
+interface Paginator<T> {
+    data: T[];
+    links: PaginatorLink[];
+    current_page: number;
+    last_page: number;
+    from: number;
+    to: number;
+    total: number;
+    per_page: number;
+    path: string;
+    first_page_url: string;
+    last_page_url: string;
+    next_page_url: string | null;
+    prev_page_url: string | null;
+}

@@ -49,16 +49,12 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
     const [slotsSelecao, setSlotsSelecao] = useState<SlotCalendario[]>(slotsIniciais);
     const [dialogAberto, setDialogAberto] = useState(false);
     const [todosSlots, setTodosSlots] = useState<SlotCalendario[]>([]);
-    const [titulo, setTitulo] = useState('');
-    const [descricao, setDescricao] = useState('');
     const [recorrencia, setRecorrencia] = useState<ValorOcorrenciaType>('unica');
-    const [dataInicial, setDataInicial] = useState<Date>(hoje);
-    const [dataFinal, setDataFinal] = useState<Date>(addMonths(hoje, 1));
-    const { setData, post, put, reset } = useForm<ReservaFormData>({
-        titulo: isEditMode ? reserva!.titulo : titulo,
-        descricao: isEditMode ? reserva!.descricao : descricao,
-        data_inicial: isEditMode ? reserva!.data_inicial : dataInicial,
-        data_final: isEditMode ? reserva!.data_final : dataFinal,
+    const { data, setData, post, patch, reset } = useForm<ReservaFormData>({
+        titulo: isEditMode ? reserva!.titulo : '',
+        descricao: isEditMode ? reserva!.descricao : '',
+        data_inicial: isEditMode ? reserva!.data_inicial : hoje,
+        data_final: isEditMode ? reserva!.data_final : addMonths(hoje, 1),
         horarios_solicitados: isEditMode ? reserva!.horarios : [],
     });
 
@@ -133,7 +129,7 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
             });
         });
         return { gestoresPorTurno: gestores, horariosReservadosMap: reservadosMap };
-    }, [agendas]); // Recalcular apenas se a prop 'agenda' mudar
+    }, [agendas, isEditMode, reserva?.id]); // Recalcular apenas se a prop 'agenda' mudar
 
     // Função para gerar slots de horário para a semana
     const gerarSlotsParaSemana = (semanaInicio: Date) => {
@@ -235,22 +231,14 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
     useEffect(() => {
         const horariosParaEnvio: Partial<Horario>[] = slotsSelecao.map((slot) => {
             return {
-                data: slot.data,
+                data: format(slot.data, 'yyyy-MM-dd'),
                 horario_inicio: slot.horario_inicio,
                 horario_fim: slot.horario_fim,
                 agenda_id: slot.agenda_id,
             };
         });
-
-        const formData: ReservaFormData = {
-            titulo: titulo,
-            descricao: descricao,
-            data_inicial: dataInicial,
-            data_final: dataFinal,
-            horarios_solicitados: horariosParaEnvio,
-        };
-        setData(formData);
-    }, [dataFinal, dataInicial, descricao, setData, slotsSelecao, titulo]);
+        setData((prevData) => ({ ...prevData, horarios_solicitados: horariosParaEnvio }));
+    }, [setData, slotsSelecao]);
 
     // Funções para navegar entre semanas
     const irParaSemanaAnterior = () => {
@@ -278,7 +266,7 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
             // Ordenar slots por dia e hora
             const novaSelecao = [...slotsSelecao, slot].sort(
                 (a, b) =>
-                    a.data.getTime() - b.data.getTime() || // Compara dias primeiro
+                    new Date(a.data).getTime() - new Date(b.data).getTime() || // Compara dias primeiro
                     a.horario_inicio.localeCompare(b.horario_inicio), // Se dias iguais, compara horaInicio como string "HH:MM:SS"
             );
 
@@ -288,20 +276,22 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
 
     // Função para enviar o formulário
     function onSubmit(e: React.FormEvent) {
+        console.log(data);
+
         e.preventDefault();
         // Obter a opção de recorrência selecionada
         const opcaoRecorrencia = opcoesRecorrencia.find((opcao) => opcao.valor === recorrencia);
         if (!opcaoRecorrencia) return;
 
         // Calcular a data final com base na recorrência
-        const dataInicial = new Date(Math.min(...slotsSelecao.map((slotSelect) => slotSelect.data.getTime())));
+        const dataInicial = new Date(Math.min(...slotsSelecao.map((slotSelect) => new Date(slotSelect.data).getTime())));
 
         if (recorrencia !== 'personalizado') {
-            setDataFinal(opcaoRecorrencia.calcularDataFinal(dataInicial));
+            setData((prevData) => ({ ...prevData, data_final: opcaoRecorrencia.calcularDataFinal(dataInicial) }));
         }
 
         if (isEditMode) {
-            put(route('reservas.update'), {
+            patch(route('reservas.update', { reserva: reserva?.id }), {
                 onSuccess: () => {
                     setSlotsSelecao([]);
                     setDialogAberto(false);
@@ -338,14 +328,12 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
     };
 
     // Calcular período de recorrência
-    const calcularPeriodoRecorrencia = () => {
+    const periodoRecorrencia = () => {
         return {
-            inicio: format(dataInicial, 'dd/MM/yyyy'),
-            fim: format(dataFinal, 'dd/MM/yyyy'),
+            inicio: format(data.data_inicial ?? hoje, 'dd/MM/yyyy'),
+            fim: format(data.data_final ?? addMonths(hoje, 1), 'dd/MM/yyyy'),
         };
     };
-
-    const periodoRecorrencia = calcularPeriodoRecorrencia();
 
     return (
         <div className="container mx-auto max-w-6xl space-y-4 py-4">
@@ -661,8 +649,8 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
                                             <Input
                                                 id="titulo"
                                                 placeholder="Ex: Aula de Programação, Reunião de Departamento"
-                                                value={titulo}
-                                                onChange={(e) => setTitulo(e.target.value)}
+                                                value={data.titulo}
+                                                onChange={(e) => setData((prevData) => ({ ...prevData, titulo: e.target.value }))}
                                                 required
                                             />
                                         </div>
@@ -677,8 +665,8 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
                                             <Textarea
                                                 id="descricao"
                                                 placeholder="Descreva o propósito da reserva..."
-                                                value={descricao}
-                                                onChange={(e) => setDescricao(e.target.value)}
+                                                value={data.descricao}
+                                                onChange={(e) => setData((prevData) => ({ ...prevData, descricao: e.target.value }))}
                                                 className="min-h-[80px] resize-none"
                                             />
                                         </div>
@@ -727,18 +715,24 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
                                                                 variant={'outline'}
                                                                 className={cn(
                                                                     'w-full justify-start text-left font-normal',
-                                                                    !dataFinal && 'text-muted-foreground',
+                                                                    !data.data_final && 'text-muted-foreground',
                                                                 )}
                                                             >
                                                                 <Calendar className="mr-2 h-4 w-4" />
-                                                                {dataInicial ? format(dataInicial, 'dd/MM/yyyy') : <span>Selecione a data</span>}
+                                                                {data.data_inicial ? (
+                                                                    format(data.data_inicial, 'dd/MM/yyyy')
+                                                                ) : (
+                                                                    <span>Selecione a data</span>
+                                                                )}
                                                             </Button>
                                                         </PopoverTrigger>
                                                         <PopoverContent className="w-auto p-0" align="start">
                                                             <CalendarComponent
                                                                 mode="single"
-                                                                selected={dataInicial}
-                                                                onSelect={(date) => setDataInicial(date!)}
+                                                                selected={data.data_inicial || undefined}
+                                                                onSelect={(date) =>
+                                                                    setData((prevData) => ({ ...prevData, data_inicial: date ?? null }))
+                                                                }
                                                                 initialFocus
                                                                 disabled={(date) => date < hoje}
                                                             />
@@ -757,20 +751,26 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
                                                                 variant={'outline'}
                                                                 className={cn(
                                                                     'w-full justify-start text-left font-normal',
-                                                                    !dataFinal && 'text-muted-foreground',
+                                                                    !data.data_final && 'text-muted-foreground',
                                                                 )}
                                                             >
                                                                 <Calendar className="mr-2 h-4 w-4" />
-                                                                {dataFinal ? format(dataFinal, 'dd/MM/yyyy') : <span>Selecione a data</span>}
+                                                                {data.data_final ? (
+                                                                    format(data.data_final, 'dd/MM/yyyy')
+                                                                ) : (
+                                                                    <span>Selecione a data</span>
+                                                                )}
                                                             </Button>
                                                         </PopoverTrigger>
                                                         <PopoverContent className="w-auto p-0" align="start">
                                                             <CalendarComponent
                                                                 mode="single"
-                                                                selected={dataFinal}
-                                                                onSelect={(date) => setDataFinal(date!)}
+                                                                selected={data.data_final || undefined}
+                                                                onSelect={(date) =>
+                                                                    setData((prevData) => ({ ...prevData, data_inicial: date ?? null }))
+                                                                }
                                                                 initialFocus
-                                                                disabled={(date) => (dataInicial ? date < dataInicial : date < hoje)}
+                                                                disabled={(date) => (data.data_inicial ? date < data.data.inicial : date < hoje)}
                                                             />
                                                         </PopoverContent>
                                                     </Popover>
@@ -787,7 +787,7 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
                                                 <div>
                                                     <p className="text-sm font-medium">Período da reserva</p>
                                                     <p className="text-muted-foreground text-xs">
-                                                        De {periodoRecorrencia.inicio} até {periodoRecorrencia.fim}
+                                                        De {periodoRecorrencia().inicio} até {periodoRecorrencia().fim}
                                                     </p>
                                                 </div>
                                             </div>
@@ -836,10 +836,10 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
                                 </div>
 
                                 <DialogFooter>
-                                    <Button variant="outline" onClick={() => setDialogAberto(false)}>
+                                    <Button type="reset" variant="outline" onClick={() => setDialogAberto(false)}>
                                         Cancelar
                                     </Button>
-                                    <Button type="submit" disabled={!titulo.trim()}>
+                                    <Button type="submit" disabled={!data.titulo.trim()}>
                                         Confirmar Reserva
                                     </Button>
                                 </DialogFooter>

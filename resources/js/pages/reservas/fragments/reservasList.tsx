@@ -1,11 +1,13 @@
+import DeleteReserva from '@/components/delete-reserva';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatDate, formatDateTime, getTurnoText, pegarPrimeiroHorario, pegarUltimoHorario } from '@/lib/utils';
-import { Reserva, SituacaoReserva } from '@/types';
-import { router } from '@inertiajs/react';
-import { CheckCircle, ChevronLeft, ChevronRight, Clock, Edit, Eye, XCircle, XSquare } from 'lucide-react';
+import { diasSemanaParser, formatDate, getTurnoText } from '@/lib/utils';
+import { Paginator, Reserva, SituacaoReserva } from '@/types';
+import { Link, router } from '@inertiajs/react';
+import { Separator } from '@radix-ui/react-separator';
+import { CalendarDays, CheckCircle, Clock, Edit, Eye, FileText, User, XCircle, XSquare } from 'lucide-react';
 import type React from 'react';
 import { useState } from 'react';
 import { SituacaoIndicator } from './reservaCard';
@@ -47,12 +49,16 @@ function SituacaoBadge({ situacao }: { situacao: SituacaoReserva }) {
             return null;
     }
 }
-
+interface ReservasListProps {
+    paginator: Paginator<Reserva>;
+    fallback: React.ReactNode;
+    isGestor: boolean;
+}
 // Componente principal da lista de reservas
-export function ReservasList({ fallback, reservas, isGestor = false }: { fallback: React.ReactNode; reservas: Reserva[]; isGestor?: boolean }) {
-    const [page, setPage] = useState(1);
-    // 1. O estado agora guarda a reserva SELECIONADA, ou null se nenhuma estiver.
+export function ReservasList({ paginator, fallback, isGestor }: ReservasListProps) {
+    const { data: reservas, links } = paginator;
     const [selectedReserva, setSelectedReserva] = useState<Reserva | null>(null);
+    const [removerReserva, setRemoverReserva] = useState<Reserva | null>(null);
 
     if (reservas.length === 0) {
         return fallback;
@@ -128,11 +134,25 @@ export function ReservasList({ fallback, reservas, isGestor = false }: { fallbac
                                                     </div>
                                                 ) : (
                                                     <div>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Editar">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8"
+                                                            title="Editar"
+                                                            onClick={() => {
+                                                                router.visit(`reservas/${reserva.id}/editar`);
+                                                            }}
+                                                        >
                                                             <Edit className="h-4 w-4" />
                                                             <span className="sr-only">Editar</span>
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" title="Cancelar">
+                                                        <Button
+                                                            onClick={() => setRemoverReserva(reserva)}
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-red-600"
+                                                            title="Cancelar"
+                                                        >
                                                             <XCircle className="h-4 w-4" />
                                                             <span className="sr-only">Cancelar</span>
                                                         </Button>
@@ -147,7 +167,16 @@ export function ReservasList({ fallback, reservas, isGestor = false }: { fallbac
                     </TableBody>
                 </Table>
             </div>
-            {/* 3. O Dialog foi movido para FORA do loop. Ele só vai renderizar se houver uma reserva selecionada */}
+            {removerReserva && (
+                <DeleteReserva
+                    isOpen={(open) => {
+                        if (!open) {
+                            setRemoverReserva(null);
+                        }
+                    }}
+                    id={removerReserva.id}
+                />
+            )}
             {selectedReserva && (
                 <Dialog
                     open={!!selectedReserva}
@@ -159,48 +188,59 @@ export function ReservasList({ fallback, reservas, isGestor = false }: { fallbac
                 >
                     <DialogContent className="sm:max-w-md">
                         <DialogHeader>
-                            <DialogTitle>{selectedReserva.titulo}</DialogTitle>
-                            <DialogDescription asChild>
+                            <DialogTitle className="flex items-center gap-2">
+                                <FileText className="h-5 w-5" />
+                                {selectedReserva.titulo}
+                            </DialogTitle>
+                            <DialogDescription className="flex-col items-center gap-2">
+                                <div className="flex items-center gap-2">
+                                    <User className="h-4 w-4" />
+                                    Solicitado por: {selectedReserva.user?.name}
+                                </div>
                                 <SituacaoIndicator situacao={selectedReserva.situacao} />
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-4 py-4">
-                            <div className="space-y-2">
-                                <h4 className="text-sm font-medium">Descrição</h4>
-                                <p className="text-muted-foreground text-sm">{selectedReserva.descricao}</p>
-                            </div>
+                        <div>
+                            <h4 className="mb-2 font-medium text-gray-900">Descrição</h4>
+                            <p className="rounded-lg bg-gray-50 p-3 text-gray-700">{selectedReserva.descricao}</p>
+                        </div>
 
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div className="space-y-2">
-                                    <h4 className="text-sm font-medium">Data de Início</h4>
-                                    <p className="text-sm">
-                                        {selectedReserva.horarios[0] != null ? pegarPrimeiroHorario(selectedReserva.horarios).horario_inicio : null}
-                                    </p>
-                                </div>
-                                <div className="space-y-2">
-                                    <h4 className="text-sm font-medium">Data de Término</h4>
-                                    <p className="text-sm">
-                                        {selectedReserva.horarios[0] != null ? pegarUltimoHorario(selectedReserva.horarios).horario_fim : null}
-                                    </p>
-                                </div>
-                            </div>
+                        <Separator />
 
-                            {selectedReserva.observacao && (
-                                <div className="space-y-2">
-                                    <h4 className="text-sm font-medium">Observações</h4>
-                                    <p className="text-muted-foreground text-sm">{selectedReserva.observacao}</p>
-                                </div>
-                            )}
-
-                            <div className="text-muted-foreground grid grid-cols-1 gap-4 text-xs sm:grid-cols-2">
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="flex items-center gap-2">
+                                <CalendarDays className="h-4 w-4 text-gray-500" />
                                 <div>
-                                    <p>Criado em: {formatDateTime(selectedReserva.created_at)}</p>
-                                </div>
-                                <div>
-                                    <p>Atualizado em: {formatDateTime(selectedReserva.updated_at)}</p>
+                                    <p className="text-sm text-gray-500">Período</p>
+                                    <p className="font-medium">
+                                        {formatDate(selectedReserva.data_inicial)} até {formatDate(selectedReserva.data_final)}
+                                    </p>
                                 </div>
                             </div>
                         </div>
+
+                        <Separator />
+
+                        <div>
+                            <h4 className="mb-3 flex items-center gap-2 font-medium text-gray-900">
+                                <Clock className="h-4 w-4" />
+                                Horários Solicitados
+                            </h4>
+                            <div className="grid gap-2">
+                                {selectedReserva.horarios.map((horario) => {
+                                    const dia = new Date(horario.data);
+                                    return (
+                                        <div key={horario.id} className="flex items-center justify-between rounded-lg bg-blue-50 p-3">
+                                            <span className="font-medium text-blue-900">{diasSemanaParser[dia.getDay()]}</span>
+                                            <span className="text-blue-700">
+                                                {horario.horario_inicio} às {horario.horario_fim}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setSelectedReserva(null)}>
                                 Fechar
@@ -237,16 +277,30 @@ export function ReservasList({ fallback, reservas, isGestor = false }: { fallbac
                     </DialogContent>
                 </Dialog>
             )}
-            <div className="flex items-center justify-center space-x-2 py-4">
-                <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page === 1}>
-                    <ChevronLeft className="h-4 w-4" />
-                    <span className="sr-only">Página anterior</span>
-                </Button>
-                <div className="text-muted-foreground text-sm">Página {page} de 1</div>
-                <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={true}>
-                    <ChevronRight className="h-4 w-4" />
-                    <span className="sr-only">Próxima página</span>
-                </Button>
+            <div className="mt-4 flex justify-center">
+                <div className="flex flex-wrap justify-center gap-1">
+                    {links.map((link, index) =>
+                        // Renderiza o link apenas se a URL não for nula
+                        link.url ? (
+                            <Link
+                                key={index}
+                                href={link.url}
+                                preserveScroll
+                                className={`rounded-md border px-4 py-2 text-sm transition-colors ${
+                                    link.active ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent'
+                                }`}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        ) : (
+                            // Renderiza um span não clicável para "..." ou links desativados
+                            <span
+                                key={index}
+                                className="text-muted-foreground rounded-md border px-4 py-2 text-sm"
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        ),
+                    )}
+                </div>
             </div>
         </div>
     );

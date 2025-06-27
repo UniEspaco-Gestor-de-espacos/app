@@ -3,8 +3,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { User, type BreadcrumbItem } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { type BreadcrumbItem } from '@/types';
+import { Head } from '@inertiajs/react';
 import { FileText, PieChart, Search, Settings, Users } from 'lucide-react';
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -36,9 +36,8 @@ const reservationStats = {
     rejected: 55,
 };
 export default function Dashboard() {
-    const { props } = usePage<{ user: User}>();
-    const { user } = props;
-    console.log(user);
+    // const { props } = usePage<{ user: User}>();
+    // const { user } = props;
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />

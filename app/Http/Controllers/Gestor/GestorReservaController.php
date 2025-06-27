@@ -23,36 +23,57 @@ class GestorReservaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $gestor = Auth::user();
+
+        // 1. Pega os IDs das agendas que o gestor gerencia.
         $agendasDoGestorIds = Agenda::where('user_id', $gestor->id)->pluck('id');
 
-        if ($agendasDoGestorIds->isEmpty()) {
-            return Inertia::render('reservas/gestor/verReservas', [
-                'reservas' => collect(), // Envia uma coleção vazia
-            ]);
-        }
+        // Pega os filtros da requisição (URL query string)
+        $filters = $request->only(['search', 'situacao']);
 
-        $reservaIds = DB::table('reserva_horario')
-            ->join('horarios', 'reserva_horario.horario_id', '=', 'horarios.id')
-            ->whereIn('horarios.agenda_id', $agendasDoGestorIds)
-            ->distinct()
-            ->pluck('reserva_horario.reserva_id');
-        if ($reservaIds->isEmpty()) {
-            return Inertia::render('reservas/gestor/verReservas', [
-                'reservas' => collect(),
-            ]);
-        }
-        $reservasParaAvaliar = Reserva::whereIn('id', $reservaIds)
+        // 2. Inicia a query a partir do modelo Reserva.
+        $reservasQuery = Reserva::query()
+            // 3. O PULO DO GATO: Filtra as reservas que TÊM ('whereHas') um relacionamento
+            // com 'horarios' onde a 'agenda_id' pertence às agendas do gestor.
+            ->whereHas('horarios', function ($query) use ($agendasDoGestorIds) {
+                $query->whereIn('horarios.agenda_id', $agendasDoGestorIds);
+            })
+            // 4. Agora podemos aplicar os filtros de busca normalmente nesta query já restringida.
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('titulo', 'like', '%' . $search . '%')
+                        ->orWhere('descricao', 'like', '%' . $search . '%');
+                });
+                $query->orderByRaw(
+                    "CASE WHEN titulo LIKE ? THEN 1 ELSE 2 END",
+                    ['%' . $search . '%']
+                );
+            })
+            ->when($filters['situacao'] ?? null, function ($query, $situacao) {
+                $query->where('situacao', $situacao);
+            })
+            // 5. Carrega os relacionamentos necessários para a exibição.
             ->with([
                 'user', // O usuário que solicitou a reserva
+                'horarios' => function ($query) use ($agendasDoGestorIds) {
+                    // Opcional, mas útil: só mostra os horários que são das agendas do gestor.
+                    $query->whereIn('agenda_id', $agendasDoGestorIds)
+                        ->orderBy('data')
+                        ->orderBy('horario_inicio');
+                },
                 'horarios.agenda.espaco.andar.modulo.unidade.instituicao'
             ])
-            ->latest()
-            ->get();
+            ->latest();
+
+        // 6. Pagina o resultado final.
+        $reservasParaAvaliar = $reservasQuery->paginate(10)->withQueryString();
+
+        // 7. Renderiza a view do Inertia com os dados no formato esperado pelo front-end.
         return Inertia::render('reservas/gestor/verReservas', [
             'reservas' => $reservasParaAvaliar,
+            'filters' => $filters,
         ]);
     }
 
