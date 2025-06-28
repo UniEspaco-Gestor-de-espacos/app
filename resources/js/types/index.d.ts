@@ -141,15 +141,15 @@ export interface Espaco {
  * Representa os possíveis status de uma reserva ou de um horário.
  * Adicionado 'parcialmente_deferido' para o status geral da reserva.
  */
-export type SituacaoReserva = 'em_analise' | 'deferida' | 'indeferida' | 'parcialmente_deferida';
+export type SituacaoReserva = 'em_analise' | 'indeferida' | 'parcialmente_deferida' | 'deferida' | 'inativa';
 
 /**
- * Dados da tabela pivô `reserva_horario`, crucial para o status individual.
+ * Dados da tabela pivô `reserva_horario`, crucial para o status individual.|
  */
 export interface Pivot {
     reserva_id: number;
     horario_id: number;
-    situacao: 'em_analise' | 'deferida' | 'indeferida';
+    situacao: 'em_analise' | 'indeferida' | 'deferida' | 'inativa';
 }
 
 /**
@@ -189,6 +189,7 @@ export interface Reserva {
     situacao: SituacaoReserva; // O status geral da reserva
     data_inicial: Date;
     data_final: Date;
+    recorrencia: ValorOcorrenciaType; // Tipo de recorrência da reserva
     observacao: string | null;
     created_at: string;
     updated_at: string;
@@ -209,6 +210,7 @@ export interface ReservaFormData {
     descricao: string;
     data_inicial: Date | null;
     data_final: Date | null;
+    recorrencia: ValorOcorrenciaType; // Tipo de recorrência selecionada
     horarios_solicitados: Partial<Horario>[]; // Horários que o usuário seleciona
     [key: string]: any;
 }

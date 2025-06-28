@@ -57,6 +57,7 @@ export default function MinhasReservas() {
                         onSituacaoChange={setSelectedSituacao}
                         selectedDate={data}
                         onDateChange={setData}
+                        isGestor={true}
                     />
                     <Suspense fallback={<ReservasLoading />}>
                         <ReservasList fallback={<ReservasEmpty />} paginator={paginator} isGestor={true} />

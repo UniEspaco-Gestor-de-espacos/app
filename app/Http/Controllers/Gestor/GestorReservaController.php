@@ -17,9 +17,11 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class GestorReservaController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
@@ -51,9 +53,17 @@ class GestorReservaController extends Controller
                     ['%' . $search . '%']
                 );
             })
-            ->when($filters['situacao'] ?? null, function ($query, $situacao) {
-                $query->where('situacao', $situacao);
-            })
+            ->when(
+                $filters['situacao'] ?? null,
+                // 1. Função a ser executada SE 'situacao' EXISTIR no filtro
+                function ($query, $situacao) {
+                    $query->where('situacao', $situacao);
+                },
+                // 2. Função a ser executada SE 'situacao' NÃO EXISTIR no filtro
+                function ($query) {
+                    $query->where('situacao', '!=', 'inativa');
+                }
+            )
             // 5. Carrega os relacionamentos necessários para a exibição.
             ->with([
                 'user', // O usuário que solicitou a reserva
@@ -137,16 +147,13 @@ class GestorReservaController extends Controller
      */
     public function update(Request $request, Reserva $reserva)
     {
-        // 1. Validação da entrada: garante que a situação seja 'deferido' ou 'indeferido'.
-        $request->validate([
-            'situacao' => 'required|in:deferida,indeferia',
-        ]);
+        $this->authorize('update', $reserva);
 
         $gestor = Auth::user();
         $novaSituacao = $request->input('situacao');
-
         // 2. Obter um array com os IDs de todas as agendas gerenciadas pelo gestor.
         $agendasDoGestorIds = Agenda::where('user_id', $gestor->id)->pluck('id');
+
 
         // Se o gestor não gerencia nenhuma agenda, ele não pode avaliar nada.
         if ($agendasDoGestorIds->isEmpty()) {
@@ -207,6 +214,9 @@ class GestorReservaController extends Controller
         } elseif ($statusDosHorarios->contains('deferida')) {
             // Se pelo menos um foi deferido (e não todos), é parcial.
             $reserva->situacao = 'parcialmente_deferida';
+        } elseif ($statusDosHorarios->every(fn($status) => $status === 'inativa')) {
+            // Se pelo menos um foi deferido (e não todos), é parcial.
+            $reserva->situacao = 'inativa';
         } else {
             // Se nenhum foi deferido ainda, mas nem todos foram indeferidos, continua em análise.
             $reserva->situacao = 'em_analise';

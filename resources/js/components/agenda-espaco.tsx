@@ -290,7 +290,7 @@ const DialogReserva: FC<{
     onOpenChange: (open: boolean) => void;
     onSubmit: (e: FormEvent) => void;
     formData: ReservaFormData;
-    setFormData: (key: keyof ReservaFormData | 'data_inicial' | 'data_final', value: any) => void;
+    setFormData: ReturnType<typeof useForm<ReservaFormData>>['setData'];
     recorrencia: ValorOcorrenciaType;
     setRecorrencia: (value: ValorOcorrenciaType) => void;
     slotsSelecao: SlotCalendario[];
@@ -349,7 +349,7 @@ const DialogReserva: FC<{
                                 id="titulo"
                                 placeholder="Ex: Aula, Reunião"
                                 value={formData.titulo}
-                                onChange={(e) => setFormData('titulo', e.target.value)}
+                                onChange={(e) => setFormData((dataPrev) => ({ ...dataPrev, titulo: e.target.value }))}
                                 required
                             />
                         </div>
@@ -361,7 +361,7 @@ const DialogReserva: FC<{
                                 id="descricao"
                                 placeholder="Descreva o propósito da reserva..."
                                 value={formData.descricao}
-                                onChange={(e) => setFormData('descricao', e.target.value)}
+                                onChange={(e) => setFormData((dataPrev) => ({ ...dataPrev, descricao: e.target.value }))}
                                 className="min-h-[80px] resize-none"
                             />
                         </div>
@@ -410,7 +410,7 @@ const DialogReserva: FC<{
                                             <CalendarComponent
                                                 mode="single"
                                                 selected={formData.data_inicial ? new Date(formData.data_inicial) : undefined}
-                                                onSelect={(date) => setFormData('data_inicial', date ?? null)}
+                                                onSelect={(date) => setFormData((dataPrev) => ({ ...dataPrev, data_inicial: date ?? null }))}
                                                 initialFocus
                                                 disabled={(date) => date < hoje}
                                             />
@@ -438,7 +438,7 @@ const DialogReserva: FC<{
                                             <CalendarComponent
                                                 mode="single"
                                                 selected={formData.data_final ? new Date(formData.data_final) : undefined}
-                                                onSelect={(date) => setFormData('data_final', date ?? null)}
+                                                onSelect={(date) => setFormData((dataPrev) => ({ ...dataPrev, data_final: date ?? null }))}
                                                 initialFocus
                                                 disabled={(date) => (formData.data_inicial ? date < new Date(formData.data_inicial) : date < hoje)}
                                             />
@@ -505,7 +505,7 @@ const EditModeAlert: FC<{ reserva: Reserva }> = ({ reserva }) => (
         <Pencil className="h-4 w-4 !text-yellow-600" />
         <AlertTitle className="font-semibold !text-yellow-900">Modo de Edição</AlertTitle>
         <AlertDescription className="!text-yellow-700">
-            Você está editando a reserva: <strong>{reserva.titulo}</strong>. As alterações nos horários e detalhes serão salvas nesta reserva.
+            Você está editando a reserva: <strong>Titulo: {reserva.titulo} </strong> As alterações nos horários e detalhes serão salvas nesta reserva.
         </AlertDescription>
     </Alert>
 );
@@ -547,6 +547,7 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
         descricao: reserva?.descricao ?? '',
         data_inicial: reserva?.data_inicial ? new Date(reserva.data_inicial) : hoje,
         data_final: reserva?.data_final ? new Date(reserva.data_final) : addMonths(hoje, 1),
+        recorrencia: reserva?.recorrencia ?? 'unica',
         horarios_solicitados: reserva?.horarios ?? [],
     });
 
@@ -578,6 +579,26 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
         });
         return { gestoresPorTurno: gestores, horariosReservadosMap: reservadosMap };
     }, [agendas, isEditMode, reserva?.id]);
+
+    useEffect(() => {
+        // Se não existir recorrecia
+        const opcaoRecorrencia = opcoesRecorrencia.find((op) => op.valor === recorrencia);
+        if (!opcaoRecorrencia || slotsSelecao.length === 0) return;
+        const dataInicialCalculada = new Date(Math.min(...slotsSelecao.map((s) => s.data.getTime())));
+
+        const dataFinalCalculada =
+            recorrencia !== 'personalizado'
+                ? recorrencia === 'unica'
+                    ? new Date(Math.max(...slotsSelecao.map((s) => s.data.getTime())))
+                    : opcaoRecorrencia.calcularDataFinal(dataInicialCalculada)
+                : data.data_final;
+
+        setData((prevData) => ({
+            ...prevData,
+            data_inicial: dataInicialCalculada,
+            data_final: dataFinalCalculada,
+        }));
+    }, [recorrencia, setData, slotsSelecao]);
 
     useEffect(() => {
         const gerarSlotsParaSemana = (semanaInicio: Date) => {
@@ -673,25 +694,12 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
         const novaSelecao = isSlotSelecionado(slot)
             ? slotsSelecao.filter((s) => s.id !== slot.id)
             : [...slotsSelecao, slot].sort((a, b) => a.data.getTime() - b.data.getTime() || a.horario_inicio.localeCompare(b.horario_inicio));
+        console.log('Antes: ', slotsSelecao.length);
         setSlotsSelecao(novaSelecao);
     };
-
-    const handleFormSubmit = (e: FormEvent) => {
-        e.preventDefault();
-        const opcaoRecorrencia = opcoesRecorrencia.find((op) => op.valor === recorrencia);
-        if (!opcaoRecorrencia || slotsSelecao.length === 0) return;
-
-        const dataInicialCalculada = new Date(Math.min(...slotsSelecao.map((s) => s.data.getTime())));
-        let dataFinalCalculada = data.data_final;
-
-        if (recorrencia !== 'personalizado') {
-            dataFinalCalculada = opcaoRecorrencia.calcularDataFinal(dataInicialCalculada);
-        }
-
+    useEffect(() => {
         setData((prevData) => ({
             ...prevData,
-            data_inicial: dataInicialCalculada,
-            data_final: dataFinalCalculada,
             horarios_solicitados: slotsSelecao.map((s) => ({
                 data: format(s.data, 'yyyy-MM-dd'),
                 horario_inicio: s.horario_inicio,
@@ -699,7 +707,14 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
                 agenda_id: s.agenda_id,
             })),
         }));
+    }, [setData, slotsSelecao]);
 
+    const handleFormSubmit = (e: FormEvent) => {
+        e.preventDefault();
+        if (slotsSelecao.length === 0) {
+            toast.error('Selecione pelo menos um horário para reservar.');
+            return;
+        }
         const options = {
             onSuccess: () => {
                 limparSelecao();
@@ -707,7 +722,7 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
                 reset();
                 toast.success(isEditMode ? 'Reserva atualizada com sucesso!' : 'Reserva solicitada com sucesso!');
             },
-            onError: (errors: any) => {
+            onError: (errors: Record<string, string>) => {
                 toast.error((Object.values(errors)[0] as string) || 'Ocorreu um erro de validação.');
             },
         };
@@ -739,7 +754,7 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
                         onOpenChange={setDialogAberto}
                         onSubmit={handleFormSubmit}
                         formData={data}
-                        setFormData={(key, value) => setData(key as any, value)}
+                        setFormData={setData}
                         recorrencia={recorrencia}
                         setRecorrencia={setRecorrencia}
                         slotsSelecao={slotsSelecao}
