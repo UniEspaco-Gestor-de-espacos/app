@@ -16,6 +16,7 @@ class Reserva extends Model
         'situacao',
         'data_inicial',
         'data_final',
+        'recorrencia',
         'observacao',
         'user_id'
     ];

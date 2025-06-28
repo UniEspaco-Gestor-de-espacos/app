@@ -14,7 +14,7 @@ type ReservasFiltersProps = {
     onSituacaoChange: (value: string) => void;
     selectedDate?: Date; // Adicionei para o filtro de data
     onDateChange?: (date: Date | undefined) => void; // Função opcional para lidar com a mudança de data
-    // Adicione props de data aqui se for usar o filtro de data
+    isGestor?: boolean;
 };
 
 export function ReservasFilters({
@@ -24,6 +24,7 @@ export function ReservasFilters({
     onSituacaoChange,
     selectedDate,
     onDateChange,
+    isGestor = false,
 }: ReservasFiltersProps) {
     return (
         <div className="flex flex-col gap-4 sm:flex-row">
@@ -51,6 +52,7 @@ export function ReservasFilters({
                         <SelectItem value="indeferida">Indeferida</SelectItem>
                         <SelectItem value="parcialmente_deferida">Parcialmente Deferida</SelectItem>
                         <SelectItem value="deferida">Deferida</SelectItem>
+                        {isGestor && <SelectItem value="inativa">Inativa</SelectItem>}
                     </SelectContent>
                 </Select>
 

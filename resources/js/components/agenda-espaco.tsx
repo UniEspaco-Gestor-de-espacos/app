@@ -1,3 +1,4 @@
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -13,11 +14,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib/utils';
 import { Espaco, Horario, OpcoesRecorrencia, Reserva, ReservaFormData, SlotCalendario, ValorOcorrenciaType } from '@/types';
 import { useForm } from '@inertiajs/react';
-import { addDays, addMonths, addWeeks, format, isSameDay, startOfWeek, subWeeks } from 'date-fns';
+import { addDays, addMonths, addWeeks, format, isSameDay, parse, startOfWeek, subWeeks } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar, ChevronLeft, ChevronRight, FileText, Info, MapPin, Repeat, Type, User, Users } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Calendar, ChevronLeft, ChevronRight, FileText, Info, MapPin, Pencil, Repeat, Type, User, Users } from 'lucide-react';
+import { FC, FormEvent, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+
+// --- Tipos e Constantes ---
 
 type AgendaEspacoProps = {
     isEditMode?: boolean;
@@ -25,828 +28,739 @@ type AgendaEspacoProps = {
     reserva?: Reserva;
 };
 
-export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: AgendaEspacoProps) {
-    const { andar, agendas } = espaco;
-    const modulo = andar?.modulo;
-    const slotsIniciais =
-        !isEditMode || !reserva?.horarios
-            ? []
-            : reserva!.horarios.map(
-                  (horario) =>
-                      ({
-                          id: `${format(new Date(horario.data), 'yyyy-MM-dd')}|${horario.horario_inicio}`,
-                          status: 'selecionado', // Marcamos como 'selecionado'
-                          data: new Date(horario.data),
-                          horario_inicio: horario.horario_inicio,
-                          horario_fim: horario.horario_fim,
-                          agenda_id: horario.agenda?.id,
-                          dadosReserva: { horarioDB: horario, autor: reserva.user!.name, reserva_titulo: reserva.titulo }, // Adiciona dados relevantes
-                      }) as SlotCalendario,
-              );
+const opcoesRecorrencia: OpcoesRecorrencia[] = [
+    {
+        valor: 'unica',
+        label: 'Apenas esta semana',
+        descricao: 'A reserva será feita apenas para os dias selecionados nesta semana',
+        calcularDataFinal: (dataInicial: Date) => addDays(dataInicial, 6),
+    },
+    {
+        valor: '15dias',
+        label: 'Próximos 15 dias',
+        descricao: 'A reserva será replicada pelos próximos 15 dias',
+        calcularDataFinal: (dataInicial: Date) => addDays(dataInicial, 14),
+    },
+    {
+        valor: '1mes',
+        label: '1 mês',
+        descricao: 'A reserva será replicada por 1 mês',
+        calcularDataFinal: (dataInicial: Date) => addMonths(dataInicial, 1),
+    },
+    {
+        valor: 'personalizado',
+        label: 'Período personalizado',
+        descricao: 'Defina um período personalizado para a recorrência',
+        calcularDataFinal: (dataInicial: Date) => dataInicial,
+    },
+];
 
-    const hoje = useMemo(() => new Date(), []);
-    const [semanaAtual, setSemanaAtual] = useState(startOfWeek(hoje, { weekStartsOn: 1 }));
+const identificarTurno = (hora: number): 'manha' | 'tarde' | 'noite' => {
+    if (hora >= 7 && hora <= 12) return 'manha';
+    if (hora >= 13 && hora <= 18) return 'tarde';
+    return 'noite';
+};
+
+// ============================================================================
+// --- Componentes Modularizados (Versão Corrigida) ---
+// ============================================================================
+
+const EspacoHeader: FC<{ espaco: Espaco; gestoresPorTurno: any }> = ({ espaco, gestoresPorTurno }) => (
+    <Card className="shadow-sm">
+        <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-xl">
+                <MapPin className="h-5 w-5" />
+                Nome: {espaco.nome}
+            </CardTitle>
+        </CardHeader>
+        <CardContent className="pb-3">
+            <div className="mb-3 flex flex-wrap gap-2">
+                <Badge variant="outline" className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {espaco.andar?.modulo?.nome}
+                </Badge>
+                <Badge variant="outline" className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {espaco.andar?.nome}
+                </Badge>
+                <Badge variant="outline" className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    {espaco.capacidade_pessoas} pessoas
+                </Badge>
+            </div>
+            <div className="border-t pt-2">
+                <h3 className="mb-2 text-xs font-medium">Gestores por Turno:</h3>
+                <div className="mx-auto grid max-w-3xl grid-cols-1 gap-2 sm:grid-cols-3">
+                    {['manha', 'tarde', 'noite'].map((turno) => (
+                        <TooltipProvider key={turno}>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className={`flex items-center justify-center gap-2 rounded-md p-1 text-xs transition-colors`}>
+                                        <div className="font-semibold">{turno.toUpperCase()}:</div>
+                                        <div className="flex items-center gap-1">
+                                            <User className="text-muted-foreground h-3 w-3" />
+                                            <span>{gestoresPorTurno[turno]?.nome ?? 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    {gestoresPorTurno[turno] ? (
+                                        <div className="space-y-1">
+                                            <p className="font-medium">{gestoresPorTurno[turno].nome}</p>
+                                            <p className="text-xs">{gestoresPorTurno[turno].email}</p>
+                                            <p className="text-muted-foreground text-xs">{gestoresPorTurno[turno].departamento}</p>
+                                        </div>
+                                    ) : (
+                                        <p>Nenhum gestor para este turno.</p>
+                                    )}
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    ))}
+                </div>
+            </div>
+        </CardContent>
+    </Card>
+);
+
+const AgendaNavegacao: FC<{ semanaAtual: Date; onAnterior: () => void; onProxima: () => void }> = ({ semanaAtual, onAnterior, onProxima }) => (
+    <div className="flex items-center justify-between">
+        <Button variant="outline" size="sm" onClick={onAnterior}>
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            <span className="hidden sm:inline">Semana Anterior</span>
+            <span className="sm:hidden">Anterior</span>
+        </Button>
+        <h2 className="text-sm font-medium sm:text-base">
+            {format(semanaAtual, 'dd/MM', { locale: ptBR })} - {format(addDays(semanaAtual, 6), 'dd/MM', { locale: ptBR })}
+        </h2>
+        <Button variant="outline" size="sm" onClick={onProxima}>
+            <span className="hidden sm:inline">Próxima Semana</span>
+            <span className="sm:hidden">Próxima</span>
+            <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
+    </div>
+);
+
+const SlotCalendarioCell: FC<{ slot: SlotCalendario; isSelecionado: boolean; hoje: Date; onSelect: () => void }> = ({
+    slot,
+    isSelecionado,
+    hoje,
+    onSelect,
+}) => {
+    const isReservado = slot.status === 'reservado';
+    return (
+        <div
+            key={slot.id}
+            className={cn(
+                'relative cursor-pointer border-l p-1 transition-all',
+                isReservado ? 'bg-muted/30 cursor-not-allowed' : 'hover:bg-muted/10',
+                isSelecionado && 'bg-primary/20 hover:bg-primary/30 ring-primary ring-2 ring-inset',
+                isSameDay(slot.data, hoje) && !isSelecionado && 'bg-primary/5',
+            )}
+            onClick={onSelect}
+        >
+            {isReservado ? (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className="flex h-full w-full items-center justify-center">
+                                <Badge variant="outline" className="text-xs">
+                                    {slot.dadosReserva?.autor}
+                                </Badge>
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p className="font-bold">{slot.dadosReserva?.reserva_titulo}</p>
+                            <p>Reservado por: {slot.dadosReserva?.autor}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            ) : (
+                isSelecionado && (
+                    <div className="flex h-full w-full items-center justify-center">
+                        <Badge variant="secondary" className="text-xs">
+                            Selecionado
+                        </Badge>
+                    </div>
+                )
+            )}
+        </div>
+    );
+};
+
+const TurnoSection: FC<{
+    titulo: string;
+    slotsDoTurno: Record<string, SlotCalendario[]>;
+    diasSemana: any[];
+    isSlotSelecionado: (slot: SlotCalendario) => boolean;
+    alternarSelecaoSlot: (slot: SlotCalendario) => void;
+    hoje: Date;
+}> = ({ titulo, slotsDoTurno, diasSemana, isSlotSelecionado, alternarSelecaoSlot, hoje }) => (
+    <>
+        <div
+            className={cn(
+                'grid grid-cols-[80px_repeat(7,1fr)] border-b',
+                titulo === 'MANHÃ' && 'bg-accent/10',
+                titulo === 'TARDE' && 'bg-secondary/10',
+                titulo === 'NOITE' && 'bg-muted/20',
+            )}
+        >
+            <div className="p-2 text-center text-xs font-semibold">{titulo}</div>
+            {diasSemana.map((dia) => (
+                <div key={`${titulo}-${dia.valor}`} className="border-l p-2 text-center text-xs font-medium"></div>
+            ))}
+        </div>
+        {Object.entries(slotsDoTurno).map(([hora, slots]) => (
+            <div
+                key={hora}
+                className={cn(
+                    'grid grid-cols-[80px_repeat(7,1fr)] border-b',
+                    titulo === 'MANHÃ' && 'bg-accent/5',
+                    titulo === 'TARDE' && 'bg-secondary/5',
+                    titulo === 'NOITE' && 'bg-muted/10',
+                )}
+            >
+                <div className="text-muted-foreground border-r p-2 pr-3 text-right text-xs">
+                    {hora} - {hora.split(':')[0]}:50
+                </div>
+                {slots.map((slot) => (
+                    <SlotCalendarioCell
+                        key={slot.id}
+                        slot={slot}
+                        isSelecionado={isSlotSelecionado(slot)}
+                        onSelect={() => alternarSelecaoSlot(slot)}
+                        hoje={hoje}
+                    />
+                ))}
+            </div>
+        ))}
+    </>
+);
+
+const AgendaCalendario: FC<{
+    diasSemana: any[];
+    slotsPorTurno: any;
+    isSlotSelecionado: (slot: SlotCalendario) => boolean;
+    alternarSelecaoSlot: (slot: SlotCalendario) => void;
+    hoje: Date;
+}> = ({ diasSemana, slotsPorTurno, isSlotSelecionado, alternarSelecaoSlot, hoje }) => (
+    <Card>
+        <ScrollArea className="h-[calc(100vh-220px)]">
+            <div className="min-w-[800px]">
+                <div className="bg-background sticky top-0 z-10 grid grid-cols-[80px_repeat(7,1fr)] border-b">
+                    <div className="text-muted-foreground p-2 text-center text-sm font-medium"></div>
+                    {diasSemana.map((dia) => (
+                        <div key={dia.valor} className={cn('border-l p-2 text-center text-sm font-medium', dia.ehHoje && 'bg-primary/5')}>
+                            <div>{dia.abreviado}</div>
+                            <div className={cn('text-xs', dia.ehHoje ? 'text-primary font-bold' : 'text-muted-foreground')}>{dia.diaMes}</div>
+                        </div>
+                    ))}
+                </div>
+                <TurnoSection
+                    titulo="MANHÃ"
+                    slotsDoTurno={slotsPorTurno.manha}
+                    diasSemana={diasSemana}
+                    isSlotSelecionado={isSlotSelecionado}
+                    alternarSelecaoSlot={alternarSelecaoSlot}
+                    hoje={hoje}
+                />
+                <TurnoSection
+                    titulo="TARDE"
+                    slotsDoTurno={slotsPorTurno.tarde}
+                    diasSemana={diasSemana}
+                    isSlotSelecionado={isSlotSelecionado}
+                    alternarSelecaoSlot={alternarSelecaoSlot}
+                    hoje={hoje}
+                />
+                <TurnoSection
+                    titulo="NOITE"
+                    slotsDoTurno={slotsPorTurno.noite}
+                    diasSemana={diasSemana}
+                    isSlotSelecionado={isSlotSelecionado}
+                    alternarSelecaoSlot={alternarSelecaoSlot}
+                    hoje={hoje}
+                />
+            </div>
+        </ScrollArea>
+    </Card>
+);
+
+const DialogReserva: FC<{
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSubmit: (e: FormEvent) => void;
+    formData: ReservaFormData;
+    setFormData: ReturnType<typeof useForm<ReservaFormData>>['setData'];
+    recorrencia: ValorOcorrenciaType;
+    setRecorrencia: (value: ValorOcorrenciaType) => void;
+    slotsSelecao: SlotCalendario[];
+    hoje: Date;
+    isSubmitting: boolean;
+    isEditMode?: boolean;
+}> = ({ isEditMode, isOpen, onOpenChange, onSubmit, formData, setFormData, recorrencia, setRecorrencia, slotsSelecao, hoje, isSubmitting }) => {
+    const periodoRecorrencia = useMemo(
+        () => ({
+            inicio: format(formData.data_inicial ?? hoje, 'dd/MM/yyyy'),
+            fim: format(formData.data_final ?? addMonths(hoje, 1), 'dd/MM/yyyy'),
+        }),
+        [formData.data_inicial, formData.data_final, hoje],
+    );
+
+    const slotsAgrupadosPorDia = useMemo(
+        () =>
+            slotsSelecao.reduce(
+                (acc, horario) => {
+                    const diaKey = format(horario.data, 'yyyy-MM-dd');
+                    if (!acc[diaKey]) {
+                        acc[diaKey] = { data: horario.data, slots: [] };
+                    }
+                    acc[diaKey].slots.push(horario);
+                    return acc;
+                },
+                {} as Record<string, { data: Date; slots: SlotCalendario[] }>,
+            ),
+        [slotsSelecao],
+    );
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogTrigger asChild>
+                <Button className="shadow-lg">
+                    {isEditMode ? 'Editar' : 'Reservar'} {slotsSelecao.length} horário{slotsSelecao.length > 1 ? 's' : ''} em{' '}
+                    {Object.keys(slotsAgrupadosPorDia).length} dia
+                    {Object.keys(slotsAgrupadosPorDia).length > 1 ? 's' : ''}
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+                <form onSubmit={onSubmit}>
+                    <DialogHeader>
+                        <DialogTitle>{isEditMode ? 'Atualizar Reserva' : 'Confirmar Reserva'}</DialogTitle>
+                        <DialogDescription>
+                            {' '}
+                            {isEditMode ? 'Ajuste os detalhes da sua reserva.' : 'Preencha os detalhes da sua reserva.'}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="titulo" className="flex items-center gap-2 font-medium">
+                                <Type className="text-muted-foreground h-4 w-4" /> Título da Reserva
+                            </Label>
+                            <Input
+                                id="titulo"
+                                placeholder="Ex: Aula, Reunião"
+                                value={formData.titulo}
+                                onChange={(e) => setFormData((dataPrev) => ({ ...dataPrev, titulo: e.target.value }))}
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="descricao" className="flex items-center gap-2 font-medium">
+                                <FileText className="text-muted-foreground h-4 w-4" /> Descrição
+                            </Label>
+                            <Textarea
+                                id="descricao"
+                                placeholder="Descreva o propósito da reserva..."
+                                value={formData.descricao}
+                                onChange={(e) => setFormData((dataPrev) => ({ ...dataPrev, descricao: e.target.value }))}
+                                className="min-h-[80px] resize-none"
+                            />
+                        </div>
+                        <div className="space-y-2 border-t pt-2">
+                            <h3 className="flex items-center gap-2 font-medium">
+                                <Repeat className="text-muted-foreground h-4 w-4" /> Período de Recorrência
+                            </h3>
+                            <RadioGroup value={recorrencia} onValueChange={(v: ValorOcorrenciaType) => setRecorrencia(v)} className="space-y-2">
+                                {opcoesRecorrencia.map((opcao) => (
+                                    <div key={opcao.valor} className="flex items-start space-x-2">
+                                        <RadioGroupItem value={opcao.valor} id={opcao.valor} />
+                                        <div className="grid gap-1">
+                                            <Label htmlFor={opcao.valor} className="font-medium">
+                                                {opcao.label}
+                                            </Label>
+                                            <p className="text-muted-foreground text-xs">{opcao.descricao}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </RadioGroup>
+                        </div>
+                        {recorrencia === 'personalizado' && (
+                            <div className="bg-muted/10 grid grid-cols-2 gap-4 rounded-md border p-3">
+                                <div className="space-y-2">
+                                    <Label htmlFor="data-inicial" className="text-xs">
+                                        Início
+                                    </Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant={'outline'}
+                                                className={cn(
+                                                    'w-full justify-start text-left font-normal',
+                                                    !formData.data_inicial && 'text-muted-foreground',
+                                                )}
+                                            >
+                                                <Calendar className="mr-2 h-4 w-4" />
+                                                {formData.data_inicial ? (
+                                                    format(new Date(formData.data_inicial), 'dd/MM/yyyy')
+                                                ) : (
+                                                    <span>Selecione</span>
+                                                )}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                            <CalendarComponent
+                                                mode="single"
+                                                selected={formData.data_inicial ? new Date(formData.data_inicial) : undefined}
+                                                onSelect={(date) => setFormData((dataPrev) => ({ ...dataPrev, data_inicial: date ?? null }))}
+                                                initialFocus
+                                                disabled={(date) => date < hoje}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="data-final" className="text-xs">
+                                        Término
+                                    </Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant={'outline'}
+                                                className={cn(
+                                                    'w-full justify-start text-left font-normal',
+                                                    !formData.data_final && 'text-muted-foreground',
+                                                )}
+                                            >
+                                                <Calendar className="mr-2 h-4 w-4" />
+                                                {formData.data_final ? format(new Date(formData.data_final), 'dd/MM/yyyy') : <span>Selecione</span>}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                            <CalendarComponent
+                                                mode="single"
+                                                selected={formData.data_final ? new Date(formData.data_final) : undefined}
+                                                onSelect={(date) => setFormData((dataPrev) => ({ ...dataPrev, data_final: date ?? null }))}
+                                                initialFocus
+                                                disabled={(date) => (formData.data_inicial ? date < new Date(formData.data_inicial) : date < hoje)}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                            </div>
+                        )}
+                        <div className="bg-muted/30 flex items-start gap-2 rounded-md p-3">
+                            <Info className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                            <div>
+                                <p className="text-sm font-medium">Período da reserva</p>
+                                <p className="text-muted-foreground text-xs">
+                                    De {periodoRecorrencia.inicio} até {periodoRecorrencia.fim}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="space-y-2 border-t pt-2">
+                            <h3 className="flex items-center gap-2 font-medium">
+                                <Calendar className="text-muted-foreground h-4 w-4" /> Horários selecionados
+                            </h3>
+                            <ScrollArea className="h-[150px] rounded-md border p-2">
+                                {Object.entries(slotsAgrupadosPorDia).map(([diaKey, { data, slots }]) => (
+                                    <div key={diaKey} className="mb-3 last:mb-0">
+                                        <div className="mb-1 text-sm font-medium">{format(data, 'EEEE, dd/MM', { locale: ptBR })}</div>
+                                        <div className="border-muted border-l-2 pl-2">
+                                            {slots.map((horario) => (
+                                                <div key={horario.id} className="text-muted-foreground py-1 text-sm">
+                                                    {horario.horario_inicio} - {horario.horario_fim}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </ScrollArea>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                            Cancelar
+                        </Button>
+                        <Button type="submit" disabled={!formData.titulo.trim() || isSubmitting}>
+                            {isSubmitting
+                                ? isEditMode
+                                    ? 'Salvando...'
+                                    : 'Confirmando...'
+                                : isEditMode
+                                  ? 'Atualizar Reserva'
+                                  : 'Confirmar Reserva'}{' '}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+/**
+ * @component EditModeAlert
+ * @description Um alerta exibido no topo da página quando o isEditMode é true.
+ */
+const EditModeAlert: FC<{ reserva: Reserva }> = ({ reserva }) => (
+    <Alert variant="default" className="border-yellow-400 bg-yellow-50 text-yellow-800">
+        <Pencil className="h-4 w-4 !text-yellow-600" />
+        <AlertTitle className="font-semibold !text-yellow-900">Modo de Edição</AlertTitle>
+        <AlertDescription className="!text-yellow-700">
+            Você está editando a reserva: <strong>Titulo: {reserva.titulo} </strong> As alterações nos horários e detalhes serão salvas nesta reserva.
+        </AlertDescription>
+    </Alert>
+);
+// ============================================================================
+// --- Componente Principal (Orquestrador) ---
+// ============================================================================
+
+export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: AgendaEspacoProps) {
+    const { agendas } = espaco;
+    const hoje = useMemo(() => new Date(new Date().setHours(0, 0, 0, 0)), []);
+
+    const slotsIniciais = useMemo(
+        () =>
+            !isEditMode || !reserva?.horarios
+                ? []
+                : reserva.horarios.map(
+                      (horario) =>
+                          ({
+                              id: `${horario.data}|${horario.horario_inicio}`,
+                              status: 'selecionado',
+                              data: parse(horario.data, 'yyyy-MM-dd', new Date()),
+                              horario_inicio: horario.horario_inicio,
+                              horario_fim: horario.horario_fim,
+                              agenda_id: horario.agenda?.id,
+                              dadosReserva: { horarioDB: horario, autor: reserva.user!.name, reserva_titulo: reserva.titulo },
+                          }) as SlotCalendario,
+                  ),
+        [isEditMode, reserva],
+    );
+
+    const [semanaAtual, setSemanaAtual] = useState(() => startOfWeek(slotsIniciais.length > 0 ? slotsIniciais[0].data : hoje, { weekStartsOn: 1 }));
     const [slotsSelecao, setSlotsSelecao] = useState<SlotCalendario[]>(slotsIniciais);
     const [dialogAberto, setDialogAberto] = useState(false);
     const [todosSlots, setTodosSlots] = useState<SlotCalendario[]>([]);
-    const [recorrencia, setRecorrencia] = useState<ValorOcorrenciaType>('unica');
-    const { data, setData, post, patch, reset } = useForm<ReservaFormData>({
-        titulo: isEditMode ? reserva!.titulo : '',
-        descricao: isEditMode ? reserva!.descricao : '',
-        data_inicial: isEditMode ? reserva!.data_inicial : hoje,
-        data_final: isEditMode ? reserva!.data_final : addMonths(hoje, 1),
-        horarios_solicitados: isEditMode ? reserva!.horarios : [],
+    const [recorrencia, setRecorrencia] = useState<ValorOcorrenciaType>(reserva?.recorrencia || 'unica');
+
+    const { data, setData, post, patch, reset, processing } = useForm<ReservaFormData>({
+        titulo: reserva?.titulo ?? '',
+        descricao: reserva?.descricao ?? '',
+        data_inicial: reserva?.data_inicial ? new Date(reserva.data_inicial) : hoje,
+        data_final: reserva?.data_final ? new Date(reserva.data_final) : addMonths(hoje, 1),
+        recorrencia: reserva?.recorrencia ?? 'unica',
+        horarios_solicitados: reserva?.horarios ?? [],
     });
 
-    // Opções de recorrência
-    const opcoesRecorrencia: OpcoesRecorrencia[] = [
-        {
-            valor: 'unica',
-            label: 'Apenas esta semana',
-            descricao: 'A reserva será feita apenas para os dias selecionados nesta semana',
-            calcularDataFinal: (dataInicial: Date) => addDays(dataInicial, 6), // Até o fim da semana atual
-        },
-        {
-            valor: '15dias',
-            label: 'Próximos 15 dias',
-            descricao: 'A reserva será replicada pelos próximos 15 dias',
-            calcularDataFinal: (dataInicial: Date) => addDays(dataInicial, 14),
-        },
-        {
-            valor: '1mes',
-            label: '1 mês',
-            descricao: 'A reserva será replicada por 1 mês',
-            calcularDataFinal: (dataInicial: Date) => addMonths(dataInicial, 1),
-        },
-        {
-            valor: 'personalizado',
-            label: 'Período personalizado',
-            descricao: 'Defina um período personalizado para a recorrência',
-            calcularDataFinal: (dataInicial: Date) => dataInicial, // Será substituído pela data personalizada
-        },
-    ];
-    // Função para identificar o turno com base na hora
-    const identificarTurno = (hora: number): 'manha' | 'tarde' | 'noite' => {
-        if (hora >= 7 && hora <= 12) return 'manha';
-        if (hora >= 13 && hora <= 18) return 'tarde';
-        return 'noite'; // 19-22
-    };
     const { gestoresPorTurno, horariosReservadosMap } = useMemo(() => {
-        // Objeto para mapear os gestores por turno (substitui 'gestores_espaco')
-        const gestores: { [key: string]: { nome: string; email: string; departamento: string; agenda_id: number } } = {};
-        // Um Map para acesso rápido aos horários reservados (substitui 'horarios_reservados')
+        const gestores: any = {};
         const reservadosMap = new Map<string, { horario: Horario; autor: string; reserva_titulo: string }>();
 
-        // Iteramos sobre as agendas que vieram dentro do espaço
         agendas?.forEach((agenda) => {
-            // Preenchemos os dados dos gestores
             if (agenda.user) {
                 gestores[agenda.turno] = {
                     nome: agenda.user.name,
                     email: agenda.user.email,
-                    departamento: agenda.user.setor?.nome ?? 'Setor não informado',
+                    departamento: agenda.user.setor?.nome ?? 'N/I',
                     agenda_id: agenda.id,
                 };
             }
-            // Preenchemos o Map com os horários já reservados
             agenda.horarios?.forEach((horario) => {
-                if (horario.reservas && horario.reservas.length > 0) {
-                    const reservaDoHorario = horario.reservas.filter(
-                        (reserva) => reserva.situacao === 'deferida' || reserva.situacao === 'parcialmente_deferida',
-                    ); // Pegamos a primeira reserva para este horário
-                    if (isEditMode && reservaDoHorario.find((r) => r.id == reserva?.id)) {
-                        console.log('pulou');
-                        return; // Pula este horário, para que ele apareça como 'livre' ou 'selecionado'
-                    }
-                    // A chave do Map combina data e hora para uma busca O(1)
+                const reservaValida = horario.reservas?.find((r) => ['deferida', 'parcialmente_deferida'].includes(r.situacao));
+                if (reservaValida) {
+                    if (isEditMode && reservaValida.id === reserva?.id) return;
                     const chave = `${horario.data}|${horario.horario_inicio}`;
                     reservadosMap.set(chave, {
                         horario: horario,
-                        autor: reservaDoHorario[0].user?.name ?? 'Indefinido',
-                        reserva_titulo: reservaDoHorario[0].titulo,
+                        autor: reservaValida.user?.name ?? 'Indefinido',
+                        reserva_titulo: reservaValida.titulo,
                     });
                 }
             });
         });
         return { gestoresPorTurno: gestores, horariosReservadosMap: reservadosMap };
-    }, [agendas, isEditMode, reserva?.id]); // Recalcular apenas se a prop 'agenda' mudar
+    }, [agendas, isEditMode, reserva?.id]);
 
-    // Função para gerar slots de horário para a semana
-    const gerarSlotsParaSemana = (semanaInicio: Date) => {
-        const slotsGerados: SlotCalendario[] = [];
-        const horaInicio = 7;
-        const horaFim = 22;
+    useEffect(() => {
+        // Se não existir recorrecia
+        const opcaoRecorrencia = opcoesRecorrencia.find((op) => op.valor === recorrencia);
+        if (!opcaoRecorrencia || slotsSelecao.length === 0) return;
+        const dataInicialCalculada = new Date(Math.min(...slotsSelecao.map((s) => s.data.getTime())));
 
-        for (let diaOffset = 0; diaOffset < 7; diaOffset++) {
-            // Segunda a Domingo
-            const diaAtual = addDays(semanaInicio, diaOffset);
-            const diaFormatado = format(diaAtual, 'yyyy-MM-dd');
+        const dataFinalCalculada =
+            recorrencia !== 'personalizado'
+                ? recorrencia === 'unica'
+                    ? new Date(Math.max(...slotsSelecao.map((s) => s.data.getTime())))
+                    : opcaoRecorrencia.calcularDataFinal(dataInicialCalculada)
+                : data.data_final;
 
-            for (let hora = horaInicio; hora < horaFim; hora++) {
-                const turno = identificarTurno(hora);
-                const inicio = `${hora.toString().padStart(2, '0')}:00:00`;
-                const fim = `${hora.toString().padStart(2, '0')}:50:00`;
+        setData((prevData) => ({
+            ...prevData,
+            data_inicial: dataInicialCalculada,
+            data_final: dataFinalCalculada,
+        }));
+    }, [recorrencia, setData, slotsSelecao]);
 
-                // Busca no nosso Map de horários reservados
-                const chave = `${diaFormatado}|${inicio}`;
-                const horarioReservado = horariosReservadosMap.get(chave);
-                if (horarioReservado) {
-                    // Se está RESERVADO, cria um SlotCalendario com os dados da reserva.
-                    slotsGerados.push({
-                        id: chave,
-                        status: 'reservado',
-                        data: diaAtual,
-                        horario_inicio: inicio,
-                        horario_fim: fim,
-                        dadosReserva: {
-                            horarioDB: horarioReservado.horario,
-                            autor: horarioReservado.autor,
-                            reserva_titulo: horarioReservado.reserva_titulo,
-                        },
-                    });
-                } else if (gestoresPorTurno[turno]) {
-                    // Se está LIVRE, cria um SlotCalendario com o agenda_id.
-                    slotsGerados.push({
-                        id: chave,
-                        status: 'livre',
-                        data: diaAtual,
-                        horario_inicio: inicio,
-                        horario_fim: fim,
-                        agenda_id: gestoresPorTurno[turno].agenda_id,
-                    });
+    useEffect(() => {
+        const gerarSlotsParaSemana = (semanaInicio: Date) => {
+            const slotsGerados: SlotCalendario[] = [];
+            for (let diaOffset = 0; diaOffset < 7; diaOffset++) {
+                const diaAtual = addDays(semanaInicio, diaOffset);
+                const diaFormatado = format(diaAtual, 'yyyy-MM-dd');
+                for (let hora = 7; hora < 22; hora++) {
+                    const turno = identificarTurno(hora);
+                    const inicio = `${String(hora).padStart(2, '0')}:00:00`;
+                    const chave = `${diaFormatado}|${inicio}`;
+                    const horarioReservado = horariosReservadosMap.get(chave);
+                    if (horarioReservado) {
+                        slotsGerados.push({
+                            id: chave,
+                            status: 'reservado',
+                            data: diaAtual,
+                            horario_inicio: inicio,
+                            horario_fim: `${String(hora).padStart(2, '0')}:50:00`,
+                            dadosReserva: {
+                                horarioDB: horarioReservado.horario,
+                                autor: horarioReservado.autor,
+                                reserva_titulo: horarioReservado.reserva_titulo,
+                            },
+                        });
+                    } else if (gestoresPorTurno[turno]) {
+                        slotsGerados.push({
+                            id: chave,
+                            status: 'livre',
+                            data: diaAtual,
+                            horario_inicio: inicio,
+                            horario_fim: `${String(hora).padStart(2, '0')}:50:00`,
+                            agenda_id: gestoresPorTurno[turno].agenda_id,
+                        });
+                    }
                 }
             }
-        }
-        return slotsGerados;
-    };
-
-    // Gerar dias da semana (segunda a sábado)
-    const diasSemana = useMemo(() => {
-        return Array.from({ length: 7 }).map((_, i) => {
-            const dia = addDays(semanaAtual, i);
-            return {
-                data: dia,
-                nome: format(dia, 'EEEE', { locale: ptBR }),
-                abreviado: format(dia, 'EEE', { locale: ptBR }),
-                diaMes: format(dia, 'dd/MM'),
-                valor: format(dia, 'yyyy-MM-dd'),
-                ehHoje: format(dia, 'yyyy-MM-dd') === format(hoje, 'yyyy-MM-dd'),
-            };
-        });
-    }, [semanaAtual, hoje]);
-    // Gerar slots apenas quando a semana mudar
-    useEffect(() => {
+            return slotsGerados;
+        };
         setTodosSlots(gerarSlotsParaSemana(semanaAtual));
-    }, [semanaAtual]);
+    }, [semanaAtual, horariosReservadosMap, gestoresPorTurno]);
 
-    // Agrupar slots por hora para facilitar a renderização da tabela
-    const slotsPorHora = useMemo(() => {
-        const resultado: Record<string, SlotCalendario[]> = {};
+    const diasSemana = useMemo(
+        () =>
+            Array.from({ length: 7 }).map((_, i) => {
+                const dia = addDays(semanaAtual, i);
+                return {
+                    data: dia,
+                    nome: format(dia, 'EEEE', { locale: ptBR }),
+                    abreviado: format(dia, 'EEE', { locale: ptBR }),
+                    diaMes: format(dia, 'dd/MM'),
+                    valor: format(dia, 'yyyy-MM-dd'),
+                    ehHoje: isSameDay(dia, hoje),
+                };
+            }),
+        [semanaAtual, hoje],
+    );
 
+    const slotsPorTurno = useMemo(() => {
+        // Primeiro, agrupa todos os slots por hora (07:00, 08:00, etc.), como na lógica original.
+        const slotsPorHora: Record<string, SlotCalendario[]> = {};
         for (let hora = 7; hora < 22; hora++) {
-            const slotFormatado = `${hora.toString().padStart(2, '0')}:00`;
-            resultado[slotFormatado] = todosSlots.filter((slot) => slot.horario_inicio == `${slotFormatado}:00`);
+            const horaFormatada = `${String(hora).padStart(2, '0')}:00`;
+            slotsPorHora[horaFormatada] = todosSlots.filter((slot) => slot.horario_inicio.startsWith(horaFormatada));
         }
 
-        return resultado;
-    }, [todosSlots]);
-
-    // Agrupar slots por turno para facilitar a renderização
-    const slotsPorTurno = useMemo(() => {
+        // Depois, distribui essas horas nos seus respectivos turnos.
         const resultado = {
             manha: {} as Record<string, SlotCalendario[]>,
             tarde: {} as Record<string, SlotCalendario[]>,
             noite: {} as Record<string, SlotCalendario[]>,
         };
 
-        Object.entries(slotsPorHora).forEach(([hora, horario]) => {
-            const horaNum = Number.parseInt(hora.split(':')[0], 10);
+        Object.entries(slotsPorHora).forEach(([hora, slotsDaHora]) => {
+            const horaNum = parseInt(hora.split(':')[0], 10);
             const turno = identificarTurno(horaNum);
-            resultado[turno][hora] = horario;
+            if (slotsDaHora.length > 0) {
+                // Só adiciona a linha se houver slots
+                resultado[turno][hora] = slotsDaHora;
+            }
         });
 
         return resultado;
-    }, [slotsPorHora]);
+    }, [todosSlots]);
 
-    useEffect(() => {
-        const horariosParaEnvio: Partial<Horario>[] = slotsSelecao.map((slot) => {
-            return {
-                data: format(slot.data, 'yyyy-MM-dd'),
-                horario_inicio: slot.horario_inicio,
-                horario_fim: slot.horario_fim,
-                agenda_id: slot.agenda_id,
-            };
-        });
-        setData((prevData) => ({ ...prevData, horarios_solicitados: horariosParaEnvio }));
-    }, [setData, slotsSelecao]);
+    const irParaSemanaAnterior = () => setSemanaAtual(subWeeks(semanaAtual, 1));
+    const irParaProximaSemana = () => setSemanaAtual(addWeeks(semanaAtual, 1));
+    const limparSelecao = () => setSlotsSelecao([]);
+    const isSlotSelecionado = (slot: SlotCalendario) => slotsSelecao.some((s) => s.id === slot.id);
 
-    // Funções para navegar entre semanas
-    const irParaSemanaAnterior = () => {
-        setSemanaAtual(subWeeks(semanaAtual, 1));
-        // Limpar seleção ao mudar de semana
-        setSlotsSelecao([]);
-    };
-
-    const irParaProximaSemana = () => {
-        setSemanaAtual(addWeeks(semanaAtual, 1));
-        // Limpar seleção ao mudar de semana
-        setSlotsSelecao([]);
-    };
-
-    // Função para alternar seleção de slot
     const alternarSelecaoSlot = (slot: SlotCalendario) => {
         if (slot.status !== 'livre') return;
-
-        const jaExiste = slotsSelecao.some((slotSelect) => slotSelect.id === slot.id);
-
-        if (jaExiste) {
-            setSlotsSelecao(slotsSelecao.filter((slotSelect) => slotSelect.id !== slot.id));
-        } else {
-            // Adicionar o slot à seleção sem restrição de dia
-            // Ordenar slots por dia e hora
-            const novaSelecao = [...slotsSelecao, slot].sort(
-                (a, b) =>
-                    new Date(a.data).getTime() - new Date(b.data).getTime() || // Compara dias primeiro
-                    a.horario_inicio.localeCompare(b.horario_inicio), // Se dias iguais, compara horaInicio como string "HH:MM:SS"
-            );
-
-            setSlotsSelecao(novaSelecao);
-        }
+        const novaSelecao = isSlotSelecionado(slot)
+            ? slotsSelecao.filter((s) => s.id !== slot.id)
+            : [...slotsSelecao, slot].sort((a, b) => a.data.getTime() - b.data.getTime() || a.horario_inicio.localeCompare(b.horario_inicio));
+        console.log('Antes: ', slotsSelecao.length);
+        setSlotsSelecao(novaSelecao);
     };
+    useEffect(() => {
+        setData((prevData) => ({
+            ...prevData,
+            horarios_solicitados: slotsSelecao.map((s) => ({
+                data: format(s.data, 'yyyy-MM-dd'),
+                horario_inicio: s.horario_inicio,
+                horario_fim: s.horario_fim,
+                agenda_id: s.agenda_id,
+            })),
+        }));
+    }, [setData, slotsSelecao]);
 
-    // Função para enviar o formulário
-    function onSubmit(e: React.FormEvent) {
-        console.log(data);
-
+    const handleFormSubmit = (e: FormEvent) => {
         e.preventDefault();
-        // Obter a opção de recorrência selecionada
-        const opcaoRecorrencia = opcoesRecorrencia.find((opcao) => opcao.valor === recorrencia);
-        if (!opcaoRecorrencia) return;
-
-        // Calcular a data final com base na recorrência
-        const dataInicial = new Date(Math.min(...slotsSelecao.map((slotSelect) => new Date(slotSelect.data).getTime())));
-
-        if (recorrencia !== 'personalizado') {
-            setData((prevData) => ({ ...prevData, data_final: opcaoRecorrencia.calcularDataFinal(dataInicial) }));
+        if (slotsSelecao.length === 0) {
+            toast.error('Selecione pelo menos um horário para reservar.');
+            return;
         }
-
-        if (isEditMode) {
-            patch(route('reservas.update', { reserva: reserva?.id }), {
-                onSuccess: () => {
-                    setSlotsSelecao([]);
-                    setDialogAberto(false);
-                    reset();
-                },
-                onError: (error) => {
-                    const firstError = Object.values(error)[0];
-                    toast.error(firstError || 'Ocorreu um erro de validação. Verifique os campos');
-                },
-            });
-        } else {
-            post(route('reservas.store'), {
-                onSuccess: () => {
-                    setSlotsSelecao([]);
-                    setDialogAberto(false);
-                    reset();
-                },
-                onError: (error) => {
-                    const firstError = Object.values(error)[0];
-                    toast.error(firstError || 'Ocorreu um erro de validação. Verifique os campos');
-                },
-            });
-        }
-    }
-
-    // Função para limpar seleção
-    const limparSelecao = () => {
-        setSlotsSelecao([]);
-    };
-
-    // Verificar se um slot está selecionado
-    const isSlotSelecionado = (slot: SlotCalendario) => {
-        return slotsSelecao.some((slotSelect) => slotSelect.id === slot.id);
-    };
-
-    // Calcular período de recorrência
-    const periodoRecorrencia = () => {
-        return {
-            inicio: format(data.data_inicial ?? hoje, 'dd/MM/yyyy'),
-            fim: format(data.data_final ?? addMonths(hoje, 1), 'dd/MM/yyyy'),
+        const options = {
+            onSuccess: () => {
+                limparSelecao();
+                setDialogAberto(false);
+                reset();
+                toast.success(isEditMode ? 'Reserva atualizada com sucesso!' : 'Reserva solicitada com sucesso!');
+            },
+            onError: (errors: Record<string, string>) => {
+                toast.error((Object.values(errors)[0] as string) || 'Ocorreu um erro de validação.');
+            },
         };
+        if (isEditMode) {
+            patch(route('reservas.update', { reserva: reserva?.id }), options);
+        } else {
+            post(route('reservas.store'), options);
+        }
     };
 
     return (
-        <div className="container mx-auto max-w-6xl space-y-4 py-4">
-            {/* Cabeçalho com informações do espaço */}
-            <Card className="shadow-sm">
-                <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-xl">
-                        <MapPin className="h-5 w-5" />
-                        Nome: {espaco.nome}
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pb-3">
-                    <div className="mb-3 flex flex-wrap gap-2">
-                        <Badge variant="outline" className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {modulo?.nome}
-                        </Badge>
-                        <Badge variant="outline" className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {andar?.nome}
-                        </Badge>
-                        <Badge variant="outline" className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {espaco.capacidade_pessoas} pessoas
-                        </Badge>
-                    </div>
+        <div className="container mx-auto max-w-7xl space-y-4 py-4">
+            {isEditMode && reserva && <EditModeAlert reserva={reserva} />}
+            <EspacoHeader espaco={espaco} gestoresPorTurno={gestoresPorTurno} />
+            <AgendaNavegacao semanaAtual={semanaAtual} onAnterior={irParaSemanaAnterior} onProxima={irParaProximaSemana} />
+            <AgendaCalendario
+                diasSemana={diasSemana}
+                slotsPorTurno={slotsPorTurno}
+                isSlotSelecionado={isSlotSelecionado}
+                alternarSelecaoSlot={alternarSelecaoSlot}
+                hoje={hoje}
+            />
 
-                    <div className="border-t pt-2">
-                        <h3 className="mb-2 text-xs font-medium">Gestores por Turno:</h3>
-                        <div className="mx-auto grid max-w-3xl grid-cols-1 gap-2 sm:grid-cols-3">
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div className="bg-accent/10 hover:bg-accent/20 flex items-center justify-center gap-2 rounded-md p-1 text-xs transition-colors">
-                                            <div className="font-semibold">MANHÃ:</div>
-                                            <div className="flex items-center gap-1">
-                                                <User className="text-muted-foreground h-3 w-3" />
-                                                <span>{gestoresPorTurno.manha.nome}</span>
-                                            </div>
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <div className="space-y-1">
-                                            <p className="font-medium">{gestoresPorTurno.manha.nome}</p>
-                                            <p className="text-xs">{gestoresPorTurno.manha.email}</p>
-                                            <p className="text-muted-foreground text-xs">{gestoresPorTurno.manha.departamento}</p>
-                                        </div>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div className="bg-secondary/10 hover:bg-secondary/20 flex items-center justify-center gap-2 rounded-md p-1 text-xs transition-colors">
-                                            <div className="font-semibold">TARDE:</div>
-                                            <div className="flex items-center gap-1">
-                                                <User className="text-muted-foreground h-3 w-3" />
-                                                <span>{gestoresPorTurno.tarde.nome}</span>
-                                            </div>
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <div className="space-y-1">
-                                            <p className="font-medium">{gestoresPorTurno.tarde.nome}</p>
-                                            <p className="text-xs">{gestoresPorTurno.tarde.email}</p>
-                                            <p className="text-muted-foreground text-xs">{gestoresPorTurno.tarde.departamento}</p>
-                                        </div>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div className="bg-muted/20 hover:bg-muted/30 flex items-center justify-center gap-2 rounded-md p-1 text-xs transition-colors">
-                                            <div className="font-semibold">NOITE:</div>
-                                            <div className="flex items-center gap-1">
-                                                <User className="text-muted-foreground h-3 w-3" />
-                                                <span>{gestoresPorTurno.noite.nome}</span>
-                                            </div>
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <div className="space-y-1">
-                                            <p className="font-medium">{gestoresPorTurno.noite.nome}</p>
-                                            <p className="text-xs">{gestoresPorTurno.noite.email}</p>
-                                            <p className="text-muted-foreground text-xs">{gestoresPorTurno.noite.departamento}</p>
-                                        </div>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Navegação de semanas */}
-            <div className="flex items-center justify-between">
-                <Button variant="outline" size="sm" onClick={irParaSemanaAnterior}>
-                    <ChevronLeft className="mr-1 h-4 w-4" />
-                    <span className="hidden sm:inline">Semana Anterior</span>
-                    <span className="sm:hidden">Anterior</span>
-                </Button>
-
-                <h2 className="text-sm font-medium sm:text-base">
-                    {format(semanaAtual, 'dd/MM', { locale: ptBR })} - {format(addDays(semanaAtual, 5), 'dd/MM', { locale: ptBR })}
-                </h2>
-
-                <Button variant="outline" size="sm" onClick={irParaProximaSemana}>
-                    <span className="hidden sm:inline">Próxima Semana</span>
-                    <span className="sm:hidden">Próxima</span>
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
-            </div>
-
-            {/* Calendário estilo Google Calendar */}
-            <Card>
-                <ScrollArea className="h-[calc(100vh-220px)]">
-                    <div className="min-w-[800px]">
-                        {/* Cabeçalho da tabela com dias da semana */}
-                        <div className="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
-                            <div className="text-muted-foreground p-2 text-center text-sm font-medium"></div>
-                            {diasSemana.map((dia) => (
-                                <div key={dia.valor} className={`border-l p-2 text-center text-sm font-medium ${dia.ehHoje ? 'bg-primary/5' : ''}`}>
-                                    <div>{dia.abreviado}</div>
-                                    <div className={`text-xs ${dia.ehHoje ? 'text-primary font-bold' : 'text-muted-foreground'}`}>{dia.diaMes}</div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Linhas da tabela com horários */}
-                        {/* Cabeçalho e slots do turno da manhã */}
-                        <div className="bg-accent/10 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
-                            <div className="p-2 text-center text-xs font-semibold">MANHÃ</div>
-                            {diasSemana.map((dia) => (
-                                <div key={`manha-${dia.valor}`} className="border-l p-2 text-center text-xs font-medium"></div>
-                            ))}
-                        </div>
-                        {Object.entries(slotsPorTurno.manha).map(([hora, slots]) => (
-                            <div key={hora} className="bg-accent/5 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
-                                {/* Coluna de horário */}
-                                <div className="text-muted-foreground border-r p-2 pr-3 text-right text-xs">
-                                    {hora} - {hora.split(':')[0]}:50
-                                </div>
-
-                                {/* Células para cada dia */}
-                                {slots.map((slot) => (
-                                    <div
-                                        key={slot.id}
-                                        className={`relative cursor-pointer border-l p-1 transition-all ${slot.status === 'reservado' ? 'bg-muted/30' : 'hover:bg-muted/10'} ${isSlotSelecionado(slot) ? 'bg-primary/20 hover:bg-primary/30 ring-primary ring-2 ring-inset' : ''} ${isSameDay(slot.data, hoje) ? 'bg-primary/5' : ''} `}
-                                        onClick={() => alternarSelecaoSlot(slot)}
-                                    >
-                                        {slot.status === 'reservado' ? (
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <div className="flex h-full w-full items-center justify-center">
-                                                            <Badge variant="outline" className="text-xs">
-                                                                {slot.dadosReserva?.autor}
-                                                            </Badge>
-                                                        </div>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Reservado pelo setor {slot.dadosReserva?.autor}</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        ) : (
-                                            isSlotSelecionado(slot) && (
-                                                <div className="flex h-full w-full items-center justify-center">
-                                                    <Badge variant="secondary" className="text-xs">
-                                                        Selecionado
-                                                    </Badge>
-                                                </div>
-                                            )
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        ))}
-
-                        {/* Cabeçalho e slots do turno da tarde */}
-                        <div className="bg-secondary/10 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
-                            <div className="p-2 text-center text-xs font-semibold">TARDE</div>
-                            {diasSemana.map((dia) => (
-                                <div key={`tarde-${dia.valor}`} className="border-l p-2 text-center text-xs font-medium"></div>
-                            ))}
-                        </div>
-                        {Object.entries(slotsPorTurno.tarde).map(([hora, slots]) => (
-                            <div key={hora} className="bg-secondary/5 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
-                                {/* Coluna de horário */}
-                                <div className="text-muted-foreground border-r p-2 pr-3 text-right text-xs">
-                                    {hora} - {hora.split(':')[0]}:50
-                                </div>
-
-                                {/* Células para cada dia */}
-                                {slots.map((slot) => (
-                                    <div
-                                        key={slot.id}
-                                        className={`relative cursor-pointer border-l p-1 transition-all ${slot.status === 'reservado' ? 'bg-muted/30' : 'hover:bg-muted/10'} ${isSlotSelecionado(slot) ? 'bg-primary/20 hover:bg-primary/30 ring-primary ring-2 ring-inset' : ''} ${isSameDay(slot.data, hoje) ? 'bg-primary/5' : ''} `}
-                                        onClick={() => alternarSelecaoSlot(slot)}
-                                    >
-                                        {slot.status === 'reservado' ? (
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <div className="flex h-full w-full items-center justify-center">
-                                                            <Badge variant="outline" className="text-xs">
-                                                                {slot.dadosReserva?.autor}
-                                                            </Badge>
-                                                        </div>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Reservado pelo usuario: {slot.dadosReserva?.autor}</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        ) : (
-                                            isSlotSelecionado(slot) && (
-                                                <div className="flex h-full w-full items-center justify-center">
-                                                    <Badge variant="secondary" className="text-xs">
-                                                        Selecionado
-                                                    </Badge>
-                                                </div>
-                                            )
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        ))}
-
-                        {/* Cabeçalho e slots do turno da noite */}
-                        <div className="bg-muted/20 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
-                            <div className="p-2 text-center text-xs font-semibold">NOITE</div>
-                            {diasSemana.map((dia) => (
-                                <div key={`noite-${dia.valor}`} className="border-l p-2 text-center text-xs font-medium"></div>
-                            ))}
-                        </div>
-                        {Object.entries(slotsPorTurno.noite).map(([hora, slots]) => (
-                            <div key={hora} className="bg-muted/10 grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b">
-                                {/* Coluna de horário */}
-                                <div className="text-muted-foreground border-r p-2 pr-3 text-right text-xs">
-                                    {hora} - {hora.split(':')[0]}:50
-                                </div>
-
-                                {/* Células para cada dia */}
-                                {slots.map((slot) => (
-                                    <div
-                                        key={slot.id}
-                                        className={`relative cursor-pointer border-l p-1 transition-all ${slot.status === 'reservado' ? 'bg-muted/30' : 'hover:bg-muted/10'} ${isSlotSelecionado(slot) ? 'bg-primary/20 hover:bg-primary/30 ring-primary ring-2 ring-inset' : ''} ${isSameDay(slot.data, hoje) ? 'bg-primary/5' : ''} `}
-                                        onClick={() => alternarSelecaoSlot(slot)}
-                                    >
-                                        {slot.status === 'reservado' ? (
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <div className="flex h-full w-full items-center justify-center">
-                                                            <Badge variant="outline" className="text-xs">
-                                                                {slot.dadosReserva?.autor}
-                                                            </Badge>
-                                                        </div>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Reservado pelo usuario: {slot.dadosReserva?.autor}</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        ) : (
-                                            isSlotSelecionado(slot) && (
-                                                <div className="flex h-full w-full items-center justify-center">
-                                                    <Badge variant="secondary" className="text-xs">
-                                                        Selecionado
-                                                    </Badge>
-                                                </div>
-                                            )
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        ))}
-                    </div>
-                </ScrollArea>
-            </Card>
-
-            {/* Botão flutuante para reserva em período */}
             {slotsSelecao.length > 0 && (
-                <div className="fixed right-4 bottom-4 flex flex-col items-end gap-2">
-                    <Dialog open={dialogAberto} onOpenChange={setDialogAberto}>
-                        <DialogTrigger asChild>
-                            <Button className="shadow-lg">
-                                Reservar {slotsSelecao.length} horário{slotsSelecao.length > 1 ? 's' : ''} em{' '}
-                                {new Set(slotsSelecao.map((slotSelect) => format(slotSelect.data, 'yyyy-MM-dd'))).size} dia
-                                {new Set(slotsSelecao.map((slotSelect) => format(slotSelect.data, 'yyyy-MM-dd'))).size > 1 ? 's' : ''}
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-md">
-                            <form onSubmit={onSubmit}>
-                                <DialogHeader>
-                                    <DialogTitle>Confirmar Reserva</DialogTitle>
-                                    <DialogDescription>Preencha os detalhes da sua reserva.</DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4 py-4">
-                                    {/* Campos de título e descrição */}
-                                    <div className="space-y-4">
-                                        <div className="space-y-2">
-                                            <div className="mb-1 flex items-center gap-2">
-                                                <Type className="text-muted-foreground h-4 w-4" />
-                                                <Label htmlFor="titulo" className="font-medium">
-                                                    Título da Reserva
-                                                </Label>
-                                            </div>
-                                            <Input
-                                                id="titulo"
-                                                placeholder="Ex: Aula de Programação, Reunião de Departamento"
-                                                value={data.titulo}
-                                                onChange={(e) => setData((prevData) => ({ ...prevData, titulo: e.target.value }))}
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <div className="mb-1 flex items-center gap-2">
-                                                <FileText className="text-muted-foreground h-4 w-4" />
-                                                <Label htmlFor="descricao" className="font-medium">
-                                                    Descrição
-                                                </Label>
-                                            </div>
-                                            <Textarea
-                                                id="descricao"
-                                                placeholder="Descreva o propósito da reserva..."
-                                                value={data.descricao}
-                                                onChange={(e) => setData((prevData) => ({ ...prevData, descricao: e.target.value }))}
-                                                className="min-h-[80px] resize-none"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Opções de recorrência */}
-                                    <div className="space-y-2 border-t pt-2">
-                                        <div className="mb-2 flex items-center gap-2">
-                                            <Repeat className="text-muted-foreground h-4 w-4" />
-                                            <h3 className="font-medium">Período de Recorrência</h3>
-                                        </div>
-
-                                        <RadioGroup
-                                            value={recorrencia}
-                                            onValueChange={(value: ValorOcorrenciaType) => setRecorrencia(value)}
-                                            className="space-y-2"
-                                        >
-                                            {opcoesRecorrencia.map((opcao) => (
-                                                <div key={opcao.valor} className="flex items-start space-x-2">
-                                                    <RadioGroupItem value={opcao.valor} id={opcao.valor} />
-                                                    <div className="grid gap-1">
-                                                        <Label htmlFor={opcao.valor} className="font-medium">
-                                                            {opcao.label}
-                                                        </Label>
-                                                        <p className="text-muted-foreground text-xs">{opcao.descricao}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </RadioGroup>
-                                    </div>
-
-                                    {/* Seletor de datas personalizado */}
-                                    {recorrencia === 'personalizado' && (
-                                        <div className="bg-muted/10 space-y-4 rounded-md border p-3">
-                                            <h4 className="text-sm font-medium">Selecione o período personalizado</h4>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="data-inicial" className="text-xs">
-                                                        Data de início
-                                                    </Label>
-                                                    <Popover>
-                                                        <PopoverTrigger asChild>
-                                                            <Button
-                                                                id="data-inicial"
-                                                                variant={'outline'}
-                                                                className={cn(
-                                                                    'w-full justify-start text-left font-normal',
-                                                                    !data.data_final && 'text-muted-foreground',
-                                                                )}
-                                                            >
-                                                                <Calendar className="mr-2 h-4 w-4" />
-                                                                {data.data_inicial ? (
-                                                                    format(data.data_inicial, 'dd/MM/yyyy')
-                                                                ) : (
-                                                                    <span>Selecione a data</span>
-                                                                )}
-                                                            </Button>
-                                                        </PopoverTrigger>
-                                                        <PopoverContent className="w-auto p-0" align="start">
-                                                            <CalendarComponent
-                                                                mode="single"
-                                                                selected={data.data_inicial || undefined}
-                                                                onSelect={(date) =>
-                                                                    setData((prevData) => ({ ...prevData, data_inicial: date ?? null }))
-                                                                }
-                                                                initialFocus
-                                                                disabled={(date) => date < hoje}
-                                                            />
-                                                        </PopoverContent>
-                                                    </Popover>
-                                                </div>
-
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="data-final" className="text-xs">
-                                                        Data de término
-                                                    </Label>
-                                                    <Popover>
-                                                        <PopoverTrigger asChild>
-                                                            <Button
-                                                                id="data-final"
-                                                                variant={'outline'}
-                                                                className={cn(
-                                                                    'w-full justify-start text-left font-normal',
-                                                                    !data.data_final && 'text-muted-foreground',
-                                                                )}
-                                                            >
-                                                                <Calendar className="mr-2 h-4 w-4" />
-                                                                {data.data_final ? (
-                                                                    format(data.data_final, 'dd/MM/yyyy')
-                                                                ) : (
-                                                                    <span>Selecione a data</span>
-                                                                )}
-                                                            </Button>
-                                                        </PopoverTrigger>
-                                                        <PopoverContent className="w-auto p-0" align="start">
-                                                            <CalendarComponent
-                                                                mode="single"
-                                                                selected={data.data_final || undefined}
-                                                                onSelect={(date) =>
-                                                                    setData((prevData) => ({ ...prevData, data_inicial: date ?? null }))
-                                                                }
-                                                                initialFocus
-                                                                disabled={(date) => (data.data_inicial ? date < data.data.inicial : date < hoje)}
-                                                            />
-                                                        </PopoverContent>
-                                                    </Popover>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Período selecionado */}
-                                    {periodoRecorrencia && (
-                                        <div className="bg-muted/30 rounded-md p-3">
-                                            <div className="flex items-start gap-2">
-                                                <Info className="text-muted-foreground mt-0.5 h-4 w-4" />
-                                                <div>
-                                                    <p className="text-sm font-medium">Período da reserva</p>
-                                                    <p className="text-muted-foreground text-xs">
-                                                        De {periodoRecorrencia().inicio} até {periodoRecorrencia().fim}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Horários selecionados */}
-                                    <div className="space-y-2 border-t pt-2">
-                                        <div className="mb-2 flex items-center gap-2">
-                                            <Calendar className="text-muted-foreground h-4 w-4" />
-                                            <h3 className="font-medium">Horários selecionados</h3>
-                                        </div>
-
-                                        <ScrollArea className="h-[200px] rounded-md border p-2">
-                                            {/* Agrupar slots por dia */}
-                                            {Object.entries(
-                                                slotsSelecao.reduce(
-                                                    (acc, horario) => {
-                                                        const diaKey = format(horario.data, 'yyyy-MM-dd');
-                                                        if (!acc[diaKey]) {
-                                                            acc[diaKey] = {
-                                                                data: horario.data,
-                                                                slots: [],
-                                                            };
-                                                        }
-                                                        acc[diaKey].slots.push(horario);
-                                                        return acc;
-                                                    },
-                                                    {} as Record<string, { data: Date; slots: SlotCalendario[] }>,
-                                                ),
-                                            ).map(([diaKey, { data, slots }]) => (
-                                                <div key={diaKey} className="mb-4 last:mb-0">
-                                                    <div className="mb-1 text-sm font-medium">{format(data, 'EEEE, dd/MM', { locale: ptBR })}</div>
-
-                                                    <div className="border-muted border-l-2 pl-2">
-                                                        {slots.map((horario) => (
-                                                            <div key={horario.id} className="text-muted-foreground py-1 text-sm">
-                                                                {horario.horario_inicio} - {horario.horario_fim}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </ScrollArea>
-                                    </div>
-                                </div>
-
-                                <DialogFooter>
-                                    <Button type="reset" variant="outline" onClick={() => setDialogAberto(false)}>
-                                        Cancelar
-                                    </Button>
-                                    <Button type="submit" disabled={!data.titulo.trim()}>
-                                        Confirmar Reserva
-                                    </Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
-
+                <div className="fixed right-4 bottom-4 z-20 flex flex-col items-end gap-2">
+                    <DialogReserva
+                        isOpen={dialogAberto}
+                        isEditMode={isEditMode}
+                        onOpenChange={setDialogAberto}
+                        onSubmit={handleFormSubmit}
+                        formData={data}
+                        setFormData={setData}
+                        recorrencia={recorrencia}
+                        setRecorrencia={setRecorrencia}
+                        slotsSelecao={slotsSelecao}
+                        hoje={hoje}
+                        isSubmitting={processing}
+                    />
                     <Button variant="outline" size="sm" onClick={limparSelecao}>
                         Limpar seleção
                     </Button>

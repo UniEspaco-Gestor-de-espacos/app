@@ -27,6 +27,7 @@ class StoreReservaRequest extends FormRequest
             'descricao' => 'nullable|string',
             'data_inicial' => 'required',
             'data_final' => 'required',
+            'recorrencia' => 'required|in:unica,15dias,1mes,personalizado',
             // Validação do array de horários
             'horarios_solicitados' => 'required|array|min:1',
 

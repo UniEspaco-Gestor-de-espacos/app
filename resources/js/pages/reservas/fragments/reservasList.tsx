@@ -26,7 +26,7 @@ function SituacaoBadge({ situacao }: { situacao: SituacaoReserva }) {
             );
         case 'parcialmente_deferida':
             return (
-                <Badge variant="outline" className="flex items-center gap-1 border-green-200 bg-green-50 text-green-700">
+                <Badge variant="outline" className="flex items-center gap-1 border-blue-200 bg-blue-50 text-blue-700">
                     <CheckCircle className="h-3 w-3" />
                     Parcialmente Deferida
                 </Badge>
@@ -43,6 +43,13 @@ function SituacaoBadge({ situacao }: { situacao: SituacaoReserva }) {
                 <Badge variant="outline" className="flex items-center gap-1 border-red-200 bg-red-50 text-red-700">
                     <XSquare className="h-3 w-3" />
                     Indeferida
+                </Badge>
+            );
+        case 'inativa':
+            return (
+                <Badge variant="outline" className="border-black-200 text-black-700 flex items-center gap-1 bg-gray-50">
+                    <XSquare className="h-3 w-3" />
+                    Inativa / Cancelada
                 </Badge>
             );
         default:
@@ -117,49 +124,45 @@ export function ReservasList({ paginator, fallback, isGestor }: ReservasListProp
                                             Detalhes
                                         </Button>
 
-                                        {reserva.situacao === 'em_analise' && (
-                                            <>
-                                                {isGestor ? (
-                                                    <div>
-                                                        <Button
-                                                            onClick={() => handleAvaliarButton(reserva.id)}
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8"
-                                                            title="Avaliar"
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                            <span className="sr-only">Avaliar</span>
-                                                        </Button>
-                                                    </div>
-                                                ) : (
-                                                    <div>
+                                        {reserva.situacao !== 'inativa' ? (
+                                            isGestor ? (
+                                                <Button
+                                                    onClick={() => handleAvaliarButton(reserva.id)}
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    title={reserva.situacao === 'em_analise' ? 'Avaliar' : 'Reavaliar'}
+                                                >
+                                                    <Edit className="h-4 w-4" />
+                                                    {reserva.situacao === 'em_analise' ? 'Avaliar' : 'Reavaliar'}
+                                                </Button>
+                                            ) : (
+                                                <>
+                                                    {reserva.situacao === 'em_analise' && (
                                                         <Button
                                                             variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8"
+                                                            size="sm"
                                                             title="Editar"
                                                             onClick={() => {
                                                                 router.visit(`reservas/${reserva.id}/editar`);
                                                             }}
                                                         >
-                                                            <Edit className="h-4 w-4" />
-                                                            <span className="sr-only">Editar</span>
+                                                            <Edit />
+                                                            Editar
                                                         </Button>
-                                                        <Button
-                                                            onClick={() => setRemoverReserva(reserva)}
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-red-600"
-                                                            title="Cancelar"
-                                                        >
-                                                            <XCircle className="h-4 w-4" />
-                                                            <span className="sr-only">Cancelar</span>
-                                                        </Button>
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
+                                                    )}
+                                                    <Button
+                                                        onClick={() => setRemoverReserva(reserva)}
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-red-600"
+                                                        title="Cancelar"
+                                                    >
+                                                        <XCircle />
+                                                        Cancelar
+                                                    </Button>
+                                                </>
+                                            )
+                                        ) : null}
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -245,33 +248,31 @@ export function ReservasList({ paginator, fallback, isGestor }: ReservasListProp
                             <Button variant="outline" onClick={() => setSelectedReserva(null)}>
                                 Fechar
                             </Button>
-                            {selectedReserva.situacao === 'em_analise' && (
-                                <>
-                                    {isGestor ? (
-                                        <div>
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => {
-                                                    router.visit(`/gestor/reservas/${selectedReserva.id}`);
-                                                }}
-                                            >
-                                                <Edit className="mr-1 h-4 w-4" />
-                                                Avaliar
-                                            </Button>
-                                        </div>
-                                    ) : (
-                                        <div>
-                                            <Button variant="outline">
-                                                <Edit className="mr-1 h-4 w-4" />
-                                                Editar
-                                            </Button>
-                                            <Button variant="destructive">
-                                                <XCircle className="mr-1 h-4 w-4" />
-                                                Cancelar
-                                            </Button>
-                                        </div>
+                            {isGestor ? (
+                                <div>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            router.visit(`/gestor/reservas/${selectedReserva.id}`);
+                                        }}
+                                    >
+                                        <Edit className="mr-1 h-4 w-4" />
+                                        Avaliar
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div>
+                                    {selectedReserva.situacao === 'em_analise' && (
+                                        <Button variant="outline">
+                                            <Edit className="mr-1 h-4 w-4" />
+                                            Editar
+                                        </Button>
                                     )}
-                                </>
+                                    <Button variant="destructive">
+                                        <XCircle className="mr-1 h-4 w-4" />
+                                        Cancelar
+                                    </Button>
+                                </div>
                             )}
                         </DialogFooter>
                     </DialogContent>

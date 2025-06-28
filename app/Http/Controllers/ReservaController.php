@@ -6,6 +6,7 @@ use App\Http\Requests\StoreReservaRequest;
 use App\Models\Horario;
 use App\Models\Reserva;
 use Exception;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,13 +15,13 @@ use Inertia\Inertia;
 
 class ReservaController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request) // Recebe a Request
     {
         $user = Auth::user();
-
         // Pega os parâmetros de filtro da URL (query string), exatamente como no outro controller
         $filters = $request->only(['search', 'situacao']);
 
@@ -37,9 +38,17 @@ class ReservaController extends Controller
                     ['%' . $search . '%']
                 );
             })
-            ->when($filters['situacao'] ?? null, function ($query, $situacao) {
-                $query->where('situacao', $situacao);
-            })
+            ->when(
+                $filters['situacao'] ?? null,
+                // 1. Função a ser executada SE 'situacao' EXISTIR no filtro
+                function ($query, $situacao) {
+                    $query->where('situacao', $situacao);
+                },
+                // 2. Função a ser executada SE 'situacao' NÃO EXISTIR no filtro
+                function ($query) {
+                    $query->where('situacao', '!=', 'inativa');
+                }
+            )
             // Carrega todos os relacionamentos necessários em uma única consulta.
             ->with([
                 'user',
@@ -51,6 +60,7 @@ class ReservaController extends Controller
             ->latest() // Ordena as reservas da mais nova para a mais antiga.
             ->paginate(10) // Pagina os resultados
             ->withQueryString(); // Anexa os filtros aos links de paginação
+
 
         return Inertia::render('reservas/minhasReservas', [
             'reservas' => $reservas, // Envia o objeto paginador completo
@@ -83,6 +93,7 @@ class ReservaController extends Controller
                     'descricao' => $request->validated('descricao'),
                     'data_inicial' => $request->validated('data_inicial'),
                     'data_final' => $request->validated('data_final'),
+                    'recorrencia' => $request->validated('recorrencia'),
                     'user_id' => Auth::id(),
                     'situacao' => 'em_analise', // Status geral inicial
                 ]);
@@ -103,10 +114,10 @@ class ReservaController extends Controller
                 return $reserva;
             });
 
-            return to_route('espacos.index')->with('success', 'Reserva solicitada com sucesso! Aguarde avaliação.');
+            return redirect()->route('espacos.index')->with('success', 'Reserva solicitada com sucesso! Aguarde avaliação.');
         } catch (Exception $error) {
             Log::error('Erro ao solicitar reserva: ' . $error->getMessage());
-            return to_route('espacos.index')->with('error', 'Erro ao solicitar reserva. Tente novamente.');
+            return redirect()->route('espacos.index')->with('error', 'Erro ao solicitar reserva. Tente novamente.');
         }
     }
 
@@ -115,6 +126,7 @@ class ReservaController extends Controller
      */
     public function update(StoreReservaRequest $request, Reserva $reserva)
     {
+        $this->authorize('update', $reserva);
         // A validação já foi executada pela Form Request.
         // Usamos uma transação para garantir que tudo seja salvo, ou nada.
         try {
@@ -125,9 +137,9 @@ class ReservaController extends Controller
                     'descricao' => $request->validated('descricao'),
                     'data_inicial' => $request->validated('data_inicial'),
                     'data_final' => $request->validated('data_final'),
+                    'recorrencia' => $request->validated('recorrencia'),
                     // O user_id não deve mudar, e a situação é gerenciada em outro lugar.
                 ]);
-
                 // 2. Pega os IDs dos horários antigos para depois deletá-los.
                 $horariosAntigosIds = $reserva->horarios()->pluck('horarios.id');
 
@@ -152,10 +164,10 @@ class ReservaController extends Controller
                 $reserva->horarios()->attach($horariosParaAnexar);
             });
 
-            return to_route('reservas.index')->with('success', 'Reserva atualizada com sucesso! Aguarde nova avaliação.');
+            return redirect()->route('reservas.index')->with('success', 'Reserva atualizada com sucesso! Aguarde nova avaliação.');
         } catch (Exception $error) {
             Log::error('Erro ao atualizar reserva: ' . $error->getMessage());
-            return to_route('reservas.index')->with('error', 'Erro ao atualizar reserva. Tente novamente.');
+            return redirect()->route('reservas.index')->with('error', 'Erro ao atualizar reserva. Tente novamente.');
         }
     }
 
@@ -208,7 +220,8 @@ class ReservaController extends Controller
         // O frontend agora é responsável por processar e exibir os dados aninhados.
         return Inertia::render('espacos/visualizar', [
             'espaco' => $espaco,
-            'reserva' => $reserva
+            'reserva' => $reserva,
+            'isEditMode' => true,
         ]);
     }
 
@@ -217,25 +230,30 @@ class ReservaController extends Controller
      */
     public function destroy(Reserva $reserva)
     {
+        $this->authorize('delete', $reserva);
         try {
             DB::transaction(function () use ($reserva) {
-                // 1. Pega os IDs dos horários associados à reserva
-                $horariosIds = $reserva->horarios()->pluck('horarios.id');
 
-                // 2. Desvincula todos os horários da reserva
-                $reserva->horarios()->detach();
+                // 1. Itera sobre cada horário associado a esta reserva
+                // para atualizar a situação na tabela pivô (horario_reserva).
+                foreach ($reserva->horarios as $horario) {
+                    $reserva->horarios()->updateExistingPivot($horario->id, [
+                        'situacao' => 'inativa'
+                    ]);
+                }
 
-                // 3. Deleta os horários que não estão mais associados a nenhuma reserva
-                Horario::whereIn('id', $horariosIds)->whereDoesntHave('reservas')->delete();
-
-                // 4. Deleta a reserva
-                $reserva->delete();
+                // 2. Atualiza a situação da própria reserva para 'inativa'
+                $reserva->update(['situacao' => 'inativa']);
             });
 
             return back()->with('success', 'Reserva cancelada com sucesso!');
         } catch (Exception $error) {
-            Log::error('Erro ao cancelar reserva: ' . $error->getMessage());
-            return back()->with('error', 'Erro ao cancelar reserva. Tente novamente.');
+            Log::error('Erro ao cancelar (inativar) reserva: ' . $error->getMessage(), [
+                'reserva_id' => $reserva->id,
+                'user_id' => Auth::id()
+            ]);
+
+            return back()->with('error', 'Erro ao cancelar a reserva. Por favor, tente novamente.');
         }
     }
 }

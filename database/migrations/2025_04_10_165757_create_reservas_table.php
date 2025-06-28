@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id()->autoIncrement();
             $table->string('titulo');
             $table->text('descricao');
-            $table->enum('situacao', ['em_analise', 'parcialmente_deferida','deferida', 'indeferida'])->default('em_analise');;
+            $table->enum('situacao', ['em_analise', 'parcialmente_deferida', 'deferida', 'indeferida', 'inativa'])->default('em_analise');;
             $table->dateTime('data_inicial');
             $table->dateTime('data_final');
+            $table->enum('recorrencia', ['unica', '15dias', '1mes', 'personalizado'])->default('unica');
             $table->text('observacao')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
