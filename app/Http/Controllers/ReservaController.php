@@ -62,7 +62,7 @@ class ReservaController extends Controller
             ->withQueryString(); // Anexa os filtros aos links de paginação
 
 
-        return Inertia::render('reservas/minhasReservas', [
+        return Inertia::render('Reservas/ReservasPage', [
             'reservas' => $reservas, // Envia o objeto paginador completo
             'filters' => $filters,   // Envia os filtros de volta para a view
         ]);
@@ -218,7 +218,7 @@ class ReservaController extends Controller
 
         // 3. Renderiza a view, passando APENAS o objeto 'espaco'.
         // O frontend agora é responsável por processar e exibir os dados aninhados.
-        return Inertia::render('espacos/visualizar', [
+        return Inertia::render('Espacos/VisualizarEspacoPage', [
             'espaco' => $espaco,
             'reserva' => $reserva,
             'isEditMode' => true,

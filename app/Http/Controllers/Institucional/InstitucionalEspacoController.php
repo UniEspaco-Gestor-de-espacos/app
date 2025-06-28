@@ -31,7 +31,7 @@ class InstitucionalEspacoController extends Controller
         $user = Auth::user();
         $modulos = Modulo::all();
         $setores = Setor::all();
-        return Inertia::render('espacos/index', compact('espacos', 'user', 'modulos', 'setores'));
+        return Inertia::render('Espacos/EspacosPage', compact('espacos', 'user', 'modulos', 'setores'));
     }
 
     /**
@@ -42,7 +42,7 @@ class InstitucionalEspacoController extends Controller
         $unidades = Unidade::all();
         $modulos = Modulo::all();
         $andares = Andar::all();
-        return Inertia::render('espacos/institucional/cadastrar', compact('unidades', 'modulos', 'andares'));
+        return Inertia::render('Espacos/Institucional/CadastrarEspacoPage', compact('unidades', 'modulos', 'andares'));
     }
 
     /**
@@ -136,7 +136,7 @@ class InstitucionalEspacoController extends Controller
             if (count($gestores_espaco) <= 0) {
                 throw new Exception();
             }
-            return Inertia::render('espacos/visualizar', compact('espaco', 'agendas', 'modulo', 'andar', 'gestores_espaco', 'horarios_reservados'));
+            return Inertia::render('Espacos/VisualizarEspacoPage', compact('espaco', 'agendas', 'modulo', 'andar', 'gestores_espaco', 'horarios_reservados'));
         } catch (Exception $th) {
             return redirect()->route('espacos.index')->with('error', 'Espaço sem gestor cadastrado - Aguardando cadastro');
         }
@@ -147,7 +147,7 @@ class InstitucionalEspacoController extends Controller
      */
     public function edit(Espaco $espaco)
     {
-        return Inertia::render('espacos/editar', compact('espaco'));
+        return Inertia::render('Espacos/Institucional/CadastrarEditarEspacoPage', compact('espaco'));
     }
 
     /**

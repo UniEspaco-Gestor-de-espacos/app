@@ -6,17 +6,7 @@ import { Link, usePage } from '@inertiajs/react';
 import AppLogo from './app-logo';
 
 /* Ícones ---------------------------------------------------------------- */
-import {
-    Bell,
-    BookOpen,
-    Building,
-    Calendar,
-    Eye,
-    LayoutGrid,
-    ShieldCheck,
-    Star,
-    Users,
-} from 'lucide-react';
+import { Bell, BookOpen, Building, Calendar, Eye, LayoutGrid, Star, Users } from 'lucide-react';
 
 // Adicione 'Users' para um ícone mais adequado
 
@@ -39,15 +29,13 @@ const commonNav: MenuItem[] = [
 ];
 
 const gestorExtras: MenuItem[] = [
-
     { title: 'Gerir Reservas', href: '/gestor/reservas', icon: Eye },
     { title: 'Gerir Espacos', href: '/gestor/espacos', icon: Star },
 ];
 
 const institucionalExtras: MenuItem[] = [
-    { title: 'Cadastrar Espaços', href: '/admin/espacos/novo', icon: Building },
+    { title: 'Cadastrar Espaços', href: '/institucional/espacos/create', icon: Building },
     { title: 'Gerenciar Usuários', href: '/institucional/usuarios', icon: Users }, // Ícone 'Users' é mais adequado para gerenciamento de usuários
-    { title: 'Gerenciar Permissões', href: '/admin/permissoes', icon: ShieldCheck },
 ];
 
 /* Rotulagem da seção extra --------------------------------------------- */
