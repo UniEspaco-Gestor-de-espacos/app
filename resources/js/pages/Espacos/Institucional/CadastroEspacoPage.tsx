@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 
 // Importando os fragmentos
-import EspacoHeader from '../fragments/EspacoHeader';
+import GenericHeader from '@/components/generic-header';
 import { AddAndarDialog } from './fragments/AddAndarDialog';
 import { EspacoFormFields } from './fragments/EspacoFormFields';
 import { ImageUpload, ImageWithPreview } from './fragments/ImageUpload';
@@ -77,7 +77,6 @@ export default function CadastroEspacoPage() {
         e.preventDefault();
 
         if (isEditMode) {
-            console.log('Data', data);
             patch(route('institucional.espacos.update', espaco!.id), {
                 onSuccess: () => {
                     toast.success(`Espaço ${isEditMode ? 'atualizado' : 'cadastrado'} com sucesso!`);
@@ -115,7 +114,7 @@ export default function CadastroEspacoPage() {
             <Head title={pageTitulo} />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
-                    <EspacoHeader titulo={pageTitulo} descricao={pageDescricao} />
+                    <GenericHeader titulo={pageTitulo} descricao={pageDescricao} />
                     <Dialog open={isAddAndarDialogOpen} onOpenChange={setIsAddAndarDialogOpen}>
                         <Card className="mb-6">
                             <CardContent className="pt-6">

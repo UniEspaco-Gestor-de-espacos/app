@@ -93,7 +93,6 @@ export interface Unidade {
     id: number;
     nome: string;
     sigla: string;
-    instituicao_id: number;
     instituicao?: Instituicao; // Relação aninhada
 }
 
@@ -101,14 +100,12 @@ export interface Setor {
     id: number;
     nome: string;
     sigla: string;
-    unidade_id: number;
     unidade?: Unidade; // Relação aninhada
 }
 
 export interface Modulo {
     id: number;
     nome: string;
-    unidade_id: number;
     unidade?: Unidade; // Relação aninhada
 }
 
@@ -116,7 +113,6 @@ export interface Andar {
     id: number;
     nome: string;
     tipo_acesso: [];
-    modulo_id: string;
     modulo?: Modulo; // Relação aninhada
 }
 
@@ -127,7 +123,6 @@ export interface Espaco {
     descricao: string;
     imagens: string[];
     main_image_index: string | null;
-    andar_id: number;
     andar?: Andar; // Relação aninhada
     agendas?: Agenda[];
 }
@@ -158,8 +153,6 @@ export interface Pivot {
 export interface Agenda {
     id: number;
     turno: 'manha' | 'tarde' | 'noite';
-    espaco_id: number;
-    user_id: number;
     espaco?: Espaco; // Relação aninhada
     user?: User; // Relação com o gestor da agenda
     horarios?: Horario[];

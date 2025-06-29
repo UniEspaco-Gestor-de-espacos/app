@@ -14,7 +14,7 @@ class InstitucionalInstituicaoController extends Controller
      */
     public function index()
     {
-        $instituicoes = Instituicao::latest();
+        $instituicoes = Instituicao::latest()->paginate(10);
 
         return Inertia::render('Administrativo/Instituicoes/Instituicoes', [
             'instituicoes' => $instituicoes,
@@ -26,7 +26,7 @@ class InstitucionalInstituicaoController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Admin/Instituicoes/Create');
+        return Inertia::render('Administrativo/Instituicoes/CadastrarInstituicao');
     }
 
     /**
@@ -37,46 +37,56 @@ class InstitucionalInstituicaoController extends Controller
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'sigla' => 'required|string|max:50',
-            'endereço' => 'nullable|string|max:255',
+            'endereco' => 'nullable|string|max:255',
         ]);
 
         Instituicao::create($validated);
 
-        return to_route('admin.instituicoes.index')->with('success', 'Instituição criada com sucesso.');
+        return redirect()->route('institucional.instituicoes.index')->with('success', 'Instituição criada com sucesso.');
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Instituicao $instituicao)
+    public function edit(Instituicao $instituico) // Corrigido o nome do parâmetro para $instituico
     {
-        return Inertia::render('Admin/Instituicoes/Edit', [
-            'instituicao' => $instituicao,
+        return Inertia::render('Administrativo/Instituicoes/EditarInstituicao', [
+            'instituicao' => $instituico,
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Instituicao $instituicao)
+    public function update(Request $request, Instituicao $instituico)
     {
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'sigla' => 'required|string|max:50',
-            'endereço' => 'nullable|string|max:255',
+            'endereco' => 'nullable|string|max:255',
         ]);
 
-        $instituicao->update($validated);
+        try {
+            $instituico->update([
+                'nome' => $validated['nome'],
+                'sigla' => $validated['sigla'],
+                'endereco' => $validated['endereco'], // Permite que o campo seja nulo
+            ]);
 
-        return to_route('admin.instituicoes.index')->with('success', 'Instituição atualizada com sucesso.');
+            $instituico->save();
+
+            return redirect()->route('institucional.instituicoes.index')->with('success', 'Instituição atualizada com sucesso.');
+        } catch (\Throwable $th) {
+            return redirect()->route('institucional.instituicoes.index')->with('error', 'Erro ao atualizar a instituição: ' . $th->getMessage());
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Instituicao $instituicao)
+    public function destroy(Instituicao $instituico)
     {
-        $instituicao->delete();
+        $instituico->delete();
 
         // O 'back()' é útil aqui para que o usuário permaneça na mesma página da paginação
         return back()->with('success', 'Instituição excluída com sucesso.');
