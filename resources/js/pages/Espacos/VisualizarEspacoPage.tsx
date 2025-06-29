@@ -1,4 +1,4 @@
-import AgendaEspaço from '@/components/agenda-espaco';
+import AgendaEspaço from '@/pages/Espacos/fragments/EspacoAgenda';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, Espaco, Reserva } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
@@ -21,7 +21,11 @@ export default function VisualizarEspaço() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head />
-            <AgendaEspaço isEditMode={reserva != undefined} reserva={reserva} espaco={espaco} />
+            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+                <div className="container mx-auto space-y-6 py-6">
+                    <AgendaEspaço isEditMode={reserva != undefined} reserva={reserva} espaco={espaco} />
+                </div>
+            </div>
         </AppLayout>
     );
 }

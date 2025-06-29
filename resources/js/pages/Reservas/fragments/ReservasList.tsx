@@ -10,7 +10,7 @@ import { Separator } from '@radix-ui/react-separator';
 import { CalendarDays, CheckCircle, Clock, Edit, Eye, FileText, User, XCircle, XSquare } from 'lucide-react';
 import type React from 'react';
 import { useState } from 'react';
-import { SituacaoIndicator } from './reservaCard';
+import { SituacaoIndicator } from './ReservaCard';
 
 // Tipos baseados no modelo de dados fornecido
 
@@ -143,7 +143,7 @@ export function ReservasList({ paginator, fallback, isGestor }: ReservasListProp
                                                             size="sm"
                                                             title="Editar"
                                                             onClick={() => {
-                                                                router.visit(`reservas/${reserva.id}/editar`);
+                                                                router.visit(`reservas/${reserva.id}/edit`);
                                                             }}
                                                         >
                                                             <Edit />

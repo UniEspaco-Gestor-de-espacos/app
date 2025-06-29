@@ -4,20 +4,20 @@ namespace App\Http\Controllers\Institucional;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEspacoRequest;
+use App\Http\Requests\UpdateEspacoRequest;
 use App\Models\Agenda;
 use App\Models\Andar;
 use App\Models\Espaco;
 use App\Models\Modulo;
-use App\Models\Setor;
 use App\Models\Unidade;
 use App\Models\User;
 use Exception;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class InstitucionalEspacoController extends Controller
 {
@@ -27,11 +27,56 @@ class InstitucionalEspacoController extends Controller
      */
     public function index()
     {
-        $espacos = Espaco::all();
         $user = Auth::user();
-        $modulos = Modulo::all();
-        $setores = Setor::all();
-        return Inertia::render('Espacos/EspacosPage', compact('espacos', 'user', 'modulos', 'setores'));
+        // Pega os parâmetros de filtro da URL (query string)
+        $filters = Request::only(['search', 'unidade', 'modulo', 'andar', 'capacidade']);
+
+        $espacos = Espaco::query()
+            // O join com 'andars' e 'modulos' é necessário para filtrar por eles
+            ->join('andars', 'espacos.andar_id', '=', 'andars.id')
+            ->join('modulos', 'andars.modulo_id', '=', 'modulos.id')
+            // Começa a aplicar os filtros
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('espacos.nome', 'like', '%' . $search . '%')
+                        ->orWhere('andars.nome', 'like', '%' . $search . '%')
+                        ->orWhere('modulos.nome', 'like', '%' . $search . '%');
+                });
+            })
+            ->when($filters['unidade'] ?? null, function ($query, $unidade) {
+                $query->where('modulos.unidade_id', $unidade);
+            })
+            ->when($filters['modulo'] ?? null, function ($query, $modulo) {
+                $query->where('andars.modulo_id', $modulo);
+            })
+            ->when($filters['andar'] ?? null, function ($query, $andar) {
+                $query->where('espacos.andar_id', $andar);
+            })
+            ->when($filters['capacidade'] ?? null, function ($query, $capacidade) {
+                if ($capacidade === 'pequeno') $query->where('espacos.capacidade_pessoas', '<=', 30);
+                if ($capacidade === 'medio') $query->whereBetween('espacos.capacidade_pessoas', [31, 100]);
+                if ($capacidade === 'grande') $query->where('espacos.capacidade_pessoas', '>', 100);
+            })
+            // Seleciona as colunas de espacos para evitar conflitos de 'id'
+            ->select('espacos.*')
+            ->with([
+                'andar.modulo.unidade', // Carrega a unidade do módulo do andar
+                'agendas' => function ($query) {
+                    $query->with('user'); // Carrega o gestor da agenda
+                }
+            ])
+            ->latest('espacos.created_at')
+            ->paginate(2)
+            // Adiciona a query string à paginação para que os filtros sejam mantidos ao mudar de página
+            ->withQueryString();
+            return Inertia::render('Espacos/Institucional/GerenciarEspacosPage', [
+            'espacos' => $espacos, // Agora é um objeto paginador
+            'andares' => Andar::all(), // Ainda precisa de todos para popular os selects
+            'modulos' => Modulo::all(),
+            'unidades' => Unidade::all(),
+            'filters' => $filters, // Envia os filtros de volta para a view
+            'user' => $user
+        ]);
     }
 
     /**
@@ -42,7 +87,7 @@ class InstitucionalEspacoController extends Controller
         $unidades = Unidade::all();
         $modulos = Modulo::all();
         $andares = Andar::all();
-        return Inertia::render('Espacos/Institucional/CadastrarEspacoPage', compact('unidades', 'modulos', 'andares'));
+        return Inertia::render('Espacos/Institucional/CadastroEspacoPage', compact('unidades', 'modulos', 'andares'));
     }
 
     /**
@@ -52,6 +97,7 @@ class InstitucionalEspacoController extends Controller
     {
         // A validação já foi feita pela Form Request!
         $validated = $request->validated();
+        dd($validated);
         try {
             // Envolve toda a lógica em uma transação. Ou tudo funciona, ou nada é salvo.
             $espaco = DB::transaction(function () use ($validated, $request) {
@@ -147,41 +193,80 @@ class InstitucionalEspacoController extends Controller
      */
     public function edit(Espaco $espaco)
     {
-        return Inertia::render('Espacos/Institucional/CadastrarEditarEspacoPage', compact('espaco'));
+        $espaco->load('andar.modulo.unidade', 'imagens', 'mainImageIndex');
+
+        return inertia('Espacos/Institucional/CadastroEspacoPage', [ // Usamos a MESMA página React!
+            // Dados necessários para os selects
+            'unidades' => Unidade::all(),
+            'modulos' => Modulo::all(),
+            'andares' => Andar::all(),
+            // A grande diferença: passamos o 'espaco' a ser editado.
+            // No modo de criação, este valor será null.
+            'espaco' => $espaco,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Espaco $espaco)
+
+    public function update(UpdateEspacoRequest $request, Espaco $espaco)
     {
-        $messages = [
-            'campus.required' => 'O campo campus é obrigatório.',
-            'modulo.required' => 'O campo módulo é obrigatório.',
-            'andar.required' => 'O campo andar é obrigatório.',
-            'nome.required' => 'O nome é obrigatório.',
-            'capacidadePessoas.required' => 'A capacidade de pessoas é obrigatória.',
-            'acessibilidade.required' => 'O campo acessibilidade é obrigatório.',
-            'descricao.required' => 'A descrição é obrigatória.',
-        ];
+        $validated = $request->validated();
+        dd($validated);
         try {
-            $espaco->update($request->validate([
-                'campus' => 'required',
-                'modulo' => 'required',
-                'andar' => 'required',
-                'nome' => 'required',
-                'capacidadePessoas' => 'required',
-                'acessibilidade' => 'required',
-                'descricao' => 'required'
-            ], $messages));
+            DB::transaction(function () use ($validated, $request, $espaco) {
+                // 1. Pega a lista de imagens atuais do espaço
+                $currentImagePaths = $espaco->imagens ?? [];
+
+                // 2. Remove imagens marcadas para exclusão
+                if (!empty($validated['images_to_delete'])) {
+                    // Deleta os arquivos do storage
+                    Storage::disk('public')->delete($validated['images_to_delete']);
+
+                    // Remove os paths da lista atual
+                    $currentImagePaths = array_diff($currentImagePaths, $validated['images_to_delete']);
+                }
+
+                // 3. Adiciona novas imagens
+                $newImagePaths = [];
+                if ($request->hasFile('imagens')) {
+                    foreach ($request->file('imagens') as $file) {
+                        $path = $file->store('espacos_images', 'public');
+                        $newImagePaths[] = $path;
+                    }
+                }
+
+                // 4. Junta as listas de imagens (as antigas que sobraram + as novas)
+                // Usar array_values para reindexar o array
+                $allImagePaths = array_values(array_merge($currentImagePaths, $newImagePaths));
+
+                // 5. Determina a nova imagem principal
+                $mainImagePath = null;
+                // O frontend envia o índice baseado na lista combinada (antigas + novas)
+                if (isset($validated['main_image_index']) && isset($allImagePaths[$validated['main_image_index']])) {
+                    $mainImagePath = $allImagePaths[$validated['main_image_index']];
+                } elseif (!empty($allImagePaths)) {
+                    // Fallback: se o índice não for válido ou a imagem principal foi removida,
+                    // usa a primeira imagem da lista como principal.
+                    $mainImagePath = $allImagePaths[0];
+                }
+
+                // 6. Atualiza o registro do Espaço
+                $espaco->update([
+                    'nome' => $validated['nome'],
+                    'capacidade_pessoas' => $validated['capacidade_pessoas'],
+                    'descricao' => $validated['descricao'],
+                    'andar_id' => $validated['andar_id'],
+                    'imagens' => $allImagePaths, // Salva o array de paths atualizado
+                    'main_image_index' => $mainImagePath, // Salva o path da imagem principal
+                ]);
+            });
+
             return redirect()->route('espacos.index')->with('success', 'Espaço atualizado com sucesso!');
-        } catch (QueryException $e) {
-            // Aqui você captura erros específicos do banco de dados
-            // Exemplo: erro de chave estrangeira, erro de duplicidade, etc.
-            return redirect()->back()->with('error', 'Erro ao salvar no banco de dados: ' . $e->getMessage());
-        } catch (Exception $e) {
-            // Captura erros gerais
-            return redirect()->back()->with('warning', 'Ocorreu um erro inesperado: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            Log::error("Erro ao atualizar espaço: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocorreu um erro inesperado ao atualizar o espaço.')->withInput();
         }
     }
 

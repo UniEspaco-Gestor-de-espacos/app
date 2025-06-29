@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
-import { Andar, Modulo, Unidade } from '@/types';
+import { Andar, Espaco, Modulo, Unidade } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Loader2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
@@ -20,7 +20,7 @@ const breadcrumbs = [
     { title: 'Cadastrar', href: '/espacos/criar' },
 ];
 
-type FormValues = {
+export interface FormCadastroValues {
     nome: string;
     capacidade_pessoas: number | undefined;
     descricao: string;
@@ -29,68 +29,100 @@ type FormValues = {
     unidade_id: number | undefined;
     modulo_id: number | undefined;
     andar_id: number | undefined;
+    _method?: string;
+    images_to_delete?: string[];
+    [key: string]: string | number | File[] | string[] | undefined;
+}
+
+type CadastroEspacoPageProps = {
+    unidades: Unidade[];
+    modulos: Modulo[];
+    andares: Andar[];
+    espaco?: Espaco & {
+        andar: Andar & { modulo: Modulo & { unidade: Unidade } };
+    };
 };
 
 export default function CadastroEspacoPage() {
-    const { unidades, modulos, andares } = usePage<{ unidades: Unidade[]; modulos: Modulo[]; andares: Andar[] }>().props;
-
-    const [unidadeSelecionada, setUnidadeSelecionada] = useState<number | undefined>();
-    const [moduloSelecionado, setModuloSelecionado] = useState<number | undefined>();
-    const [andarSelecionado, setAndarSelecionado] = useState<number | undefined>();
-    const [imagesWithPreviews, setImagesWithPreviews] = useState<ImageWithPreview[]>([]);
+    const { unidades, modulos, andares, espaco } = usePage<CadastroEspacoPageProps>().props;
+    const isEditMode = !!espaco;
+    const [unidadeSelecionada, setUnidadeSelecionada] = useState<number | undefined>(espaco?.andar?.modulo?.unidade_id);
+    const [moduloSelecionado, setModuloSelecionado] = useState<number | undefined>(espaco?.andar?.modulo?.id);
+    const [andarSelecionado, setAndarSelecionado] = useState<number | undefined>(espaco?.andar?.id);
+    const [imagesWithPreviews, setImagesWithPreviews] = useState<ImageWithPreview[]>(() => {
+        if (!isEditMode || !espaco.imagens) return [];
+        // No modo de edição, inicializa com as imagens existentes
+        return espaco.imagens.map((imgPath) => ({
+            file: new File([], imgPath, { type: 'image/jpeg' }), // Create a dummy File object for existing images
+            preview: `/storage/${imgPath}`,
+            path: imgPath, // Armazena o path relativo para enviar na exclusão
+        }));
+    });
     const [isAddAndarDialogOpen, setIsAddAndarDialogOpen] = useState(false);
 
-    const { data, setData, post, processing, errors, reset } = useForm<FormValues>({
-        nome: '',
-        capacidade_pessoas: undefined,
-        descricao: '',
+    const { data, setData, post, processing, errors, reset } = useForm<FormCadastroValues>({
+        _method: isEditMode ? 'PUT' : 'POST', // Essencial para o Laravel entender a requisição de update
+        nome: espaco?.nome ?? '',
+        capacidade_pessoas: espaco?.capacidade_pessoas ?? undefined,
+        descricao: espaco?.descricao ?? '',
         imagens: [],
-        main_image_index: undefined,
-        unidade_id: undefined,
-        modulo_id: undefined,
-        andar_id: undefined,
+        main_image_index: espaco ? espaco.imagens.findIndex((img) => img === espaco.main_image_index) : 0,
+        unidade_id: espaco?.andar?.modulo?.unidade.id ?? undefined,
+        modulo_id: espaco?.andar?.modulo?.id ?? undefined,
+        andar_id: espaco?.andar?.id ?? undefined,
     });
 
     useEffect(() => {
-        setData('unidade_id', unidadeSelecionada);
+        setData((prevData) => ({ ...prevData, unidade_id: unidadeSelecionada }));
         setModuloSelecionado(undefined);
-        setData('modulo_id', undefined);
+        setData((prevData) => ({ ...prevData, modulo_id: undefined }));
         setAndarSelecionado(undefined);
-        setData('andar_id', undefined);
+        setData((prevData) => ({ ...prevData, andar_id: undefined }));
     }, [unidadeSelecionada]);
 
+    const handleSetMainImage = (index: number) => {
+        setData((prevData) => ({ ...prevData, main_image_index: index }));
+    };
     const handleModuloChange = (value: number) => {
         setModuloSelecionado(value);
-        setData('modulo_id', value);
+        setData((prevData) => ({ ...prevData, modulo_id: value }));
         setAndarSelecionado(undefined);
-        setData('andar_id', undefined);
+        setData((prevData) => ({ ...prevData, andar_id: undefined }));
     };
 
     const handleAndarChange = (value: string) => {
         const andarId = parseInt(value, 10);
         setAndarSelecionado(andarId);
-        setData('andar_id', andarId);
+        setData((prevData) => ({ ...prevData, andar_id: andarId }));
     };
+    const handleImagesToDelete = (path: string) =>
+        setData((prevData) => ({ ...prevData, images_to_delete: [...(data.images_to_delete ?? []), path] }));
 
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('institucional.espacos.store'), {
+
+        const url = isEditMode ? route('institucional.espacos.update', { espaco: espaco!.id }) : route('institucional.espacos.store');
+        console.log(url, data);
+        post(url, {
+            forceFormData: true, // Garante que a requisição seja multipart/form-data
             onSuccess: () => {
-                imagesWithPreviews.forEach((img) => URL.revokeObjectURL(img.preview));
-                reset();
-                setUnidadeSelecionada(undefined);
-                setImagesWithPreviews([]);
-                toast.success('Espaço cadastrado com sucesso!');
+                toast.success(`Espaço ${isEditMode ? 'atualizado' : 'cadastrado'} com sucesso!`);
+                if (!isEditMode) {
+                    reset();
+                    setImagesWithPreviews([]);
+                }
             },
             onError: (errs) => {
+                setErros(errs);
                 toast.error(Object.values(errs)[0] || 'Ocorreu um erro de validação.');
             },
         });
     };
-
+    const pageTitle = isEditMode ? 'Editar Espaço' : 'Cadastro de Espaço';
+    const buttonLabel = isEditMode ? 'Salvar Alterações' : 'Cadastrar Espaço';
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Cadastrar Espaço" />
+            <Head title={pageTitle} />
             <div className="container mx-auto py-10">
                 <Dialog open={isAddAndarDialogOpen} onOpenChange={setIsAddAndarDialogOpen}>
                     <Card className="mx-auto max-w-3xl">
@@ -118,20 +150,24 @@ export default function CadastroEspacoPage() {
                                     imagesWithPreviews={imagesWithPreviews}
                                     setImagesWithPreviews={setImagesWithPreviews}
                                     mainImageIndex={data.main_image_index}
+                                    setMainImageIndex={handleSetMainImage}
                                     setData={setData}
+                                    setImagesToDelete={handleImagesToDelete}
                                     processing={processing}
                                     errors={errors}
                                 />
                                 <CardFooter className="flex justify-end p-0">
                                     <Button type="submit" disabled={processing}>
                                         {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                        {processing ? 'Cadastrando...' : 'Cadastrar Espaço'}
+                                        {buttonLabel}
                                     </Button>
                                 </CardFooter>
                             </form>
                         </CardContent>
                     </Card>
-                    {moduloSelecionado && <AddAndarDialog moduloSelecionado={moduloSelecionado} setIsDialogOpen={setIsAddAndarDialogOpen} />}
+                    {moduloSelecionado && (
+                        <AddAndarDialog erros={errors} moduloSelecionado={moduloSelecionado} setIsDialogOpen={setIsAddAndarDialogOpen} />
+                    )}
                 </Dialog>
             </div>
         </AppLayout>

@@ -1,11 +1,9 @@
-// fragments/LocationSelector.tsx
-import React from 'react';
-import { Select as SelectUI, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { DialogTrigger } from '@/components/ui/dialog';
+import { SelectContent, SelectItem, SelectTrigger, Select as SelectUI, SelectValue } from '@/components/ui/select';
+import { Andar, Modulo, Unidade } from '@/types';
 import { Plus } from 'lucide-react';
-import { Unidade, Modulo, Andar } from '@/types';
 
 interface LocationSelectorProps {
     unidades: Unidade[];
@@ -45,16 +43,22 @@ export function LocationSelector({
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {/* Seleção de Unidade */}
                 <div className="space-y-2">
-                    <label htmlFor="unidade_id" className="text-sm font-medium">Unidade</label>
+                    <label htmlFor="unidade_id" className="text-sm font-medium">
+                        Unidade
+                    </label>
                     <SelectUI
                         value={unidadeSelecionada?.toString()}
                         onValueChange={(value) => setUnidadeSelecionada(parseInt(value))}
                         disabled={processing}
                     >
-                        <SelectTrigger><SelectValue placeholder="Selecione uma unidade" /></SelectTrigger>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Selecione uma unidade" />
+                        </SelectTrigger>
                         <SelectContent>
                             {unidades.map((unidade) => (
-                                <SelectItem key={unidade.id.toString()} value={unidade.id.toString()}>{unidade.nome}</SelectItem>
+                                <SelectItem key={unidade.id.toString()} value={unidade.id.toString()}>
+                                    {unidade.nome}
+                                </SelectItem>
                             ))}
                         </SelectContent>
                     </SelectUI>
@@ -63,18 +67,24 @@ export function LocationSelector({
 
                 {/* Seleção de Módulo */}
                 <div className="space-y-2">
-                    <label htmlFor="module_id" className="text-sm font-medium">Módulo</label>
+                    <label htmlFor="module_id" className="text-sm font-medium">
+                        Módulo
+                    </label>
                     <SelectUI
                         value={moduloSelecionado?.toString()}
                         onValueChange={(value) => handleModuloChange(parseInt(value))}
                         disabled={!unidadeSelecionada || processing}
                     >
-                        <SelectTrigger><SelectValue placeholder={unidadeSelecionada ? 'Selecione um módulo' : 'Selecione uma unidade primeiro'} /></SelectTrigger>
+                        <SelectTrigger>
+                            <SelectValue placeholder={unidadeSelecionada ? 'Selecione um módulo' : 'Selecione uma unidade primeiro'} />
+                        </SelectTrigger>
                         <SelectContent>
                             {modulos
                                 .filter((modulo) => modulo.unidade_id == unidadeSelecionada)
                                 .map((modulo) => (
-                                    <SelectItem key={modulo.id.toString()} value={modulo.id.toString()}>{modulo.nome}</SelectItem>
+                                    <SelectItem key={modulo.id.toString()} value={modulo.id.toString()}>
+                                        {modulo.nome}
+                                    </SelectItem>
                                 ))}
                         </SelectContent>
                     </SelectUI>
@@ -85,19 +95,21 @@ export function LocationSelector({
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {/* Seleção de Andar */}
                 <div className="space-y-2">
-                    <label htmlFor="andar_id" className="text-sm font-medium">Andar</label>
+                    <label htmlFor="andar_id" className="text-sm font-medium">
+                        Andar
+                    </label>
                     <div className="flex gap-2">
-                        <SelectUI
-                            value={andarSelecionado?.toString()}
-                            onValueChange={handleAndarChange}
-                            disabled={!moduloSelecionado || processing}
-                        >
-                            <SelectTrigger><SelectValue placeholder={moduloSelecionado ? 'Selecione um andar' : 'Selecione um módulo primeiro'} /></SelectTrigger>
+                        <SelectUI value={andarSelecionado?.toString()} onValueChange={handleAndarChange} disabled={!moduloSelecionado || processing}>
+                            <SelectTrigger>
+                                <SelectValue placeholder={moduloSelecionado ? 'Selecione um andar' : 'Selecione um módulo primeiro'} />
+                            </SelectTrigger>
                             <SelectContent>
                                 {andares
-                                    .filter((andar) => andar.modulo_id == moduloSelecionado)
+                                    .filter((andar) => andar.modulo?.id == moduloSelecionado)
                                     .map((andar) => (
-                                        <SelectItem key={andar.id.toString()} value={andar.id.toString()}>{andar.nome}</SelectItem>
+                                        <SelectItem key={andar.id.toString()} value={andar.id.toString()}>
+                                            {andar.nome}
+                                        </SelectItem>
                                     ))}
                             </SelectContent>
                         </SelectUI>
@@ -113,10 +125,12 @@ export function LocationSelector({
                 {/* Tipos de Acesso do Andar */}
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Tipos de Acesso do Andar</label>
-                    <div className="flex min-h-[40px] flex-wrap items-center gap-2 rounded-md border border-input bg-slate-50 px-3 py-2">
+                    <div className="border-input flex min-h-[40px] flex-wrap items-center gap-2 rounded-md border bg-slate-50 px-3 py-2">
                         {tiposDeAcessoDoAndar.length > 0 ? (
                             tiposDeAcessoDoAndar.map((tipo) => (
-                                <Badge key={tipo} variant="secondary">{tipo}</Badge>
+                                <Badge key={tipo} variant="secondary">
+                                    {tipo}
+                                </Badge>
                             ))
                         ) : (
                             <p className="text-muted-foreground text-sm">Selecione um andar para ver os acessos</p>

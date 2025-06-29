@@ -126,7 +126,7 @@ export interface Espaco {
     capacidade_pessoas: number;
     descricao: string;
     imagens: string[];
-    main_image_index: number;
+    main_image_index: string | null;
     andar_id: number;
     andar?: Andar; // Relação aninhada
     agendas?: Agenda[];
@@ -282,4 +282,27 @@ interface Paginator<T> {
     last_page_url: string;
     next_page_url: string | null;
     prev_page_url: string | null;
+}
+
+export interface ImageWithPreview {
+    preview: string; // URL para visualização (blob: ou /storage/...)
+    file?: File;      // Objeto File para novas imagens
+    path?: string;    // Path relativo para imagens existentes
+}
+
+export type AgendaGestoresPorTurnoType = Record<string, { nome: string; email: string; departamento: string; agenda_id: number }>;
+
+export type AgendaDiasSemanaType = {
+    data: Date;
+    nome: string;
+    abreviado: string;
+    diaMes: string;
+    valor: string;
+    ehHoje: boolean;
+}
+
+export type AgendaSlotsPorTurnoType = {
+    manha: Record<string, SlotCalendario[]>;
+    tarde: Record<string, SlotCalendario[]>;
+    noite: Record<string, SlotCalendario[]>;
 }

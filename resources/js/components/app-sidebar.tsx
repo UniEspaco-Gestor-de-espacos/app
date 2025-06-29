@@ -24,7 +24,7 @@ const commonNav: MenuItem[] = [
     { title: 'Painel Inicial', href: '/dashboard', icon: LayoutGrid },
     { title: 'Consultar Espaços', href: '/espacos', icon: Calendar },
     { title: 'Notificações', href: '/notificacoes', icon: Bell },
-    { title: 'Minhas Reservas', href: '/minhas-reservas', icon: BookOpen },
+    { title: 'Minhas Reservas', href: '/reservas', icon: BookOpen },
     { title: 'Espaços Favoritos', href: '/favoritos', icon: Star },
 ];
 
@@ -34,7 +34,7 @@ const gestorExtras: MenuItem[] = [
 ];
 
 const institucionalExtras: MenuItem[] = [
-    { title: 'Cadastrar Espaços', href: '/institucional/espacos/create', icon: Building },
+    { title: 'Gerir Espaços', href: '/institucional/espacos', icon: Building },
     { title: 'Gerenciar Usuários', href: '/institucional/usuarios', icon: Users }, // Ícone 'Users' é mais adequado para gerenciamento de usuários
 ];
 
