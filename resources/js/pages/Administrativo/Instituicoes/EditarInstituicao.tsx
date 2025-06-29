@@ -1,18 +1,27 @@
 // Arquivo: resources/js/Pages/Admin/Instituicoes/Edit.jsx
 import AppLayout from '@/layouts/app-layout';
-import { Head, useForm } from '@inertiajs/react';
+import { Instituicao } from '@/types';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import InstituicaoForm from './fragments/InstituicaoForm';
 
-export default function EditarInstituicao({ instituicao }) {
-    const { data, setData, put, processing, errors } = useForm({
-        nome: instituicao.nome || '',
-        sigla: instituicao.sigla || '',
-        endereço: instituicao.endereço || '',
+export interface EditarInstituicaoForm {
+    nome: string;
+    sigla: string;
+    endereco: string;
+    [key: string]: string;
+}
+
+export default function EditarInstituicao() {
+    const { instituicao } = usePage<{ instituicao: Instituicao }>().props;
+    const { data, setData, put, processing, errors } = useForm<EditarInstituicaoForm>({
+        nome: instituicao.nome,
+        sigla: instituicao.sigla,
+        endereco: instituicao.endereco,
     });
 
-    const submit = (e) => {
+    const submit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        put(route('admin.instituicoes.update', instituicao.id));
+        put(route('institucional.instituicoes.update', { instituico: instituicao.id }));
     };
 
     return (

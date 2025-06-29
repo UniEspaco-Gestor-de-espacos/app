@@ -1,3 +1,4 @@
+import GenericHeader from '@/components/generic-header';
 import AppLayout from '@/layouts/app-layout';
 import { useDebounce } from '@/lib/utils';
 import { Paginator, Reserva, User, type BreadcrumbItem } from '@/types';
@@ -5,7 +6,6 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { Suspense, useEffect, useState } from 'react';
 import { ReservasEmpty } from '../fragments/ReservasEmpty';
 import { ReservasFilters } from '../fragments/ReservasFilters';
-import { ReservasHeader } from '../fragments/ReservasHeader';
 import { ReservasList } from '../fragments/ReservasList';
 import { ReservasLoading } from '../fragments/reservasLoading';
 
@@ -49,7 +49,7 @@ export default function MinhasReservas() {
             <Head title="Home" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
-                    <ReservasHeader />
+                    <GenericHeader titulo="Gerenciar reservas" descricao="Avalie as solicitações de reserva dos espaços que voce gere" />
                     <ReservasFilters
                         searchTerm={searchTerm}
                         onSearchTermChange={setSearchTerm}

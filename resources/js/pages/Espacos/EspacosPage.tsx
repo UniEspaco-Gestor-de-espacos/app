@@ -1,9 +1,9 @@
+import GenericHeader from '@/components/generic-header';
 import AppLayout from '@/layouts/app-layout';
 import { Andar, Espaco, Modulo, Unidade, User } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import EspacoCard from './fragments/EspacoCard';
 import EspacoFiltroBusca from './fragments/EspacoFiltroBusca';
-import EspacoHeader from './fragments/EspacoHeader';
 const breadcrumbs = [
     {
         title: 'Consultar Espaços',
@@ -50,7 +50,7 @@ export default function EspacosPage() {
             <Head title="Espacos" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
-                    <EspacoHeader
+                    <GenericHeader
                         titulo="Consultar espaços"
                         descricao="Gerencie todos os espaços disponíveis, cadastre novos,exclua ou edite os existentes"
                     />

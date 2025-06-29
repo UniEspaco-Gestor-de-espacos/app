@@ -86,14 +86,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Espaços
         Route::resource('espacos', InstitucionalEspacoController::class);
-
-        /**
-         * ->except(['store', 'update']);
-        Route::patch('espacos/{espaco}', [InstitucionalEspacoController::class, 'update'])
-            ->middleware(EditarEspacoMiddleware::class)->name('espacos.update'); // TODO: Criar regras de editar espaço
-        Route::post('espacos', [InstitucionalEspacoController::class, 'store'])
-            ->middleware(CadastroEspacoMiddleware::class)->name('espacos.store');
-         */
     });
 });
 

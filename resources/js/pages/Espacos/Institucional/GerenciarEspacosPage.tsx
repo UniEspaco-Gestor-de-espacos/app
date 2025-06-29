@@ -1,4 +1,5 @@
 import DeleteEspaco from '@/components/delete-espaco';
+import GenericHeader from '@/components/generic-header';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { Andar, Espaco, Modulo, Unidade, User } from '@/types'; // Importe seus tipos
@@ -7,7 +8,6 @@ import { PlusCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import EspacoCard from '../fragments/EspacoCard';
 import EspacoFiltroBusca from '../fragments/EspacoFiltroBusca';
-import EspacoHeader from '../fragments/EspacoHeader';
 
 const breadcrumbs = [
     { title: 'Início', href: '/' },
@@ -60,11 +60,14 @@ export default function GerenciarEspacosPage() {
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
                     {/* Cabeçalho da Página */}
-                    <EspacoHeader
-                        isGerenciarEspacos
+                    <GenericHeader
                         titulo="Gerenciar espaços"
                         descricao="Gerencie todos os espaços disponíveis, cadastre novos,exclua ou edite os existentes"
-                    />{' '}
+                        ButtonIcon={PlusCircle}
+                        buttonText="Cadastrar Espaço"
+                        buttonLink={route('institucional.espacos.create')}
+                        canSeeButton={permission_type_id === 1} // Exibe o botão apenas para administradores
+                    />
                     {/* Filtros e Busca */}
                     <EspacoFiltroBusca
                         route={route('institucional.espacos.index')}

@@ -14,7 +14,7 @@ class Instituicao extends Model
     protected $fillable = [
         'nome',
         'sigla',
-        'endereço'
+        'endereco'
     ];
 
     public function unidades()

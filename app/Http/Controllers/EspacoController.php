@@ -57,7 +57,7 @@ class EspacoController extends Controller
                 }
             ])
             ->latest('espacos.created_at')
-            ->paginate(2)
+            ->paginate(6)
             // Adiciona a query string à paginação para que os filtros sejam mantidos ao mudar de página
             ->withQueryString();
 

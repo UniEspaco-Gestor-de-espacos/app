@@ -1,11 +1,12 @@
+import GenericHeader from '@/components/generic-header';
 import AppLayout from '@/layouts/app-layout';
 import { useDebounce } from '@/lib/utils';
 import { Paginator, Reserva, User, type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
+import { PlusCircle } from 'lucide-react';
 import { Suspense, useEffect, useState } from 'react';
 import { ReservasEmpty } from './fragments/ReservasEmpty';
 import { ReservasFilters } from './fragments/ReservasFilters';
-import { ReservasHeader } from './fragments/ReservasHeader';
 import { ReservasList } from './fragments/ReservasList';
 import { ReservasLoading } from './fragments/reservasLoading';
 
@@ -45,7 +46,14 @@ export default function MinhasReservas() {
             <Head title="Minhas Reservas" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
-                    <ReservasHeader />
+                    <GenericHeader
+                        titulo="Minhas Reservas"
+                        descricao="Gerencie suas solicitações de reservas de espaços acadêmicos"
+                        canSeeButton={true}
+                        buttonText="Nova Reserva"
+                        buttonLink={route('espacos.index')}
+                        ButtonIcon={PlusCircle} // Você pode definir um ícone aqui se necessário
+                    />
                     <ReservasFilters
                         searchTerm={searchTerm}
                         onSearchTermChange={setSearchTerm}
