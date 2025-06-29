@@ -4,18 +4,16 @@ import { PlusCircle } from 'lucide-react';
 
 type HeaderEspacoProps = {
     isGerenciarEspacos?: boolean;
+    titulo: string;
+    descricao: string;
 };
 
-export default function EspacoHeader({ isGerenciarEspacos }: HeaderEspacoProps) {
+export default function EspacoHeader({ isGerenciarEspacos, titulo, descricao }: HeaderEspacoProps) {
     return (
         <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h1 className="text-2xl font-bold tracking-tight">{isGerenciarEspacos ? 'Gerenciar espaços' : 'Consultar espaços'}</h1>
-                <p className="text-muted-foreground">
-                    {isGerenciarEspacos
-                        ? 'Gerencie todos os espaços disponíveis, cadastre novos,exclua ou edite os existentes'
-                        : 'Todos os espaços disponíveis para reserva estão listados aqui. Você pode solicitar reservas para os espaços que desejar.'}
-                </p>
+                <h1 className="text-2xl font-bold tracking-tight">{titulo}</h1>
+                <p className="text-muted-foreground">{descricao}</p>
             </div>
             {isGerenciarEspacos && (
                 <Link href={route('institucional.espacos.create')}>

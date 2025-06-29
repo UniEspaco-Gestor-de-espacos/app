@@ -1,4 +1,3 @@
-// fragments/AddAndarDialog.tsx
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -9,7 +8,6 @@ import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-// Componente interno para seleção múltipla, pode ser movido para a pasta de componentes da UI se for reutilizado.
 function MultiSelect({ value, onValueChange, processing }: { value: string[]; onValueChange: (values: string[]) => void; processing: boolean }) {
     const tiposDeAcesso = ['terreo', 'escada', 'elevador', 'rampa'];
 
@@ -79,10 +77,9 @@ function MultiSelect({ value, onValueChange, processing }: { value: string[]; on
 interface AddAndarDialogProps {
     moduloSelecionado: number;
     setIsDialogOpen: (isOpen: boolean) => void;
-    errors?: Record<string, string>;
 }
 
-export function AddAndarDialog({ moduloSelecionado, setIsDialogOpen, errors }: AddAndarDialogProps) {
+export function AddAndarDialog({ moduloSelecionado, setIsDialogOpen }: AddAndarDialogProps) {
     const andaresPredefinidos = ['Térreo', ...Array.from({ length: 10 }, (_, i) => `${i + 1}º Andar`)];
     const [nomeNovoAndar, setNomeNovoAndar] = useState('');
     const [tipoAcessoNovoAndar, setTipoAcessoNovoAndar] = useState<string[]>([]);

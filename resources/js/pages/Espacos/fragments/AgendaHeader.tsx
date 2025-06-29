@@ -1,13 +1,12 @@
 import { Badge } from '@/components/ui/badge';
-import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Espaco, GestoresPorTurnoType } from '@/types';
-import { MapPin, User, Users } from 'lucide-react';
+import { AgendaGestoresPorTurnoType, Espaco } from '@/types';
+import { Calendar, MapPin, User, Users } from 'lucide-react';
 
 type AgendaHeaderProps = {
     espaco: Espaco;
-    gestoresPorTurno: GestoresPorTurnoType;
+    gestoresPorTurno: AgendaGestoresPorTurnoType;
 };
 
 export default function AgendaHeader({ espaco, gestoresPorTurno }: AgendaHeaderProps) {

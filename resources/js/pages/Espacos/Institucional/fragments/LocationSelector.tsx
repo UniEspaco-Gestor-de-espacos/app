@@ -4,6 +4,7 @@ import { DialogTrigger } from '@/components/ui/dialog';
 import { SelectContent, SelectItem, SelectTrigger, Select as SelectUI, SelectValue } from '@/components/ui/select';
 import { Andar, Modulo, Unidade } from '@/types';
 import { Plus } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface LocationSelectorProps {
     unidades: Unidade[];
@@ -12,9 +13,9 @@ interface LocationSelectorProps {
     unidadeSelecionada: number | undefined;
     setUnidadeSelecionada: (id: number | undefined) => void;
     moduloSelecionado: number | undefined;
-    handleModuloChange: (id: number) => void;
+    handleModuloChange: (id: number | undefined) => void;
     andarSelecionado: number | undefined;
-    handleAndarChange: (id: string) => void;
+    handleAndarChange: (id: string | undefined) => void;
     processing: boolean;
     errors: {
         unidade_id?: string;
@@ -37,7 +38,7 @@ export function LocationSelector({
     errors,
 }: LocationSelectorProps) {
     const tiposDeAcessoDoAndar = andares.find((andar) => andar.id == andarSelecionado)?.tipo_acesso || [];
-
+    
     return (
         <>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

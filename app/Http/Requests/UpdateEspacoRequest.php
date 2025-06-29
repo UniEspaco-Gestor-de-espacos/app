@@ -27,18 +27,17 @@ class UpdateEspacoRequest extends FormRequest
     {
         // Pega o ID do espaço da rota (ex: /espacos/{espaco})
         $espacoId = $this->route('espaco')->id;
-
         return [
             'nome' => [
                 'required',
                 'string',
                 'max:255',
                 // Garante que o nome é único, mas ignora o registro do espaço atual.
-                Rule::unique('espacos')->ignore($espacoId),
+                Rule::unique('espacos', 'nome')->ignore($espacoId),
             ],
             'capacidade_pessoas' => ['required', 'integer', 'min:1'],
             'descricao' => ['nullable', 'string'],
-            'andar_id' => ['required', 'exists:andares,id'],
+            'andar_id' => ['required', 'exists:andars,id'],
 
             // Novas imagens a serem adicionadas. É 'nullable' pois o usuário pode não adicionar novas.
             'imagens' => ['nullable', 'array'],

@@ -69,7 +69,7 @@ class InstitucionalEspacoController extends Controller
             ->paginate(2)
             // Adiciona a query string à paginação para que os filtros sejam mantidos ao mudar de página
             ->withQueryString();
-            return Inertia::render('Espacos/Institucional/GerenciarEspacosPage', [
+        return Inertia::render('Espacos/Institucional/GerenciarEspacosPage', [
             'espacos' => $espacos, // Agora é um objeto paginador
             'andares' => Andar::all(), // Ainda precisa de todos para popular os selects
             'modulos' => Modulo::all(),
@@ -85,8 +85,8 @@ class InstitucionalEspacoController extends Controller
     public function create()
     {
         $unidades = Unidade::all();
-        $modulos = Modulo::all();
-        $andares = Andar::all();
+        $modulos = Modulo::with('unidade')->get();
+        $andares = Andar::with('modulo.unidade')->get();
         return Inertia::render('Espacos/Institucional/CadastroEspacoPage', compact('unidades', 'modulos', 'andares'));
     }
 
@@ -97,10 +97,9 @@ class InstitucionalEspacoController extends Controller
     {
         // A validação já foi feita pela Form Request!
         $validated = $request->validated();
-        dd($validated);
         try {
             // Envolve toda a lógica em uma transação. Ou tudo funciona, ou nada é salvo.
-            $espaco = DB::transaction(function () use ($validated, $request) {
+            DB::transaction(function () use ($validated, $request) {
 
                 $storedImagePaths = [];
                 $mainImagePath = null;
@@ -193,17 +192,11 @@ class InstitucionalEspacoController extends Controller
      */
     public function edit(Espaco $espaco)
     {
-        $espaco->load('andar.modulo.unidade', 'imagens', 'mainImageIndex');
-
-        return inertia('Espacos/Institucional/CadastroEspacoPage', [ // Usamos a MESMA página React!
-            // Dados necessários para os selects
-            'unidades' => Unidade::all(),
-            'modulos' => Modulo::all(),
-            'andares' => Andar::all(),
-            // A grande diferença: passamos o 'espaco' a ser editado.
-            // No modo de criação, este valor será null.
-            'espaco' => $espaco,
-        ]);
+        $espaco->load('andar.modulo.unidade');
+        $unidades = Unidade::all();
+        $modulos = Modulo::with('unidade')->get();
+        $andares = Andar::with('modulo.unidade')->get();
+        return inertia('Espacos/Institucional/CadastroEspacoPage', compact('espaco', 'unidades', 'modulos', 'andares'));
     }
 
     /**
@@ -213,7 +206,6 @@ class InstitucionalEspacoController extends Controller
     public function update(UpdateEspacoRequest $request, Espaco $espaco)
     {
         $validated = $request->validated();
-        dd($validated);
         try {
             DB::transaction(function () use ($validated, $request, $espaco) {
                 // 1. Pega a lista de imagens atuais do espaço

@@ -50,7 +50,11 @@ export default function EspacosPage() {
             <Head title="Espacos" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
-                    <EspacoHeader />
+                    <EspacoHeader
+                        titulo="Consultar espaços"
+                        descricao="Gerencie todos os espaços disponíveis, cadastre novos,exclua ou edite os existentes"
+                    />
+
                     {/* Todo o conteúdo a partir dos filtros até o final em uma única div */}
                     <div>
                         <EspacoFiltroBusca route={route('espacos.index')} unidades={unidades} modulos={modulos} andares={andares} filters={filters} />

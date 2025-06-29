@@ -10,7 +10,6 @@ type CardEspacoProps = {
     userType: number;
     isGerenciarEspacos?: boolean;
     handleSolicitarReserva?: (espacoId: string) => void;
-    handleDetalhesEspaco?: (espacoId: string) => void;
     handleEditarEspaco?: (espacoId: string) => void;
     handleExcluirEspaco?: (espacoId: string) => void;
 };
@@ -20,7 +19,6 @@ export default function EspacoCard({
     userType,
     isGerenciarEspacos,
     handleSolicitarReserva,
-    handleDetalhesEspaco,
     handleEditarEspaco,
     handleExcluirEspaco,
 }: CardEspacoProps) {
@@ -71,7 +69,7 @@ export default function EspacoCard({
             <CardFooter className="flex flex-wrap gap-2 pt-0">
                 {isGerenciarEspacos && userType === 1 ? (
                     <>
-                        <Button variant="outline" size="sm" onClick={() => handleDetalhesEspaco?.(espaco.id.toString())}>
+                        <Button variant="outline" size="sm" onClick={() => {}}>
                             <Edit className="mr-2 h-4 w-4" />
                             Ver Detalhes
                         </Button>

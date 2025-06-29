@@ -73,7 +73,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('usuarios/{usuario}/edit', [InstitucionalUsuarioController::class, 'edit'])->name('usuarios.edit');
 
         // Instituições
-        Route::resource('instituicoes', InstitucionalInstituicaoController::class);
+        Route::resource('instituicoes', InstitucionalInstituicaoController::class)->except(['show']);
 
         // Unidades
         Route::resource('unidades', InstitucionalUnidadeController::class);
