@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { router } from '@inertiajs/react';
 import { PlusCircle } from 'lucide-react';
 
 type ReservaHeaderProps = {
@@ -16,7 +17,7 @@ export function ReservasHeader({ isGestor = false }: ReservaHeaderProps) {
                         : 'Gerencie suas solicitações de reservas de espaços acadêmicos'}
                 </p>
             </div>
-            <Button className="w-full sm:w-auto">
+            <Button onClick={() => router.visit(route('espacos.index'))} className="w-full sm:w-auto">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Nova Reserva
             </Button>

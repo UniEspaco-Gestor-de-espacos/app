@@ -3,20 +3,16 @@ import { useDebounce } from '@/lib/utils';
 import { Paginator, Reserva, User, type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Suspense, useEffect, useState } from 'react';
-import { ReservasEmpty } from '../fragments/reservasEmpty';
-import { ReservasFilters } from '../fragments/reservasFilters';
-import { ReservasHeader } from '../fragments/reservasHeader';
-import { ReservasList } from '../fragments/reservasList';
-import { ReservasLoading } from '../fragments/reservasLoading';
+import { ReservasEmpty } from './fragments/ReservasEmpty';
+import { ReservasFilters } from './fragments/ReservasFilters';
+import { ReservasHeader } from './fragments/ReservasHeader';
+import { ReservasList } from './fragments/ReservasList';
+import { ReservasLoading } from './fragments/reservasLoading';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Reservas',
-        href: '/gestor/reservas',
-    },
-    {
-        title: 'Gerenciar Reservas',
-        href: '/gestor/reservas',
+        title: 'Minhas Reservas',
+        href: '/reservas',
     },
 ];
 
@@ -37,7 +33,7 @@ export default function MinhasReservas() {
             situacao: selectedSituacao || undefined,
         };
 
-        router.get(route('gestor.reservas.index'), params, {
+        router.get(route('reservas.index'), params, {
             preserveState: true,
             preserveScroll: true,
             replace: true,
@@ -46,7 +42,7 @@ export default function MinhasReservas() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Home" />
+            <Head title="Minhas Reservas" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
                     <ReservasHeader />
@@ -57,10 +53,9 @@ export default function MinhasReservas() {
                         onSituacaoChange={setSelectedSituacao}
                         selectedDate={data}
                         onDateChange={setData}
-                        isGestor={true}
                     />
                     <Suspense fallback={<ReservasLoading />}>
-                        <ReservasList fallback={<ReservasEmpty />} paginator={paginator} isGestor={true} />
+                        <ReservasList fallback={<ReservasEmpty />} paginator={paginator} isGestor={false} />
                     </Suspense>
                 </div>
             </div>

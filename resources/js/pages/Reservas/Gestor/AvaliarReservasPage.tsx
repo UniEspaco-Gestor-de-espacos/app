@@ -28,7 +28,7 @@ type FormAvaliacaoType = {
 export default function AvaliarReserva() {
     const { props } = usePage<{ reserva: Reserva }>();
     const reserva = props.reserva;
-    const { setData, patch } = useForm<FormAvaliacaoType>({
+    const { setData, patch, reset } = useForm<FormAvaliacaoType>({
         situacao: reserva.situacao,
         motivo: '',
     });
@@ -63,9 +63,9 @@ export default function AvaliarReserva() {
         }
         setIsSubmitting(true);
 
-        patch(route('gestor.reservas.avaliar', reserva.id), {
-            onSuccess: (data) => {
-                console.log(data);
+        patch(route('gestor.reservas.update', reserva.id), {
+            onSuccess: () => {
+                reset();
             },
             onError: (error) => {
                 const firstError = Object.values(error)[0];

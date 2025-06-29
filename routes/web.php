@@ -46,43 +46,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Reservas
     // ---------------------------
 
-        // Visualizar reservas do usuário
-    Route::get('minhas-reservas', [ReservaController::class, 'index'])->name('reservas.index');
-    Route::get('minhas-reservas/{reserva}', [ReservaController::class, 'show'])->name('reservas.show'); // Não usada
-
-        // Cadastrar nova reserva
-    Route::post('reservas', [ReservaController::class, 'store'])
-        ->middleware(CadastroReservaMiddleware::class)->name('reservas.store');
-
-        // Editar reserva (antes de ser avaliada) Criar middleware para verificar se a reserva não foi avaliada
-    Route::middleware([])->group(function () {
-        Route::get('reservas/{reserva}/editar', [ReservaController::class, 'edit'])->name('reservas.edit');
-        Route::patch('reservas/{reserva}', [ReservaController::class, 'update'])->name('reservas.update');
-    });
-        // Excluir
-    Route::delete('minhas-reservas/{reserva}', [ReservaController::class, 'destroy'])->name('reservas.destroy');
+    Route::resource('reservas', ReservaController::class);
 
 
     // ---------------------------
     // Rotas para Usuário Gestor
     // ---------------------------
     Route::middleware([])->prefix('gestor')->name('gestor.')->group(function () {
-
-        // Gestão de reservas
-        Route::get('reservas', [GestorReservaController::class, 'index'])->name('reservas.index');
-        Route::get('reservas/{reserva}', [GestorReservaController::class, 'show'])->name('reservas.show');
-        Route::patch('reserva/{reserva}/avaliar', [GestorReservaController::class, 'update'])
-            ->middleware(AvaliarReservaMiddleware::class)->name('reservas.avaliar'); // TODO: Criar regras de avaliar reserva
-
-        // Gestão de espaços
-        Route::get('espacos', [GestorEspacoController::class, 'index'])->name('espacos.index');
+        Route::resource('reservas', GestorReservaController::class)->except('patch');
     });
 
     // ---------------------------
     // Rotas Institucionais
     // ---------------------------
     Route::prefix('institucional')->name('institucional.')->group(function () {
-
         // Usuários
         Route::resource('usuarios', InstitucionalUsuarioController::class)->except(['store', 'update']);
         Route::patch('usuarios/{usuario}', [InstitucionalUsuarioController::class, 'update'])
@@ -96,7 +73,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('usuarios/{usuario}/edit', [InstitucionalUsuarioController::class, 'edit'])->name('usuarios.edit');
 
         // Instituições
-        Route::resource('instituicoes', InstitucionalInstituicaoController::class);
+        Route::resource('instituicoes', InstitucionalInstituicaoController::class)->except(['show']);
 
         // Unidades
         Route::resource('unidades', InstitucionalUnidadeController::class);
@@ -108,11 +85,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('andares', InstitucionalAndarController::class);
 
         // Espaços
-        Route::resource('espacos', InstitucionalEspacoController::class)->except(['store', 'update']);
+        Route::resource('espacos', InstitucionalEspacoController::class);
+
+        /**
+         * ->except(['store', 'update']);
         Route::patch('espacos/{espaco}', [InstitucionalEspacoController::class, 'update'])
             ->middleware(EditarEspacoMiddleware::class)->name('espacos.update'); // TODO: Criar regras de editar espaço
         Route::post('espacos', [InstitucionalEspacoController::class, 'store'])
             ->middleware(CadastroEspacoMiddleware::class)->name('espacos.store');
+         */
     });
 });
 

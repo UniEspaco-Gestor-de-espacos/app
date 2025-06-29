@@ -14,9 +14,9 @@ class HomeController extends Controller
         $user = Auth::user();
         switch ($user->permission_type_id) {
             case 1: // Institucional
-                return Inertia::render('dashboard/institucional', compact('user'));
+                return Inertia::render('Dashboard/DashboardInstitucionalPage', compact('user'));
             case 2: // Gestor
-                return Inertia::render('dashboard/gestor', compact('user'));
+                return Inertia::render('Dashboard/DashboardGestorPage', compact('user'));
             default: // Usuario Comum
                 $baseUserReservasQuery = Reserva::where('user_id', $user->id);
                 $reservas = (clone $baseUserReservasQuery)->get();
@@ -43,7 +43,7 @@ class HomeController extends Controller
                 if ($proximaReserva && $proximaReserva->horarios->isNotEmpty()) {
                     $espacoDaProximaReserva = $proximaReserva->horarios->first()->agenda->espaco;
                 }
-                return Inertia::render('dashboard/usuario', compact('user', 'proximaReserva', 'statusDasReservas', 'reservas', 'espacoDaProximaReserva'));
+                return Inertia::render('Dashboard/DashboardUsuarioPage', compact('user', 'proximaReserva', 'statusDasReservas', 'reservas', 'espacoDaProximaReserva'));
         }
     }
 }

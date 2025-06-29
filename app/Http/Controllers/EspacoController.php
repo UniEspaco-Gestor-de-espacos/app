@@ -57,11 +57,11 @@ class EspacoController extends Controller
                 }
             ])
             ->latest('espacos.created_at')
-            ->paginate(15)
+            ->paginate(2)
             // Adiciona a query string à paginação para que os filtros sejam mantidos ao mudar de página
             ->withQueryString();
 
-        return Inertia::render('espacos/index', [
+        return Inertia::render('Espacos/EspacosPage', [
             'espacos' => $espacos, // Agora é um objeto paginador
             'andares' => Andar::all(), // Ainda precisa de todos para popular os selects
             'modulos' => Modulo::all(),
@@ -97,28 +97,8 @@ class EspacoController extends Controller
 
         // 3. Renderiza a view, passando APENAS o objeto 'espaco'.
         // O frontend agora é responsável por processar e exibir os dados aninhados.
-        return Inertia::render('espacos/visualizar', [
+        return Inertia::render('Espacos/VisualizarEspacoPage', [
             'espaco' => $espaco,
         ]);
     }
-
-    /*
-    <?php
-// ...existing code...
-
-// Visualizar espaço
-Route::get('/espacos/{espaco}', [EspacoController::class, 'show'])->name('espacos.show');
-
-// Editar espaço (formulário)
-Route::get('/espacos/{espaco}/editar', [EspacoController::class, 'edit'])->name('espacos.edit');
-
-// Atualizar espaço (envio do formulário)
-Route::put('/espacos/{espaco}', [EspacoController::class, 'update'])->name('espacos.update');
-
-// Favoritar espaço (exemplo usando POST)
-Route::post('/espacos/{espaco}/favoritar', [EspacoController::class, 'favoritar'])->name('espacos.favoritar');
-
-// ...existing code...
-
-    */
 }

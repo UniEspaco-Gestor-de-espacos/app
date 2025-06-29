@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AvaliarReservaRequest;
 use App\Models\Andar;
 use App\Models\Espaco;
 use App\Models\Modulo;
@@ -81,7 +82,7 @@ class GestorReservaController extends Controller
         $reservasParaAvaliar = $reservasQuery->paginate(10)->withQueryString();
 
         // 7. Renderiza a view do Inertia com os dados no formato esperado pelo front-end.
-        return Inertia::render('reservas/gestor/verReservas', [
+        return Inertia::render('Reservas/Gestor/ReservasGestorPage', [
             'reservas' => $reservasParaAvaliar,
             'filters' => $filters,
         ]);
@@ -129,7 +130,7 @@ class GestorReservaController extends Controller
         ]);
 
 
-        return Inertia::render('reservas/gestor/avaliarReserva', [
+        return Inertia::render('Reservas/Gestor/AvaliarReservaPage', [
             'reserva' => $reserva
         ]);
     }
@@ -145,7 +146,7 @@ class GestorReservaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Reserva $reserva)
+    public function update(AvaliarReservaRequest $request, Reserva $reserva)
     {
         $this->authorize('update', $reserva);
 
