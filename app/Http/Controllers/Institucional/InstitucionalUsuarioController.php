@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\User; // Importar o modelo User para buscar o usuário
 use Illuminate\Validation\Rule; // Importar Rule para validações
+use App\Models\Espaco;
+use App\Models\Modulo;
+use App\Models\Andar;
+use App\Models\Agenda;
+
 
 
 class InstitucionalUsuarioController extends Controller
@@ -16,15 +21,17 @@ class InstitucionalUsuarioController extends Controller
      */
     public function index()
     {
-        // Exemplo de como você passaria dados para a tela de listagem de usuários
-        // Para uma tela de edição, geralmente você renderiza a tela `edit` ou `create`
         $users = User::all(); // Busca todos os usuários
-        return Inertia::render('Editar/UserController', [
+        return Inertia::render('Editar/GerenciarUsuarios', [
             'users' => $users,
+            'roles' => ['Institucional', 'Gestor', 'Comum'],
+            'spaces' => Espaco::all(),
+            'modulos' => Modulo::all(),
+            'andares' => Andar::all(),
+            'turnos' => Agenda::distinct()->pluck('turno'),
+            'agendas' => Agenda::distinct()->pluck('id'),
         ]);
     }
-
-    
 
     /**
      * Show the form for creating a new resource.
@@ -35,7 +42,7 @@ class InstitucionalUsuarioController extends Controller
         // Você pode passar listas de roles e statuses disponíveis
         $roles = ['admin', 'gestor', 'user']; // Exemplo de funções
         $statuses = ['active', 'inactive', 'suspended']; // Exemplo de status
-        return Inertia::render('Editar/UserController', [
+        return Inertia::render('Editar/GerenciarUsuarios', [
             'roles' => $roles,
             'statuses' => $statuses,
         ]);
@@ -88,7 +95,7 @@ class InstitucionalUsuarioController extends Controller
         $statuses = ['active', 'inactive', 'suspended']; // Exemplo de status
 
         // Renderiza o componente UserController passando o usuário a ser editado
-        return Inertia::render('Editar/UserController', [
+        return Inertia::render('Editar/GerenciarUsuarios', [
             'user' => $user,
             'roles' => $roles,
             'statuses' => $statuses,
