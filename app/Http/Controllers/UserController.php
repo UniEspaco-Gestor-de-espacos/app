@@ -25,34 +25,41 @@ class UserController extends Controller
         ]);
     }
 
+
     public function update(Request $request, User $user)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'permission_type_id' => 'required|integer',
-            'space_id' => 'nullable|integer|exists:espacos,id',
-            'agendas' => 'array',
-            'agendas.*' => 'integer|exists:agendas,id',
+            'name' => ['required'],
+            'permission_type_id' => ['required'],
+            'space_id' => ['required', 'exists:espacos,id'],
+            'agendas' => ['array'],
+            'agendas.*' => ['exists:agendas,id'],
         ]);
 
         $user->update([
             'name' => $validated['name'],
             'permission_type_id' => $validated['permission_type_id'],
-            'space_id' => $validated['space_id'] ?? null,
         ]);
 
-        $agendasIds = $validated['agendas'] ?? [];
-
-        // Limpa todas as agendas antigas deste usuário
+        // Limpa o user_id das agendas que NÃO foram selecionadas para este usuário
         Agenda::where('user_id', $user->id)
-            ->whereNotIn('id', $agendasIds)
-            ->update(['user_id' => null]);
+            ->whereNotIn('id', $validated['agendas'] ?? [])
+            ->update(['user_id' => null, 'espaco_id' => null]);
 
-        // Atribui as novas agendas a este usuário
-        Agenda::whereIn('id', $agendasIds)
-            ->update(['user_id' => $user->id]);
+        // Atualiza o user_id e espaco_id das agendas selecionadas
+        if (!empty($validated['agendas'])) {
+            foreach ($validated['agendas'] as $agendaId) {
+                $agenda = Agenda::find($agendaId);
+                if ($agenda) {
+                    $agenda->update([
+                        'user_id' => $user->id,
+                        'espaco_id' => $validated['space_id'],
+                    ]);
+                }
+            }
+        }
 
-        return redirect()->route('usuario.index')->with('success', 'Usuário atualizado com sucesso.');
+        return redirect()->route('usuarios.index')->with('success', 'Usuário atualizado e agendas vinculadas!');
     }
 
     public function verificar()
