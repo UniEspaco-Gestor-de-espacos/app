@@ -20,7 +20,7 @@ export function UnidadeFilters({ searchTerm, onSearchTermChange, instituicoes, o
                 <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
                 <Input
                     type="search"
-                    placeholder="Buscar por título ou descrição..."
+                    placeholder="Buscar por nome"
                     className="w-full pl-8"
                     value={searchTerm} // 3. O valor vem das props
                     onChange={(e) => onSearchTermChange(e.target.value)} // 4. A mudança notifica o pai
@@ -35,7 +35,7 @@ export function UnidadeFilters({ searchTerm, onSearchTermChange, instituicoes, o
                     }}
                 >
                     <SelectTrigger className="w-full sm:w-[180px]">
-                        <SelectValue placeholder="Situação" />
+                        <SelectValue placeholder="Instituição" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Todas</SelectItem>
