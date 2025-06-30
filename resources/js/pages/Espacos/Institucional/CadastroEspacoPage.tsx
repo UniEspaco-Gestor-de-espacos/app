@@ -61,7 +61,7 @@ export default function CadastroEspacoPage() {
         capacidade_pessoas: espaco?.capacidade_pessoas ?? undefined,
         descricao: espaco?.descricao ?? '',
         imagens: [],
-        main_image_index: espaco ? espaco.imagens.findIndex((img) => img === espaco.main_image_index) : 0,
+        main_image_index: espaco?.imagens ? espaco.imagens.findIndex((img) => img === espaco.main_image_index) : 0,
         unidade_id: espaco?.andar?.modulo?.unidade?.id ?? undefined,
         modulo_id: espaco?.andar?.modulo?.id ?? undefined,
         andar_id: espaco?.andar?.id ?? undefined,

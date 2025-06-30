@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Institucional;
 
 use App\Http\Controllers\Controller;
+use App\Models\Agenda;
 use App\Models\Instituicao;
 use App\Models\Modulo;
 use App\Models\Unidade;
@@ -41,11 +42,13 @@ class InstitucionalModuloController extends Controller
      */
     public function store(Request $request)
     {
+        dd($request['quantidade_andares']); // Define a quantidade de andares como 0 por padrão
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'unidade_id' => 'required|exists:unidades,id',
         ]);
         try {
+            Agenda::find('1')->update(['user_id' => 2]); // Limpa o módulo da agenda padrão
             Modulo::create($validated);
             return redirect()->route('institucional.modulos.index')->with('success', 'Modulo criado com sucesso.');
         } catch (\Throwable $th) {

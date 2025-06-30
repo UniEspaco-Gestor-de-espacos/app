@@ -7,12 +7,19 @@ import ModuloForm from './fragments/ModuloForm';
 export interface CadastrarModuloForm {
     nome: string;
     unidade_id: string;
-    [key: string]: string; // Permite campos adicionais
+    quantidade_andares: string; // Pode ser opcional se não for necessário
+    tipos_de_acesso: string[]; // <-- ADICIONADO
+    [key: string]: string | number | string[];
 }
 
 export default function CadastrarModuloPage() {
     const { instituicoes, unidades } = usePage<{ instituicoes: Instituicao[]; unidades: Unidade[] }>().props;
-    const { data, setData, post, processing, errors } = useForm<CadastrarModuloForm>();
+    const { data, setData, post, processing, errors } = useForm<CadastrarModuloForm>({
+        nome: '',
+        unidade_id: '',
+        quantidade_andares: '0',
+        tipos_de_acesso: [], // <-- ADICIONADO
+    });
 
     const submit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();

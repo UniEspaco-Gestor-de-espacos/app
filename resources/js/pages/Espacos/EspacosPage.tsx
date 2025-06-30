@@ -12,6 +12,7 @@ const breadcrumbs = [
 ];
 
 export default function EspacosPage() {
+
     const {
         andares,
         modulos,
