@@ -9,6 +9,7 @@ import { Andar, Espaco, Modulo, Unidade, User } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Calendar, Edit, Home, Search, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
+
 const breadcrumbs = [
     {
         title: 'Consultar Espaços',
@@ -21,13 +22,12 @@ export default function EspacosPage() {
         espacos: {
             data: Espaco[];
             links: { url: string | null; label: string; active: boolean }[];
-            meta: object; // Contém 'from', 'to', 'total', etc.
+            meta: object;
         };
         unidades: Unidade[];
         modulos: Modulo[];
         andares: Andar[];
         filters: {
-            // Recebe os filtros atuais do controller
             search?: string;
             unidade?: string;
             modulo?: string;
@@ -37,24 +37,22 @@ export default function EspacosPage() {
         user: User;
     }>();
     const { andares, modulos, unidades, user } = props;
-    const userType = user.permission_type_id; // 1 - INSTITUCIONAL, 2 - GESTOR, 3 - COMUM
-    // Extrai os dados do paginador
+    const userType = user.permission_type_id;
     const { data: espacos, links } = props.espacos;
     const { filters } = props;
-    // Gerencia de estado
+
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [selectedUnidade, setSelectedUnidade] = useState(filters.unidade || 'all');
     const [selectedModulo, setSelectedModulo] = useState(filters.modulo || 'all');
     const [selectedAndar, setSelectedAndar] = useState(filters.andar || 'all');
     const [selectedCapacidade, setSelectedCapacidade] = useState(filters.capacidade || '');
     const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
-    // Hook que reserta caso modulo ou andar mude
+
     useEffect(() => {
         setSelectedModulo('all');
         setSelectedAndar('all');
     }, [selectedUnidade]);
 
-    // Reseta o andar quando o módulo muda
     useEffect(() => {
         setSelectedAndar('all');
     }, [selectedModulo]);
@@ -69,37 +67,34 @@ export default function EspacosPage() {
         };
 
         router.get(route('espacos.index'), params, {
-            preserveState: true, // Mantém o estado dos filtros na página
-            preserveScroll: true, // Não rola a página para o topo
-            replace: true, // Não adiciona ao histórico do navegador
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
         });
     }, [debouncedSearchTerm, selectedUnidade, selectedModulo, selectedAndar, selectedCapacidade]);
 
-    // Função para solicitar reserva
     const handleSolicitarReserva = (espacoId: string) => {
         router.visit(`/espacos/${espacoId}`);
     };
 
-    // Função para editar espaço
     const handleEditarEspaco = (espacoId: string) => {
         router.visit(`/espacos/editar/${espacoId}`);
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Espacos" />
-            {/* Todo o conteúdo a partir dos filtros até o final em uma única div */}
-            <div className="m-8">
+            <Head title="Espaços" />
+            <div className="mx-auto max-w-7xl px-4 py-8">
                 {/* Filtros e Busca */}
-                <Card className="mb-6">
-                    <CardContent className="pt-6">
+                <Card className="border-primary/10 mb-8 border-2 shadow-lg">
+                    <CardContent className="pt-8 pb-6">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                             {/* Busca */}
                             <div className="relative sm:col-span-2 lg:col-span-5">
-                                <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+                                <Search className="text-muted-foreground absolute top-3 left-3 h-5 w-5" />
                                 <Input
                                     placeholder="Buscar por nome do espaço, andar ou módulo..."
-                                    className="pl-8"
+                                    className="border-primary/30 focus:border-primary focus:ring-primary/20 rounded-lg py-3 pl-10 transition focus:ring-2"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
@@ -107,7 +102,7 @@ export default function EspacosPage() {
 
                             {/* Filtro de Unidade */}
                             <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
-                                <SelectTrigger>
+                                <SelectTrigger className="border-primary/30 focus:border-primary focus:ring-primary/20 rounded-lg transition focus:ring-2">
                                     <SelectValue placeholder="Unidade" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -122,7 +117,7 @@ export default function EspacosPage() {
 
                             {/* Filtro de Módulo */}
                             <Select value={selectedModulo} onValueChange={setSelectedModulo} disabled={selectedUnidade === 'all'}>
-                                <SelectTrigger>
+                                <SelectTrigger className="border-primary/30 focus:border-primary focus:ring-primary/20 rounded-lg transition focus:ring-2">
                                     <SelectValue placeholder="Módulo" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -137,7 +132,7 @@ export default function EspacosPage() {
 
                             {/* Filtro de Andar */}
                             <Select value={selectedAndar} onValueChange={setSelectedAndar} disabled={selectedModulo === 'all'}>
-                                <SelectTrigger>
+                                <SelectTrigger className="border-primary/30 focus:border-primary focus:ring-primary/20 rounded-lg transition focus:ring-2">
                                     <SelectValue placeholder="Andar" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -152,7 +147,7 @@ export default function EspacosPage() {
 
                             {/* Filtro de Capacidade */}
                             <Select value={selectedCapacidade} onValueChange={setSelectedCapacidade}>
-                                <SelectTrigger>
+                                <SelectTrigger className="border-primary/30 focus:border-primary focus:ring-primary/20 rounded-lg transition focus:ring-2">
                                     <SelectValue placeholder="Capacidade" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -165,56 +160,68 @@ export default function EspacosPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
                     {espacos.map((espaco) => (
-                        <Card key={espaco.id} className="overflow-hidden">
-                            <CardHeader className="p-0">
+                        <Card
+                            key={espaco.id}
+                            className="border-primary/10 group overflow-hidden border-2 shadow-lg transition-shadow duration-200 hover:shadow-2xl"
+                        >
+                            <CardHeader className="relative p-0">
                                 <img
                                     src={espaco.main_image_index ? `/storage/${espaco.main_image_index}` : espacoImage}
                                     alt={espaco.nome}
-                                    className="object-absolute h-40 w-full"
+                                    className="h-44 w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                 />
-                            </CardHeader>
-                            <CardContent className="pt-6">
-                                <div className="mb-2 flex items-start justify-between">
-                                    <CardTitle className="text-xl">Espaço: {espaco.nome}</CardTitle>
+                                <div className="bg-primary text-primary-foreground absolute top-2 right-2 rounded-full px-3 py-1 text-xs shadow">
+                                    {espaco.andar?.modulo?.unidade?.nome}
                                 </div>
-
-                                <div className="espaco-y-2 mt-4">
-                                    <div className="flex items-center gap-2">
-                                        <Users className="text-muted-foreground h-4 w-4" />
-                                        <span>Capacidade: {espaco.capacidade_pessoas} pessoas</span>
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                        <Home className="text-muted-foreground h-4 w-4" />
+                            </CardHeader>
+                            <CardContent className="pt-6 pb-4">
+                                <CardTitle className="text-primary mb-2 text-xl font-bold">Espaço: {espaco.nome}</CardTitle>
+                                <div className="space-y-2">
+                                    <div className="text-muted-foreground flex items-center gap-2">
+                                        <Users className="h-4 w-4" />
                                         <span>
-                                            {espaco.andar?.nome} - {espaco.andar?.modulo?.nome} - {espaco.andar?.modulo?.unidade?.nome}
+                                            Capacidade: <span className="text-foreground font-semibold">{espaco.capacidade_pessoas}</span> pessoas
                                         </span>
                                     </div>
-
-                                    <div className="space-y-2">
-                                        <span className="text-muted-foreground">Gestores por turno:</span>
-                                        <div className="grid grid-cols-3 gap-4 rounded-lg border p-4">
-                                            {espaco.agendas?.map((agenda) => (
-                                                <div key={agenda.id} className="flex flex-col items-center text-center">
-                                                    <span className="text-muted-foreground text-sm font-semibold">{getTurnoText(agenda.turno)}</span>
-                                                    <span className="mt-1 text-sm">{getPrimeirosDoisNomes(agenda.user?.name)}</span>
-                                                </div>
-                                            ))}
+                                    <div className="text-muted-foreground flex items-center gap-2">
+                                        <Home className="h-4 w-4" />
+                                        <span>
+                                            {espaco.andar?.nome} - {espaco.andar?.modulo?.nome}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-muted-foreground text-sm">Gestores por turno:</span>
+                                        <div className="border-primary/10 bg-muted/40 mt-2 grid grid-cols-3 gap-4 rounded-lg border p-4">
+                                            {espaco.agendas?.length ? (
+                                                espaco.agendas.map((agenda) => (
+                                                    <div key={agenda.id} className="flex flex-col items-center text-center">
+                                                        <span className="text-primary text-xs font-semibold">{getTurnoText(agenda.turno)}</span>
+                                                        <span className="text-foreground mt-1 text-sm">
+                                                            {getPrimeirosDoisNomes(agenda.user?.name)}
+                                                        </span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <span className="text-muted-foreground col-span-3 text-center italic">Nenhum gestor</span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                             </CardContent>
-
-                            <CardFooter className="flex flex-wrap gap-2 pt-0">
-                                <Button size="sm" onClick={() => handleSolicitarReserva(espaco.id.toString())}>
+                            <CardFooter className="border-primary/10 bg-muted/30 flex flex-wrap gap-2 border-t pt-0">
+                                <Button size="sm" className="flex-1 rounded-full" onClick={() => handleSolicitarReserva(espaco.id.toString())}>
                                     <Calendar className="mr-2 h-4 w-4" />
                                     Ver agenda
                                 </Button>
-
                                 {userType === 1 && (
-                                    <Button variant="secondary" size="sm" onClick={() => handleEditarEspaco(espaco.id.toString())}>
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        className="flex-1 rounded-full"
+                                        onClick={() => handleEditarEspaco(espaco.id.toString())}
+                                    >
                                         <Edit className="mr-2 h-4 w-4" />
                                         Editar Espaço
                                     </Button>
@@ -223,26 +230,30 @@ export default function EspacosPage() {
                         </Card>
                     ))}
                 </div>
-            </div>
-            {/* Componente de Paginação */}
-            <div className="mt-6 flex justify-center">
-                <div className="flex gap-1">
-                    {links.map((link, index) =>
-                        link.url ? (
-                            <Link
-                                key={index}
-                                href={link.url}
-                                className={`rounded-md border px-4 py-2 text-sm ${link.active ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent'}`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
-                        ) : (
-                            <span
-                                key={index}
-                                className="text-muted-foreground rounded-md border px-4 py-2 text-sm"
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
-                        ),
-                    )}
+
+                <div className="mt-10 flex justify-center">
+                    <div className="flex gap-1">
+                        {links.map((link, index) =>
+                            link.url ? (
+                                <Link
+                                    key={index}
+                                    href={link.url}
+                                    className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                                        link.active
+                                            ? 'bg-primary text-primary-foreground border-primary'
+                                            : 'bg-background hover:bg-accent border-primary/10'
+                                    }`}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
+                            ) : (
+                                <span
+                                    key={index}
+                                    className="text-muted-foreground rounded-full border px-4 py-2 text-sm"
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
+                            ),
+                        )}
+                    </div>
                 </div>
             </div>
         </AppLayout>
