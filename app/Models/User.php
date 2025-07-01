@@ -56,10 +56,27 @@ class User extends Authenticatable
     }
     public function agendas()
     {
-        return $this->hasMany(Agenda::class);
+        return $this->hasMany(Agenda::class, 'user_id');
     }
     public function reservas()
     {
         return $this->hasMany(Reserva::class);
+    }
+
+    public function espaco()
+    {
+        return $this->belongsTo(Espaco::class, 'espaco_id', 'id');
+    }
+
+    // Espaco.php
+    public function andar()
+    {
+        return $this->espaco->andar();
+    }
+
+    // Andar.php
+    public function modulo()
+    {
+        return $this->belongsTo(Modulo::class, 'modulo_id');
     }
 }
