@@ -1,4 +1,4 @@
-import DeleteReserva from '@/components/delete-reserva';
+import DeleteItem from '@/components/delete-item';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -171,13 +171,14 @@ export function ReservasList({ paginator, fallback, isGestor }: ReservasListProp
                 </Table>
             </div>
             {removerReserva && (
-                <DeleteReserva
+                <DeleteItem
                     isOpen={(open) => {
                         if (!open) {
                             setRemoverReserva(null);
                         }
                     }}
-                    id={removerReserva.id}
+                    itemName={removerReserva.titulo}
+                    route={route('reservas.destroy', { reserva: removerReserva.id })}
                 />
             )}
             {selectedReserva && (

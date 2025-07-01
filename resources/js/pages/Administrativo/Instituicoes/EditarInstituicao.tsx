@@ -28,15 +28,17 @@ export default function EditarInstituicao() {
         <AppLayout>
             <Head title={`Editar ${instituicao.nome}`} />
             <div className="container mx-auto py-10">
-                <InstituicaoForm
-                    data={data}
-                    setData={setData}
-                    submit={submit}
-                    errors={errors}
-                    processing={processing}
-                    title="Editar Instituição"
-                    description="Altere os dados da instituição abaixo."
-                />
+                <div className="container mx-auto space-y-6 p-6">
+                    <InstituicaoForm
+                        data={data}
+                        setData={setData}
+                        submit={submit}
+                        errors={errors}
+                        processing={processing}
+                        title="Editar Instituição"
+                        description="Altere os dados da instituição abaixo."
+                    />
+                </div>
             </div>
         </AppLayout>
     );

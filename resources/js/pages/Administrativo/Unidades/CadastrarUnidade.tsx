@@ -25,17 +25,19 @@ export default function CadastrarUnidadePage() {
             <Head title="Criar Unidade" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
-                    <GenericHeader titulo="Cadastrar Unidade" descricao="Preencha os dados abaixo para cadastrar uma nova unidade." />
-                    <UnidadeForm
-                        data={data}
-                        setData={setData}
-                        submit={submit}
-                        errors={errors}
-                        processing={processing}
-                        title="Criar Novo Módulo"
-                        description="Preencha os dados abaixo para cadastrar um novo modulo."
-                        instituicoes={instituicoes}
-                    />
+                    <div className="container mx-auto space-y-6 p-6">
+                        <GenericHeader titulo="Cadastrar Unidade" descricao="Preencha os dados abaixo para cadastrar uma nova unidade." />
+                        <UnidadeForm
+                            data={data}
+                            setData={setData}
+                            submit={submit}
+                            errors={errors}
+                            processing={processing}
+                            title="Criar Novo Módulo"
+                            description="Preencha os dados abaixo para cadastrar um novo modulo."
+                            instituicoes={instituicoes}
+                        />
+                    </div>
                 </div>
             </div>
         </AppLayout>

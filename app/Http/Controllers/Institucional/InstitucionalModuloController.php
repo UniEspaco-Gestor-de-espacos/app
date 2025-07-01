@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Institucional;
 
 use App\Http\Controllers\Controller;
-use App\Models\Agenda;
+use App\Http\Requests\StoreModuloRequest;
+use App\Http\Requests\UpdateEspacoRequest;
+use App\Http\Requests\UpdateModuloRequest;
 use App\Models\Instituicao;
 use App\Models\Modulo;
 use App\Models\Unidade;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class InstitucionalModuloController extends Controller
@@ -17,7 +19,7 @@ class InstitucionalModuloController extends Controller
      */
     public function index()
     {
-        $modulos = Modulo::with(['unidade.instituicao'])->latest()->paginate(10);
+        $modulos = Modulo::with(['andars', 'unidade.instituicao'])->latest()->paginate(10);
 
         return Inertia::render('Administrativo/Modulos/Modulos', [
             'modulos' => $modulos,
@@ -40,19 +42,36 @@ class InstitucionalModuloController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreModuloRequest $request)
     {
-        dd($request['quantidade_andares']); // Define a quantidade de andares como 0 por padrão
-        $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'unidade_id' => 'required|exists:unidades,id',
-        ]);
+        $request->validated(); // Valida os dados usando a Form Request
         try {
-            Agenda::find('1')->update(['user_id' => 2]); // Limpa o módulo da agenda padrão
-            Modulo::create($validated);
-            return redirect()->route('institucional.modulos.index')->with('success', 'Modulo criado com sucesso.');
-        } catch (\Throwable $th) {
-            return redirect()->route('institucional.modulos.index')->with('error', 'Erro ao criar o modulo: ' . $th->getMessage());
+            DB::beginTransaction();
+
+            // Criar o módulo
+            $modulo = Modulo::create([
+                'nome' => $request->validated('nome'),
+                'unidade_id' => $request->validated('unidade_id'),
+            ]);
+
+            // Criar os andares
+            foreach ($request->validated('andares') as $andarData) {
+                $modulo->andars()->create([
+                    'nome' => $andarData['nome'],
+                    'tipo_acesso' => $andarData['tipo_acesso'],
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('institucional.modulos.index')
+                ->with('success', 'Módulo cadastrado com sucesso!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()
+                ->with(['error' => 'Erro ao cadastrar módulo: ' . $e->getMessage()])->withInput();
         }
     }
 
@@ -61,7 +80,7 @@ class InstitucionalModuloController extends Controller
      */
     public function edit(Modulo $modulo) // Corrigido o nome do parâmetro para $instituico
     {
-        $modulo->load('unidade.instituicao'); // Carrega a unidade e a instituição associada ao módulo
+        $modulo->load(['andars', 'unidade.instituicao']); // Carrega a unidade e a instituição associada ao módulo
         // Verifica se o módulo existe
         $instituicoes = Instituicao::all();
         $unidades = Unidade::with(['instituicao'])->get();
@@ -75,24 +94,38 @@ class InstitucionalModuloController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Modulo $modulo)
+    public function update(UpdateModuloRequest $request, Modulo $modulo)
     {
-        $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'unidade_id' => 'required|exists:unidades,id',
-        ]);
-
         try {
+            DB::beginTransaction();
+
+            // Atualizar dados básicos do módulo
             $modulo->update([
-                'nome' => $validated['nome'],
-                'unidade_id' => $validated['unidade_id'],
+                'nome' => $request->validated('nome'),
+                'unidade_id' => $request->validated('unidade_id'),
             ]);
 
-            $modulo->save();
+            // Remover andares existentes e recriar
+            $modulo->andars()->delete();
 
-            return redirect()->route('institucional.modulos.index')->with('success', 'Modulo atualizado com sucesso.');
-        } catch (\Throwable $th) {
-            return redirect()->route('institucional.modulos.index')->with('error', 'Erro ao atualizar a modulo: ' . $th->getMessage());
+            // Criar novos andares
+            foreach ($request->validated('andares') as $andarData) {
+                $modulo->andars()->create([
+                    'nome' => $andarData['nome'],
+                    'tipo_acesso' => $andarData['tipo_acesso'],
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('institucional.modulos.index')
+                ->with('success', 'Módulo atualizado com sucesso!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()
+                ->with(['error' => 'Erro ao atualizar módulo: ' . $e->getMessage()])
+                ->withInput();
         }
     }
 
@@ -102,11 +135,24 @@ class InstitucionalModuloController extends Controller
     public function destroy(Modulo $modulo)
     {
         try {
+            DB::beginTransaction();
+
+            // Remover andares primeiro (devido à foreign key)
+            $modulo->andars()->delete();
+
+            // Remover o módulo
             $modulo->delete();
 
-            return back()->with('success', 'Modulo excluído com sucesso.');
-        } catch (\Throwable $th) {
-            return redirect()->route('institucional.modulos.index')->with('error', 'Erro ao deletar o modulo: ' . $th->getMessage());
+            DB::commit();
+
+            return redirect()
+                ->route('institucional.modulos.index')
+                ->with('success', 'Módulo removido com sucesso!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()
+                ->withErrors(['error' => 'Erro ao remover módulo: ' . $e->getMessage()]);
         }
     }
 }

@@ -1,18 +1,17 @@
-'use client';
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SelectContent, SelectItem, SelectTrigger, Select as SelectUI, SelectValue } from '@/components/ui/select';
-import { isEditMode, transformModuloToFormData } from '@/lib/utils/ModuloDataFormTransformer';
+import { criarTerreoInicial, garantirTerreo, nivelParaNome } from '@/lib/utils/andars/AndarHelpers';
+import { isEditMode, transformModuloToFormData } from '@/lib/utils/andars/ModuloDataFormTransformer';
 import { Instituicao, Modulo, Unidade } from '@/types';
 import { useForm } from '@inertiajs/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { CadastrarModuloForm } from '../CadastrarModulo';
-import AndaresGrid from './AndaresGrid';
+import { AndarFormData } from './AndarFormCard';
+import AndaresManager from './AndarManager';
 import AndarStickFormActions from './AndarStickFormActions';
-import AndarSummary from './AndarSummary';
 
 export type ModuloFormProps = {
     data: CadastrarModuloForm;
@@ -26,7 +25,6 @@ export type ModuloFormProps = {
     unidades: Unidade[];
     modulo?: Modulo;
 };
-
 export default function ModuloForm({
     data,
     setData,
@@ -44,15 +42,30 @@ export default function ModuloForm({
     const topRef = useRef<HTMLDivElement>(null);
     const andaresRef = useRef<HTMLDivElement>(null);
 
-    // Inicializar dados do formulário quando em modo de edição
+    // Criar um Card com forwardRef para a seção de andares
+    const AndaresCard = forwardRef<HTMLDivElement, { children: React.ReactNode }>(({ children }, ref) => <Card ref={ref}>{children}</Card>);
+    AndaresCard.displayName = 'AndaresCard';
+
+    // Inicializar dados do formulário
     useEffect(() => {
         if (modulo && isEditMode(modulo)) {
             const formData = transformModuloToFormData(modulo);
-            setData(formData);
+            // Garantir que tem térreo mesmo nos dados vindos do backend
+            const andaresComTerreo = garantirTerreo(formData.andares);
+            setData({
+                ...formData,
+                andares: andaresComTerreo.map((andar) => ({ ...andar, nome: nivelParaNome(andar.nivel) })),
+            });
 
             if (modulo.unidade?.instituicao) {
                 setInstituicaoSelecionada(modulo.unidade.instituicao);
             }
+        } else if (data.andares.length === 0) {
+            // Se não é edição e não tem andares, criar térreo inicial
+            setData((prev) => ({
+                ...prev,
+                andares: [criarTerreoInicial()],
+            }));
         }
     }, [modulo, setData]);
 
@@ -61,54 +74,48 @@ export default function ModuloForm({
         return unidades.filter((unidade) => unidade.instituicao?.id === instituicaoSelecionada.id);
     }, [instituicaoSelecionada, unidades]);
 
-    const handleAddAndar = () => {
-        setData((prev) => ({
-            ...prev,
-            andares: [
-                ...prev.andares,
-                {
-                    nome: '',
-                    tipo_acesso: [],
-                },
-            ],
-        }));
+    const handleAddAndar = (novoAndar: AndarFormData) => {
+        setData((prev) => {
+            const novosAndares = [...prev.andares, novoAndar];
+            // Sempre garantir que tem térreo
+            return {
+                ...prev,
+                andares: garantirTerreo(novosAndares),
+            };
+        });
 
-        // Scroll suave para a seção de andares após adicionar
+        // Scroll suave para a seção de andares
         setTimeout(() => {
             andaresRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 100);
     };
 
-    const handleUpdateAndar = (index: number, andar: { nome: string; tipo_acesso: string[] }) => {
-        setData((prev) => {
-            const andarDuplicado = prev.andares.some((a, i) => i !== index && a.nome === andar.nome && andar.nome !== '');
-
-            if (andarDuplicado) {
-                return prev;
-            }
-
-            return {
-                ...prev,
-                andares: prev.andares.map((a, i) => (i === index ? andar : a)),
-            };
-        });
-    };
-
-    const handleRemoveAndar = (index: number) => {
+    const handleUpdateAndar = (andarId: string, andarAtualizado: AndarFormData) => {
         setData((prev) => ({
             ...prev,
-            andares: prev.andares.filter((_, i) => i !== index),
+            andares: prev.andares.map((a) => (a.id === andarId ? andarAtualizado : a)),
         }));
     };
 
-    const handleCollapseAll = () => {
-        // Esta funcionalidade seria implementada passando estado para os cards
-        console.log('Recolher todos os andares');
-    };
+    const handleRemoveAndar = (andarId: string) => {
+        setData((prev) => {
+            // Encontrar o andar que está sendo removido
+            const andarParaRemover = prev.andares.find((a) => a.id === andarId);
 
-    const handleExpandAll = () => {
-        // Esta funcionalidade seria implementada passando estado para os cards
-        console.log('Expandir todos os andares');
+            // PROTEÇÃO EXTRA: Nunca permitir remover térreo
+            if (andarParaRemover && andarParaRemover.nivel === 0) {
+                console.warn('Tentativa de remover térreo bloqueada no handleRemoveAndar');
+                return prev; // Não fazer nada
+            }
+
+            const novosAndares = prev.andares.filter((a) => a.id !== andarId);
+
+            // Sempre garantir que tem térreo após remoção
+            return {
+                ...prev,
+                andares: garantirTerreo(novosAndares),
+            };
+        });
     };
 
     const scrollToTop = () => {
@@ -192,28 +199,24 @@ export default function ModuloForm({
                 </Card>
 
                 {/* Seção de Andares */}
-                <Card ref={andaresRef}>
+                <AndaresCard ref={andaresRef}>
                     <CardHeader>
                         <CardTitle>Andares do Módulo</CardTitle>
-                        <CardDescription>Configure os andares e seus tipos de acesso</CardDescription>
+                        <CardDescription>
+                            Todo módulo possui térreo obrigatório. Adicione andares superiores ou subsolos conforme necessário.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <AndaresGrid
+                        <AndaresManager
                             andares={data.andares}
                             onUpdate={handleUpdateAndar}
                             onRemove={handleRemoveAndar}
                             onAdd={handleAddAndar}
-                            onCollapseAll={handleCollapseAll}
-                            onExpandAll={handleExpandAll}
                             errors={errors}
                             processing={processing}
                         />
-                        {errors.andares && <p className="mt-4 text-sm text-red-500">{errors.andares}</p>}
                     </CardContent>
-                </Card>
-
-                {/* Resumo dos Andares */}
-                {data.andares.length > 0 && <AndarSummary andares={data.andares} />}
+                </AndaresCard>
 
                 {/* Botões de Ação Fixos */}
                 <Card>

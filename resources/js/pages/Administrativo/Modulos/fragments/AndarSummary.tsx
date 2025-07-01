@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getAndarLabelByValue } from '@/lib/utils/AndarOptions';
+import { getAndarLabelByValue } from '@/lib/utils/andars/AndarOptions';
 
 interface AndarSummaryProps {
     andares: {

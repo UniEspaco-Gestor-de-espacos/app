@@ -46,25 +46,27 @@ export default function MinhasReservas() {
             <Head title="Minhas Reservas" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
-                    <GenericHeader
-                        titulo="Minhas Reservas"
-                        descricao="Gerencie suas solicitações de reservas de espaços acadêmicos"
-                        canSeeButton={true}
-                        buttonText="Nova Reserva"
-                        buttonLink={route('espacos.index')}
-                        ButtonIcon={PlusCircle} // Você pode definir um ícone aqui se necessário
-                    />
-                    <ReservasFilters
-                        searchTerm={searchTerm}
-                        onSearchTermChange={setSearchTerm}
-                        selectedSituacao={selectedSituacao}
-                        onSituacaoChange={setSelectedSituacao}
-                        selectedDate={data}
-                        onDateChange={setData}
-                    />
-                    <Suspense fallback={<ReservasLoading />}>
-                        <ReservasList fallback={<ReservasEmpty />} paginator={paginator} isGestor={false} />
-                    </Suspense>
+                    <div className="container mx-auto space-y-6 p-6">
+                        <GenericHeader
+                            titulo="Minhas Reservas"
+                            descricao="Gerencie suas solicitações de reservas de espaços acadêmicos"
+                            canSeeButton={true}
+                            buttonText="Nova Reserva"
+                            buttonLink={route('espacos.index')}
+                            ButtonIcon={PlusCircle} // Você pode definir um ícone aqui se necessário
+                        />
+                        <ReservasFilters
+                            searchTerm={searchTerm}
+                            onSearchTermChange={setSearchTerm}
+                            selectedSituacao={selectedSituacao}
+                            onSituacaoChange={setSelectedSituacao}
+                            selectedDate={data}
+                            onDateChange={setData}
+                        />
+                        <Suspense fallback={<ReservasLoading />}>
+                            <ReservasList fallback={<ReservasEmpty />} paginator={paginator} isGestor={false} />
+                        </Suspense>
+                    </div>
                 </div>
             </div>
         </AppLayout>

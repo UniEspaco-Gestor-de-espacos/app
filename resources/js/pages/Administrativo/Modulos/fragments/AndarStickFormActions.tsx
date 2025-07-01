@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowUp, Save } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface AndarStickFormActionsProps {
@@ -12,7 +12,7 @@ interface AndarStickFormActionsProps {
     andaresCount: number;
 }
 
-export default function AndarStickFormActions({ processing, isEditMode, onScrollToTop, andaresCount }: AndarStickFormActionsProps) {
+export default function AndarStickFormActions({ onScrollToTop, andaresCount }: AndarStickFormActionsProps) {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
@@ -41,10 +41,6 @@ export default function AndarStickFormActions({ processing, isEditMode, onScroll
                         </div>
                         <Button type="button" variant="outline" size="sm" onClick={onScrollToTop} className="h-8 bg-transparent">
                             <ArrowUp className="h-4 w-4" />
-                        </Button>
-                        <Button type="submit" disabled={processing} size="sm" className="h-8">
-                            <Save className="mr-1 h-4 w-4" />
-                            {processing ? 'Salvando...' : isEditMode ? 'Atualizar' : 'Salvar'}
                         </Button>
                     </div>
                 </CardContent>
