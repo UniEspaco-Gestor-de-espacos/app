@@ -21,6 +21,8 @@ use App\Http\Middleware\CadastrarUsuarioMiddleware;
 use App\Http\Middleware\CadastroEspacoMiddleware;
 use App\Http\Middleware\CadastroReservaMiddleware;
 use App\Http\Middleware\EditarEspacoMiddleware;
+use App\Http\Middleware\GestorMiddleware;
+use App\Http\Middleware\InstitucionalMiddleware;
 
 // Página inicial: redireciona para dashboard se autenticado, senão para login
 Route::get('/', function () {
@@ -48,29 +50,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('reservas', ReservaController::class);
 
-
     // ---------------------------
     // Rotas para Usuário Gestor
     // ---------------------------
-    Route::middleware([])->prefix('gestor')->name('gestor.')->group(function () {
-        Route::resource('reservas', GestorReservaController::class)->except('patch');
+    Route::middleware([GestorMiddleware::class])->prefix('gestor')->name('gestor.')->group(function () {
+        Route::resource('reservas', GestorReservaController::class);
     });
 
     // ---------------------------
     // Rotas Institucionais
     // ---------------------------
-    Route::prefix('institucional')->name('institucional.')->group(function () {
+    Route::middleware([InstitucionalMiddleware::class])->prefix('institucional')->name('institucional.')->group(function () {
+
         // Usuários
         Route::resource('usuarios', InstitucionalUsuarioController::class)->except(['store', 'update']);
-        Route::patch('usuarios/{usuario}', [InstitucionalUsuarioController::class, 'update'])
-            ->middleware(AtualizarUsuarioMiddleware::class)->name('usuario.update'); // TODO: Criar Validação
-        Route::post('usuarios', [InstitucionalUsuarioController::class, 'store'])
-            ->middleware(CadastrarUsuarioMiddleware::class)->name('usuario.store'); // TODO: Criar Validação
-
-        // Tela de criação de usuário
-        Route::get('usuarios/criar', [InstitucionalUsuarioController::class, 'create'])->name('usuarios.create');
-        // Tela de edição de usuário
-        Route::get('usuarios/{usuario}/edit', [InstitucionalUsuarioController::class, 'edit'])->name('usuarios.edit');
 
         // Instituições
         Route::resource('instituicoes', InstitucionalInstituicaoController::class)->except(['show']);

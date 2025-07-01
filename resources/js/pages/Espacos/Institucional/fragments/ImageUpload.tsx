@@ -1,3 +1,4 @@
+import Image from '@/assets/espaco.png'; // Placeholder image for empty previews
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,6 @@ import { X } from 'lucide-react';
 import React from 'react';
 import { toast } from 'sonner';
 import { FormCadastroValues } from '../CadastroEspacoPage';
-
 export interface ImageWithPreview {
     file: File;
     preview: string;
@@ -101,7 +101,7 @@ export function ImageUpload({
                                         mainImageIndex === index ? 'ring-primary border-primary ring-2' : 'bg-slate-50'
                                     }`}
                                 >
-                                    <img src={img.preview || '/placeholder.svg'} alt={`Imagem ${index + 1}`} className="h-full w-full object-cover" />
+                                    <img src={img.preview || Image} alt={`Imagem ${index + 1}`} className="h-full w-full object-cover" />
                                     {mainImageIndex === index && (
                                         <div className="bg-primary absolute top-0 left-0 rounded-br px-1.5 py-0.5 text-xs text-white">Principal</div>
                                     )}

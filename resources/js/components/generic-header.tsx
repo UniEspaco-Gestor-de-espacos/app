@@ -20,7 +20,8 @@ export default function GenericHeader({ canSeeButton, titulo, descricao, ButtonI
             {canSeeButton && (
                 <Link href={buttonLink || '#'}>
                     <Button className="flex items-center gap-2">
-                        ({ButtonIcon && <ButtonIcon className="h-4 w-4" />}){buttonText || 'N/A'}
+                        {ButtonIcon && <ButtonIcon className="h-4 w-4" />}
+                        {buttonText || 'N/A'}
                     </Button>
                 </Link>
             )}

@@ -50,44 +50,52 @@ export default function EspacosPage() {
             <Head title="Espacos" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
-                    <GenericHeader
-                        titulo="Consultar espaços"
-                        descricao="Gerencie todos os espaços disponíveis, cadastre novos,exclua ou edite os existentes"
-                    />
+                    <div className="container mx-auto space-y-6 p-6">
+                        <GenericHeader
+                            titulo="Consultar espaços"
+                            descricao="Gerencie todos os espaços disponíveis, cadastre novos,exclua ou edite os existentes"
+                        />
 
-                    {/* Todo o conteúdo a partir dos filtros até o final em uma única div */}
-                    <div>
-                        <EspacoFiltroBusca route={route('espacos.index')} unidades={unidades} modulos={modulos} andares={andares} filters={filters} />
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-                            {espacos.map((espaco) => (
-                                <EspacoCard
-                                    key={espaco.id}
-                                    espaco={espaco}
-                                    userType={permission_type_id}
-                                    handleSolicitarReserva={handleSolicitarReserva}
-                                />
-                            ))}
+                        {/* Todo o conteúdo a partir dos filtros até o final em uma única div */}
+                        <div>
+                            <EspacoFiltroBusca
+                                route={route('espacos.index')}
+                                unidades={unidades}
+                                modulos={modulos}
+                                andares={andares}
+                                filters={filters}
+                            />
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+                                {espacos.map((espaco) => (
+                                    <EspacoCard
+                                        key={espaco.id}
+                                        espaco={espaco}
+                                        userType={permission_type_id}
+                                        handleSolicitarReserva={handleSolicitarReserva}
+                                    />
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                    {/* Componente de Paginação */}
-                    <div className="mt-6 flex justify-center">
-                        <div className="flex gap-1">
-                            {links.map((link, index) =>
-                                link.url ? (
-                                    <Link
-                                        key={index}
-                                        href={link.url}
-                                        className={`rounded-md border px-4 py-2 text-sm ${link.active ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent'}`}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
-                                ) : (
-                                    <span
-                                        key={index}
-                                        className="text-muted-foreground rounded-md border px-4 py-2 text-sm"
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
-                                ),
-                            )}
+                        {/* Componente de Paginação */}
+                        <div className="mt-6 flex justify-center">
+                            <div className="flex gap-1">
+                                {links.map((link, index) =>
+                                    link.url ? (
+                                        <Link
+                                            key={index}
+                                            href={link.url}
+                                            className={`rounded-md border px-4 py-2 text-sm ${link.active ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent'}`}
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    ) : (
+                                        <span
+                                            key={index}
+                                            className="text-muted-foreground rounded-md border px-4 py-2 text-sm"
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    ),
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

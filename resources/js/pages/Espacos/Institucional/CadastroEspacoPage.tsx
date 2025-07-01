@@ -61,7 +61,7 @@ export default function CadastroEspacoPage() {
         capacidade_pessoas: espaco?.capacidade_pessoas ?? undefined,
         descricao: espaco?.descricao ?? '',
         imagens: [],
-        main_image_index: espaco ? espaco.imagens.findIndex((img) => img === espaco.main_image_index) : 0,
+        main_image_index: espaco?.imagens ? espaco.imagens.findIndex((img) => img === espaco.main_image_index) : 0,
         unidade_id: espaco?.andar?.modulo?.unidade?.id ?? undefined,
         modulo_id: espaco?.andar?.modulo?.id ?? undefined,
         andar_id: espaco?.andar?.id ?? undefined,
@@ -114,52 +114,54 @@ export default function CadastroEspacoPage() {
             <Head title={pageTitulo} />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
-                    <GenericHeader titulo={pageTitulo} descricao={pageDescricao} />
-                    <Dialog open={isAddAndarDialogOpen} onOpenChange={setIsAddAndarDialogOpen}>
-                        <Card className="mb-6">
-                            <CardContent className="pt-6">
-                                <form onSubmit={onSubmit} className="space-y-6">
-                                    <LocationSelector
-                                        unidades={unidades}
-                                        modulos={modulos}
-                                        andares={andares}
-                                        unidadeSelecionada={data.unidade_id}
-                                        setUnidadeSelecionada={(unidadeSelecionada) =>
-                                            setData((prevData) => ({ ...prevData, unidade_id: unidadeSelecionada }))
-                                        }
-                                        moduloSelecionado={data.modulo_id}
-                                        handleModuloChange={(moduloSelecionado) =>
-                                            setData((prevData) => ({ ...prevData, modulo_id: moduloSelecionado }))
-                                        }
-                                        andarSelecionado={data.andar_id}
-                                        handleAndarChange={(andarSelecionado) =>
-                                            setData((prevData) => ({ ...prevData, andar_id: parseInt(andarSelecionado!, 10) }))
-                                        }
-                                        processing={processing}
-                                        errors={errors}
-                                    />
-                                    <EspacoFormFields data={data} setData={setData} errors={errors} processing={processing} />
-                                    <ImageUpload
-                                        imagesWithPreviews={imagesWithPreviews}
-                                        setImagesWithPreviews={setImagesWithPreviews}
-                                        mainImageIndex={data.main_image_index}
-                                        setMainImageIndex={handleSetMainImage}
-                                        setData={setData}
-                                        setImagesToDelete={handleImagesToDelete}
-                                        processing={processing}
-                                        errors={errors}
-                                    />
-                                    <CardFooter className="flex justify-end p-0">
-                                        <Button type="submit" disabled={processing}>
-                                            {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            {buttonLabel}
-                                        </Button>
-                                    </CardFooter>
-                                </form>
-                            </CardContent>
-                        </Card>
-                        {data.modulo_id && <AddAndarDialog moduloSelecionado={data.modulo_id} setIsDialogOpen={setIsAddAndarDialogOpen} />}
-                    </Dialog>
+                    <div className="container mx-auto space-y-6 p-6">
+                        <GenericHeader titulo={pageTitulo} descricao={pageDescricao} />
+                        <Dialog open={isAddAndarDialogOpen} onOpenChange={setIsAddAndarDialogOpen}>
+                            <Card className="mb-6">
+                                <CardContent className="pt-6">
+                                    <form onSubmit={onSubmit} className="space-y-6">
+                                        <LocationSelector
+                                            unidades={unidades}
+                                            modulos={modulos}
+                                            andares={andares}
+                                            unidadeSelecionada={data.unidade_id}
+                                            setUnidadeSelecionada={(unidadeSelecionada) =>
+                                                setData((prevData) => ({ ...prevData, unidade_id: unidadeSelecionada }))
+                                            }
+                                            moduloSelecionado={data.modulo_id}
+                                            handleModuloChange={(moduloSelecionado) =>
+                                                setData((prevData) => ({ ...prevData, modulo_id: moduloSelecionado }))
+                                            }
+                                            andarSelecionado={data.andar_id}
+                                            handleAndarChange={(andarSelecionado) =>
+                                                setData((prevData) => ({ ...prevData, andar_id: parseInt(andarSelecionado!, 10) }))
+                                            }
+                                            processing={processing}
+                                            errors={errors}
+                                        />
+                                        <EspacoFormFields data={data} setData={setData} errors={errors} processing={processing} />
+                                        <ImageUpload
+                                            imagesWithPreviews={imagesWithPreviews}
+                                            setImagesWithPreviews={setImagesWithPreviews}
+                                            mainImageIndex={data.main_image_index}
+                                            setMainImageIndex={handleSetMainImage}
+                                            setData={setData}
+                                            setImagesToDelete={handleImagesToDelete}
+                                            processing={processing}
+                                            errors={errors}
+                                        />
+                                        <CardFooter className="flex justify-end p-0">
+                                            <Button type="submit" disabled={processing}>
+                                                {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                {buttonLabel}
+                                            </Button>
+                                        </CardFooter>
+                                    </form>
+                                </CardContent>
+                            </Card>
+                            {data.modulo_id && <AddAndarDialog moduloSelecionado={data.modulo_id} setIsDialogOpen={setIsAddAndarDialogOpen} />}
+                        </Dialog>
+                    </div>
                 </div>
             </div>
         </AppLayout>

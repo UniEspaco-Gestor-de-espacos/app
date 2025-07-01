@@ -107,6 +107,7 @@ export interface Modulo {
     id: number;
     nome: string;
     unidade?: Unidade; // Relação aninhada
+    andars?: Andar[]; // Relação aninhada, array de andares
 }
 
 export interface Andar {
