@@ -170,7 +170,7 @@ export default function EspacosPage() {
                                 <img
                                     src={espaco.main_image_index ? `/storage/${espaco.main_image_index}` : espacoImage}
                                     alt={espaco.nome}
-                                    className="h-44 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    className="h-44 w-full object-cover group-hover:scale-105"
                                 />
                                 <div className="bg-primary text-primary-foreground absolute top-2 right-2 rounded-full px-3 py-1 text-xs shadow">
                                     {espaco.andar?.modulo?.unidade?.nome}

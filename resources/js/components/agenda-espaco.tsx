@@ -66,7 +66,7 @@ const identificarTurno = (hora: number): 'manha' | 'tarde' | 'noite' => {
 // ============================================================================
 const EspacoHeader: FC<{ espaco: Espaco; gestoresPorTurno: any }> = ({ espaco, gestoresPorTurno }) => (
     <Card className="border-primary/10 mb-6 border-2 shadow-lg">
-        <CardHeader className="bg-primary/5 rounded-t-lg pb-2">
+        <CardHeader className="bg-pary/5 rounded-t-lg pb-2">
             <CardTitle className="text-primary flex items-center gap-2 text-xl">
                 <MapPin className="h-5 w-5" />
                 Espaço: {espaco.numero} - {espaco.nome}
@@ -201,22 +201,24 @@ const TurnoSection: FC<{
         {/* Cabeçalho do turno */}
         <div
             className={cn(
-                'grid grid-cols-[100px_repeat(7,1fr)] border-b sticky top-[56px] z-10',
+                'sticky top-[56px] z-10 grid grid-cols-[100px_repeat(7,1fr)] border-b',
                 titulo === 'MANHÃ' && 'bg-gradient-to-r from-blue-50 via-blue-100 to-blue-50',
                 titulo === 'TARDE' && 'bg-gradient-to-r from-yellow-50 via-yellow-100 to-yellow-50',
                 titulo === 'NOITE' && 'bg-gradient-to-r from-slate-50 via-slate-100 to-slate-50',
             )}
         >
-            <div className={cn(
-                "flex items-center justify-center font-bold text-xs uppercase tracking-widest border-r border-primary/10",
-                titulo === 'MANHÃ' && 'text-blue-700',
-                titulo === 'TARDE' && 'text-yellow-700',
-                titulo === 'NOITE' && 'text-slate-700'
-            )}>
+            <div
+                className={cn(
+                    'border-primary/10 flex items-center justify-center border-r text-xs font-bold tracking-widest uppercase',
+                    titulo === 'MANHÃ' && 'text-blue-700',
+                    titulo === 'TARDE' && 'text-yellow-700',
+                    titulo === 'NOITE' && 'text-slate-700',
+                )}
+            >
                 {titulo}
             </div>
             {diasSemana.map((dia) => (
-                <div key={`${titulo}-${dia.valor}`} className="border-l border-primary/10 p-2 text-center text-xs font-medium"></div>
+                <div key={`${titulo}-${dia.valor}`} className="border-primary/10 border-l p-2 text-center text-xs font-medium"></div>
             ))}
         </div>
         {/* Linhas de horários */}
@@ -228,11 +230,11 @@ const TurnoSection: FC<{
                     titulo === 'MANHÃ' && 'bg-blue-50/60',
                     titulo === 'TARDE' && 'bg-yellow-50/60',
                     titulo === 'NOITE' && 'bg-slate-50/60',
-                    'hover:bg-primary/5 transition-colors'
+                    'hover:bg-primary/5 transition-colors',
                 )}
             >
                 {/* Coluna fixa do horário */}
-                <div className="text-muted-foreground border-r border-primary/10 p-2 pr-3 text-right text-xs font-mono bg-background/80 sticky left-0 z-10">
+                <div className="text-muted-foreground border-primary/10 bg-background/80 sticky left-0 z-10 border-r p-2 pr-3 text-right font-mono text-xs">
                     {hora} - {hora.split(':')[0]}:50
                 </div>
                 {/* Slots dos dias */}
@@ -240,11 +242,9 @@ const TurnoSection: FC<{
                     <div
                         key={slot.id}
                         className={cn(
-                            'border-l border-primary/10 p-1 flex items-center justify-center min-h-[36px] transition-all duration-150',
-                            slot.status === 'reservado'
-                                ? 'bg-muted/40 cursor-not-allowed opacity-70'
-                                : 'hover:bg-primary/10 cursor-pointer',
-                            isSlotSelecionado(slot) && 'bg-primary/20 hover:bg-primary/30 ring-2 ring-primary ring-inset shadow-inner'
+                            'border-primary/10 flex min-h-[36px] items-center justify-center border-l p-1 transition-all duration-150',
+                            slot.status === 'reservado' ? 'bg-muted/40 cursor-not-allowed opacity-70' : 'hover:bg-primary/10 cursor-pointer',
+                            isSlotSelecionado(slot) && 'bg-primary/20 hover:bg-primary/30 ring-primary shadow-inner ring-2 ring-inset',
                         )}
                         onClick={() => slot.status === 'livre' && alternarSelecaoSlot(slot)}
                     >

@@ -28,14 +28,14 @@ export function ReservasFilters({
 }: ReservasFiltersProps) {
     return (
         <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="relative flex-1">
+            <div className="relative max-w-xs flex-1">
                 <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
                 <Input
                     type="search"
                     placeholder="Buscar por título ou descrição..."
                     className="w-full pl-8"
-                    value={searchTerm} // 3. O valor vem das props
-                    onChange={(e) => onSearchTermChange(e.target.value)} // 4. A mudança notifica o pai
+                    value={searchTerm}
+                    onChange={(e) => onSearchTermChange(e.target.value)}
                 />
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">

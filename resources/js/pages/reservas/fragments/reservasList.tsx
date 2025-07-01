@@ -95,7 +95,7 @@ export function ReservasList({ paginator, fallback, isGestor }: ReservasListProp
                                     <div>
                                         {reserva.titulo}
                                         <p className="text-muted-foreground hidden text-sm sm:block">
-                                            {reserva.descricao.substring(0, 60)}
+                                            {reserva.descricao.substring(0, 30)}
                                             {reserva.descricao.length > 60 ? '...' : ''}
                                         </p>
                                     </div>
@@ -105,12 +105,10 @@ export function ReservasList({ paginator, fallback, isGestor }: ReservasListProp
                                 </TableCell>
                                 <TableCell className="hidden md:table-cell">
                                     <div>
-                                        <p>
-                                            Espaço: {reserva.horarios[0]?.agenda?.espaco?.nome ?? ' '} /{' '}
-                                            {reserva.horarios[0]?.agenda?.espaco?.andar?.nome ?? ' '} /{' '}
-                                            {reserva.horarios[0]?.agenda?.espaco?.andar?.modulo?.nome ?? ' '} /{' '}
-                                            {reserva.horarios[0]?.agenda!.turno ? getTurnoText(reserva.horarios[0].agenda?.turno) : null}
-                                        </p>
+                                        <p>Espaço: {reserva.horarios[0]?.agenda?.espaco?.nome ?? ' '}</p>
+                                        <p>{reserva.horarios[0]?.agenda?.espaco?.andar?.nome ?? ' '}</p>
+                                        <p>{reserva.horarios[0]?.agenda?.espaco?.andar?.modulo?.nome ?? ' '}</p>
+                                        <p>{reserva.horarios[0]?.agenda?.turno ? getTurnoText(reserva.horarios[0].agenda.turno) : ''}</p>
                                     </div>
                                 </TableCell>
 
