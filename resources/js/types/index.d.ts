@@ -300,3 +300,17 @@ export type AgendaSlotsPorTurnoType = {
     tarde: Record<string, SlotCalendario[]>;
     noite: Record<string, SlotCalendario[]>;
 }
+export interface PermissionType {
+  id: number
+  name: "institucional" | "gestor" | "comum"
+  label: string
+}
+
+export interface SelectedAgenda {
+  agenda: Agenda
+  espaco: Espaco
+  andar: Andar
+  modulo: Modulo
+  unidade: Unidade
+  instituicao: Instituicao
+}

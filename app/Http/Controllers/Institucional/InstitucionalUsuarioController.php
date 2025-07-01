@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Institucional;
 
 use App\Http\Controllers\Controller;
+use App\Models\Instituicao;
+use App\Models\PermissionType;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\User; // Importar o modelo User para buscar o usuário
@@ -16,15 +18,42 @@ class InstitucionalUsuarioController extends Controller
      */
     public function index()
     {
-        // Exemplo de como você passaria dados para a tela de listagem de usuários
-        // Para uma tela de edição, geralmente você renderiza a tela `edit` ou `create`
-        $users = User::all(); // Busca todos os usuários
-        return Inertia::render('Editar/UserController', [
+        $users = User::with(['setor.unidade.instituicao'])
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'email_verified_at' => $user->email_verified_at,
+                    'telefone' => $user->telefone,
+                    'profile_pic' => $user->profile_pic,
+                    'permission_type_id' => $user->permission_type_id,
+                    'setor_id' => $user->setor_id,
+                    'setor' => $user->setor,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at,
+                ];
+            });
+
+        $permissionTypes = PermissionType::all()->map(function ($type) {
+            return [
+                'id' => $type->id,
+                'name' => $type->name,
+                'label' => $type->label,
+            ];
+        });
+
+        $instituicoes = Instituicao::all();
+
+        return Inertia::render('Administrativo/Usuarios/Usuarios', [
             'users' => $users,
+            'permissionTypes' => $permissionTypes,
+            'instituicoes' => $instituicoes,
         ]);
     }
 
-    
+
 
     /**
      * Show the form for creating a new resource.
