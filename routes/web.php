@@ -54,7 +54,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Rotas para Usuário Gestor
     // ---------------------------
     Route::middleware([GestorMiddleware::class])->prefix('gestor')->name('gestor.')->group(function () {
-        Route::resource('reservas', GestorReservaController::class)->except('patch');
+        Route::resource('reservas', GestorReservaController::class);
     });
 
     // ---------------------------

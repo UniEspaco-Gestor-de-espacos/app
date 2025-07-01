@@ -12,6 +12,7 @@ export default function EditarModulo() {
         nome: modulo.nome,
         unidade_id: modulo.unidade?.id.toString() || '',
         quantidade_andares: modulo.andars?.length || 0, // Define a quantidade de andares com base no módulo
+        
     });
 
     const submit = (e: React.FormEvent<HTMLFormElement>) => {

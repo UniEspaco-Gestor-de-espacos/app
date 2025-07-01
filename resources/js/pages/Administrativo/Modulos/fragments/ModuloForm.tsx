@@ -1,17 +1,20 @@
-import { Badge } from '@/components/ui/badge';
+'use client';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, Select as SelectUI, SelectValue } from '@/components/ui/select';
+import { SelectContent, SelectItem, SelectTrigger, Select as SelectUI, SelectValue } from '@/components/ui/select';
+import { isEditMode, transformModuloToFormData } from '@/lib/utils/ModuloDataFormTransformer';
 import { Instituicao, Modulo, Unidade } from '@/types';
 import { useForm } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CadastrarModuloForm } from '../CadastrarModulo';
+import AndaresGrid from './AndaresGrid';
+import AndarStickFormActions from './AndarStickFormActions';
+import AndarSummary from './AndarSummary';
 
-// Componente reutilizável para os formulários de Criar e Editar
-
-type ModuloFormProps = {
+export type ModuloFormProps = {
     data: CadastrarModuloForm;
     setData: ReturnType<typeof useForm<CadastrarModuloForm>>['setData'];
     submit: (e: React.FormEvent<HTMLFormElement>) => void;
@@ -21,13 +24,7 @@ type ModuloFormProps = {
     description: string;
     instituicoes: Instituicao[];
     unidades: Unidade[];
-    quantidadeAndares?: string;
     modulo?: Modulo;
-};
-
-type AndarPresetType = {
-    numero: number;
-    nome: string;
 };
 
 export default function ModuloForm({
@@ -41,191 +38,195 @@ export default function ModuloForm({
     instituicoes,
     unidades,
     modulo,
-    quantidadeAndares,
 }: ModuloFormProps) {
     const [instituicaoSelecionada, setInstituicaoSelecionada] = useState<Instituicao | undefined>(modulo?.unidade?.instituicao);
+
+    const topRef = useRef<HTMLDivElement>(null);
+    const andaresRef = useRef<HTMLDivElement>(null);
+
+    // Inicializar dados do formulário quando em modo de edição
+    useEffect(() => {
+        if (modulo && isEditMode(modulo)) {
+            const formData = transformModuloToFormData(modulo);
+            setData(formData);
+
+            if (modulo.unidade?.instituicao) {
+                setInstituicaoSelecionada(modulo.unidade.instituicao);
+            }
+        }
+    }, [modulo, setData]);
+
     const unidadesFiltradas = useMemo(() => {
         if (!instituicaoSelecionada) return [];
         return unidades.filter((unidade) => unidade.instituicao?.id === instituicaoSelecionada.id);
     }, [instituicaoSelecionada, unidades]);
-    const [open, setOpen] = useState(false);
 
-    const qntNumber = quantidadeAndares ? parseInt(quantidadeAndares, 10) : 0;
-    const andaresPredefinidos = useMemo(
-        () =>
-            [
-                { numero: -1, nome: 'Subsolo' },
-                { numero: 0, nome: 'Térreo' },
-                ...Array.from({ length: qntNumber }, (_, index) => ({ numero: index + 1, nome: `${index + 1}º Andar` })),
-            ] as AndarPresetType[],
-        [qntNumber],
-    );
-    const tiposDeAcesso = ['terreo', 'escada', 'elevador', 'rampa'];
+    const handleAddAndar = () => {
+        setData((prev) => ({
+            ...prev,
+            andares: [
+                ...prev.andares,
+                {
+                    nome: '',
+                    tipo_acesso: [],
+                },
+            ],
+        }));
+
+        // Scroll suave para a seção de andares após adicionar
+        setTimeout(() => {
+            andaresRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    };
+
+    const handleUpdateAndar = (index: number, andar: { nome: string; tipo_acesso: string[] }) => {
+        setData((prev) => {
+            const andarDuplicado = prev.andares.some((a, i) => i !== index && a.nome === andar.nome && andar.nome !== '');
+
+            if (andarDuplicado) {
+                return prev;
+            }
+
+            return {
+                ...prev,
+                andares: prev.andares.map((a, i) => (i === index ? andar : a)),
+            };
+        });
+    };
+
+    const handleRemoveAndar = (index: number) => {
+        setData((prev) => ({
+            ...prev,
+            andares: prev.andares.filter((_, i) => i !== index),
+        }));
+    };
+
+    const handleCollapseAll = () => {
+        // Esta funcionalidade seria implementada passando estado para os cards
+        console.log('Recolher todos os andares');
+    };
+
+    const handleExpandAll = () => {
+        // Esta funcionalidade seria implementada passando estado para os cards
+        console.log('Expandir todos os andares');
+    };
+
+    const scrollToTop = () => {
+        topRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const editMode = isEditMode(modulo);
 
     return (
-        <form onSubmit={submit}>
-            <Card>
-                <CardHeader>
-                    <CardTitle>{title}</CardTitle>
-                    <CardDescription>{description}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {/* Select de Instituição */}
-                    <div className="space-y-2">
-                        <Label>Instituição</Label>
-                        <SelectUI
-                            value={instituicaoSelecionada?.id.toString()}
-                            onValueChange={(value) => setInstituicaoSelecionada(instituicoes.find((i) => i.id.toString() === value))}
-                            disabled={processing}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione uma instituição" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {instituicoes.map((instituicao) => (
-                                    <SelectItem key={instituicao.id} value={instituicao.id.toString()}>
-                                        {instituicao.nome}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </SelectUI>
-                    </div>
-
-                    {/* Select de Unidade */}
-                    <div className="space-y-2">
-                        <Label htmlFor="unidade_id">Unidade</Label>
-                        <SelectUI
-                            value={data.unidade_id}
-                            onValueChange={(value) => setData((prevData) => ({ ...prevData, unidade_id: value }))}
-                            disabled={processing || !instituicaoSelecionada}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione uma unidade" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {unidadesFiltradas.map((unidade) => (
-                                    <SelectItem key={unidade.id} value={unidade.id.toString()}>
-                                        {unidade.nome}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </SelectUI>
-                        {errors.unidade_id && <p className="mt-1 text-sm text-red-500">{errors.unidade_id}</p>}
-                    </div>
-
-                    {/* Input Nome do Módulo */}
-                    <div className="space-y-2">
-                        <Label htmlFor="nome">Nome do módulo</Label>
-                        <Input
-                            id="nome"
-                            value={data.nome}
-                            onChange={(e) => setData((prevData) => ({ ...prevData, nome: e.target.value }))}
-                            placeholder="Ex: Bloco Administrativo"
-                        />
-                        {errors.nome && <p className="mt-1 text-sm text-red-500">{errors.nome}</p>}
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {/* Select de Andar */}
+        <div ref={topRef}>
+            <form onSubmit={submit} className="space-y-6 pb-20">
+                {/* Informações Básicas do Módulo */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{title}</CardTitle>
+                        <CardDescription>{description}</CardDescription>
+                        {editMode && <div className="text-muted-foreground text-sm">ID do Módulo: {modulo?.id}</div>}
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {/* Select de Instituição */}
                         <div className="space-y-2">
-                            <Label htmlFor="quantidade_andares">Andar</Label>
-                            <Select
-                                value={data.quantidade_andares}
-                                onValueChange={(value) => setData((prevData) => ({ ...prevData, quantidade_andares: value }))}
+                            <Label>Instituição</Label>
+                            <SelectUI
+                                value={instituicaoSelecionada?.id.toString()}
+                                onValueChange={(value) => {
+                                    const instituicao = instituicoes.find((i) => i.id.toString() === value);
+                                    setInstituicaoSelecionada(instituicao);
+                                    if (!editMode) {
+                                        setData((prev) => ({ ...prev, unidade_id: '' }));
+                                    }
+                                }}
+                                disabled={processing}
                             >
-                                <SelectTrigger id="andar-select">
-                                    <SelectValue placeholder="Selecione um andar" />
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione uma instituição" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {andaresPredefinidos.map((andar) => (
-                                        <SelectItem key={andar.numero} value={andar.numero.toString()}>
-                                            {andar.nome}
+                                    {instituicoes.map((instituicao) => (
+                                        <SelectItem key={instituicao.id} value={instituicao.id.toString()}>
+                                            {instituicao.nome}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
-                            </Select>
-                            {errors.quantidade_andares && <p className="mt-1 text-sm text-red-500">{errors.quantidade_andares}</p>}
+                            </SelectUI>
                         </div>
 
-                        {/* MultiSelect Tipos de Acesso */}
+                        {/* Select de Unidade */}
                         <div className="space-y-2">
-                            <Label>Tipos de Acesso</Label>
-                            <div
-                                className={`border-input bg-background ring-offset-background flex items-center justify-between rounded-md border px-3 py-2 text-sm ${processing ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-                                onClick={() => !processing && setOpen(!open)}
+                            <Label htmlFor="unidade_id">Unidade</Label>
+                            <SelectUI
+                                value={data.unidade_id}
+                                onValueChange={(value) => setData((prev) => ({ ...prev, unidade_id: value }))}
+                                disabled={processing || !instituicaoSelecionada}
                             >
-                                <div className="flex flex-wrap gap-1">
-                                    {data.tipos_de_acesso.length > 0 ? (
-                                        data.tipos_de_acesso
-                                            .filter((tipo: string) => data.tipos_de_acesso.includes(tipo))
-                                            .map((tipo: string, index: number) => (
-                                                <Badge key={index} variant="secondary" className="px-2 py-0">
-                                                    {tipo}
-                                                </Badge>
-                                            ))
-                                    ) : (
-                                        <span className="text-muted-foreground">Selecione os tipos de acesso</span>
-                                    )}
-                                </div>
-                                <div className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="24"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="h-4 w-4 opacity-50"
-                                    >
-                                        <path d="m6 9 6 6 6-6" />
-                                    </svg>
-                                </div>
-                            </div>
-                            {open && (
-                                <Select
-                                    value={data.tipos_de_acesso[0]}
-                                    onValueChange={(value) => {
-                                        if (data.tipos_de_acesso.includes(value)) {
-                                            setData((prevData) => ({
-                                                ...prevData,
-                                                tipos_de_acesso: prevData.tipos_de_acesso.filter((tipo) => tipo !== value),
-                                            }));
-                                        }
-                                        if (data.tipos_de_acesso.length < 4) {
-                                            setData((prevData) => ({
-                                                ...prevData,
-                                                tipos_de_acesso: [...prevData.tipos_de_acesso, value],
-                                            }));
-                                        }
-                                        setOpen(false);
-                                    }}
-                                >
-                                    <SelectTrigger id="tipo-acesso-select">
-                                        <SelectValue placeholder="Selecione um andar" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {tiposDeAcesso.map((tipo) => (
-                                            <SelectItem key={tipo} value={tipo}>
-                                                {tipo}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            )}
-
-                            {errors.tipos_de_acesso && <p className="mt-1 text-sm text-red-500">{errors.tipos_de_acesso}</p>}
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione uma unidade" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {unidadesFiltradas.map((unidade) => (
+                                        <SelectItem key={unidade.id} value={unidade.id.toString()}>
+                                            {unidade.nome}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </SelectUI>
+                            {errors.unidade_id && <p className="mt-1 text-sm text-red-500">{errors.unidade_id}</p>}
                         </div>
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <Button type="submit" disabled={processing}>
-                        {processing ? 'Salvando...' : 'Salvar'}
-                    </Button>
-                </CardFooter>
-            </Card>
-        </form>
+
+                        {/* Input Nome do Módulo */}
+                        <div className="space-y-2">
+                            <Label htmlFor="nome">Nome do módulo</Label>
+                            <Input
+                                id="nome"
+                                value={data.nome}
+                                onChange={(e) => setData((prev) => ({ ...prev, nome: e.target.value }))}
+                                placeholder="Ex: Bloco Administrativo"
+                            />
+                            {errors.nome && <p className="mt-1 text-sm text-red-500">{errors.nome}</p>}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Seção de Andares */}
+                <Card ref={andaresRef}>
+                    <CardHeader>
+                        <CardTitle>Andares do Módulo</CardTitle>
+                        <CardDescription>Configure os andares e seus tipos de acesso</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <AndaresGrid
+                            andares={data.andares}
+                            onUpdate={handleUpdateAndar}
+                            onRemove={handleRemoveAndar}
+                            onAdd={handleAddAndar}
+                            onCollapseAll={handleCollapseAll}
+                            onExpandAll={handleExpandAll}
+                            errors={errors}
+                            processing={processing}
+                        />
+                        {errors.andares && <p className="mt-4 text-sm text-red-500">{errors.andares}</p>}
+                    </CardContent>
+                </Card>
+
+                {/* Resumo dos Andares */}
+                {data.andares.length > 0 && <AndarSummary andares={data.andares} />}
+
+                {/* Botões de Ação Fixos */}
+                <Card>
+                    <CardFooter className="flex justify-end space-x-2">
+                        <Button type="submit" disabled={processing}>
+                            {processing ? 'Salvando...' : editMode ? 'Atualizar Módulo' : 'Salvar Módulo'}
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </form>
+
+            {/* Ações Sticky */}
+            <AndarStickFormActions processing={processing} isEditMode={editMode} onScrollToTop={scrollToTop} andaresCount={data.andares.length} />
+        </div>
     );
 }
