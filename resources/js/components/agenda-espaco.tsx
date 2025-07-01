@@ -62,41 +62,42 @@ const identificarTurno = (hora: number): 'manha' | 'tarde' | 'noite' => {
 };
 
 // ============================================================================
-// --- Componentes Modularizados (Versão Corrigida) ---
+// --- Componentes Modularizados ---
 // ============================================================================
-
 const EspacoHeader: FC<{ espaco: Espaco; gestoresPorTurno: any }> = ({ espaco, gestoresPorTurno }) => (
-    <Card className="shadow-sm">
-        <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-xl">
+    <Card className="border-primary/10 mb-6 border-2 shadow-lg">
+        <CardHeader className="bg-primary/5 rounded-t-lg pb-2">
+            <CardTitle className="text-primary flex items-center gap-2 text-xl">
                 <MapPin className="h-5 w-5" />
-                Nome: {espaco.nome}
+                Espaço: {espaco.numero} - {espaco.nome}
             </CardTitle>
         </CardHeader>
         <CardContent className="pb-3">
             <div className="mb-3 flex flex-wrap gap-2">
-                <Badge variant="outline" className="flex items-center gap-1">
+                <Badge variant="outline" className="border-primary/30 bg-background flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
                     {espaco.andar?.modulo?.nome}
                 </Badge>
-                <Badge variant="outline" className="flex items-center gap-1">
+                <Badge variant="outline" className="border-primary/30 bg-background flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     {espaco.andar?.nome}
                 </Badge>
-                <Badge variant="outline" className="flex items-center gap-1">
+                <Badge variant="outline" className="border-primary/30 bg-background flex items-center gap-1">
                     <Users className="h-3 w-3" />
                     {espaco.capacidade_pessoas} pessoas
                 </Badge>
             </div>
             <div className="border-t pt-2">
-                <h3 className="mb-2 text-xs font-medium">Gestores por Turno:</h3>
+                <h3 className="text-muted-foreground mb-2 text-xs font-medium">Gestores por Turno:</h3>
                 <div className="mx-auto grid max-w-3xl grid-cols-1 gap-2 sm:grid-cols-3">
                     {['manha', 'tarde', 'noite'].map((turno) => (
                         <TooltipProvider key={turno}>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <div className={`flex items-center justify-center gap-2 rounded-md p-1 text-xs transition-colors`}>
-                                        <div className="font-semibold">{turno.toUpperCase()}:</div>
+                                    <div
+                                        className={`bg-muted/40 border-primary/10 flex items-center justify-center gap-2 rounded-md border p-2 text-xs`}
+                                    >
+                                        <div className="text-primary font-semibold">{turno.toUpperCase()}:</div>
                                         <div className="flex items-center gap-1">
                                             <User className="text-muted-foreground h-3 w-3" />
                                             <span>{gestoresPorTurno[turno]?.nome ?? 'N/A'}</span>
@@ -124,7 +125,7 @@ const EspacoHeader: FC<{ espaco: Espaco; gestoresPorTurno: any }> = ({ espaco, g
 );
 
 const AgendaNavegacao: FC<{ semanaAtual: Date; onAnterior: () => void; onProxima: () => void }> = ({ semanaAtual, onAnterior, onProxima }) => (
-    <div className="flex items-center justify-between">
+    <div className="mb-2 flex items-center justify-between">
         <Button variant="outline" size="sm" onClick={onAnterior}>
             <ChevronLeft className="mr-1 h-4 w-4" />
             <span className="hidden sm:inline">Semana Anterior</span>
@@ -196,45 +197,68 @@ const TurnoSection: FC<{
     alternarSelecaoSlot: (slot: SlotCalendario) => void;
     hoje: Date;
 }> = ({ titulo, slotsDoTurno, diasSemana, isSlotSelecionado, alternarSelecaoSlot, hoje }) => (
-    <>
+    <div className="mb-4">
+        {/* Cabeçalho do turno */}
         <div
             className={cn(
-                'grid grid-cols-[80px_repeat(7,1fr)] border-b',
-                titulo === 'MANHÃ' && 'bg-accent/10',
-                titulo === 'TARDE' && 'bg-secondary/10',
-                titulo === 'NOITE' && 'bg-muted/20',
+                'grid grid-cols-[100px_repeat(7,1fr)] border-b sticky top-[56px] z-10',
+                titulo === 'MANHÃ' && 'bg-gradient-to-r from-blue-50 via-blue-100 to-blue-50',
+                titulo === 'TARDE' && 'bg-gradient-to-r from-yellow-50 via-yellow-100 to-yellow-50',
+                titulo === 'NOITE' && 'bg-gradient-to-r from-slate-50 via-slate-100 to-slate-50',
             )}
         >
-            <div className="p-2 text-center text-xs font-semibold">{titulo}</div>
+            <div className={cn(
+                "flex items-center justify-center font-bold text-xs uppercase tracking-widest border-r border-primary/10",
+                titulo === 'MANHÃ' && 'text-blue-700',
+                titulo === 'TARDE' && 'text-yellow-700',
+                titulo === 'NOITE' && 'text-slate-700'
+            )}>
+                {titulo}
+            </div>
             {diasSemana.map((dia) => (
-                <div key={`${titulo}-${dia.valor}`} className="border-l p-2 text-center text-xs font-medium"></div>
+                <div key={`${titulo}-${dia.valor}`} className="border-l border-primary/10 p-2 text-center text-xs font-medium"></div>
             ))}
         </div>
+        {/* Linhas de horários */}
         {Object.entries(slotsDoTurno).map(([hora, slots]) => (
             <div
                 key={hora}
                 className={cn(
-                    'grid grid-cols-[80px_repeat(7,1fr)] border-b',
-                    titulo === 'MANHÃ' && 'bg-accent/5',
-                    titulo === 'TARDE' && 'bg-secondary/5',
-                    titulo === 'NOITE' && 'bg-muted/10',
+                    'grid grid-cols-[100px_repeat(7,1fr)] border-b last:border-b-0',
+                    titulo === 'MANHÃ' && 'bg-blue-50/60',
+                    titulo === 'TARDE' && 'bg-yellow-50/60',
+                    titulo === 'NOITE' && 'bg-slate-50/60',
+                    'hover:bg-primary/5 transition-colors'
                 )}
             >
-                <div className="text-muted-foreground border-r p-2 pr-3 text-right text-xs">
+                {/* Coluna fixa do horário */}
+                <div className="text-muted-foreground border-r border-primary/10 p-2 pr-3 text-right text-xs font-mono bg-background/80 sticky left-0 z-10">
                     {hora} - {hora.split(':')[0]}:50
                 </div>
-                {slots.map((slot) => (
-                    <SlotCalendarioCell
+                {/* Slots dos dias */}
+                {slots.map((slot, idx) => (
+                    <div
                         key={slot.id}
-                        slot={slot}
-                        isSelecionado={isSlotSelecionado(slot)}
-                        onSelect={() => alternarSelecaoSlot(slot)}
-                        hoje={hoje}
-                    />
+                        className={cn(
+                            'border-l border-primary/10 p-1 flex items-center justify-center min-h-[36px] transition-all duration-150',
+                            slot.status === 'reservado'
+                                ? 'bg-muted/40 cursor-not-allowed opacity-70'
+                                : 'hover:bg-primary/10 cursor-pointer',
+                            isSlotSelecionado(slot) && 'bg-primary/20 hover:bg-primary/30 ring-2 ring-primary ring-inset shadow-inner'
+                        )}
+                        onClick={() => slot.status === 'livre' && alternarSelecaoSlot(slot)}
+                    >
+                        <SlotCalendarioCell
+                            slot={slot}
+                            isSelecionado={isSlotSelecionado(slot)}
+                            onSelect={() => alternarSelecaoSlot(slot)}
+                            hoje={hoje}
+                        />
+                    </div>
                 ))}
             </div>
         ))}
-    </>
+    </div>
 );
 
 const AgendaCalendario: FC<{
@@ -244,18 +268,21 @@ const AgendaCalendario: FC<{
     alternarSelecaoSlot: (slot: SlotCalendario) => void;
     hoje: Date;
 }> = ({ diasSemana, slotsPorTurno, isSlotSelecionado, alternarSelecaoSlot, hoje }) => (
-    <Card>
+    <Card className="overflow-hidden rounded-lg shadow-sm">
         <ScrollArea className="h-[calc(100vh-220px)]">
             <div className="min-w-[800px]">
+                {/* Cabeçalho fixo com dias */}
                 <div className="bg-background sticky top-0 z-10 grid grid-cols-[80px_repeat(7,1fr)] border-b">
-                    <div className="text-muted-foreground p-2 text-center text-sm font-medium"></div>
+                    <div className="text-muted-foreground p-2 text-center text-sm font-bold"></div>
                     {diasSemana.map((dia) => (
-                        <div key={dia.valor} className={cn('border-l p-2 text-center text-sm font-medium', dia.ehHoje && 'bg-primary/5')}>
+                        <div key={dia.valor} className={cn('border-l p-2 text-center text-sm font-semibold', dia.ehHoje && 'bg-primary/10')}>
                             <div>{dia.abreviado}</div>
                             <div className={cn('text-xs', dia.ehHoje ? 'text-primary font-bold' : 'text-muted-foreground')}>{dia.diaMes}</div>
                         </div>
                     ))}
                 </div>
+
+                {/* MANHÃ */}
                 <TurnoSection
                     titulo="MANHÃ"
                     slotsDoTurno={slotsPorTurno.manha}
@@ -264,6 +291,8 @@ const AgendaCalendario: FC<{
                     alternarSelecaoSlot={alternarSelecaoSlot}
                     hoje={hoje}
                 />
+
+                {/* TARDE */}
                 <TurnoSection
                     titulo="TARDE"
                     slotsDoTurno={slotsPorTurno.tarde}
@@ -272,6 +301,8 @@ const AgendaCalendario: FC<{
                     alternarSelecaoSlot={alternarSelecaoSlot}
                     hoje={hoje}
                 />
+
+                {/* NOITE */}
                 <TurnoSection
                     titulo="NOITE"
                     slotsDoTurno={slotsPorTurno.noite}
@@ -513,7 +544,7 @@ const EditModeAlert: FC<{ reserva: Reserva }> = ({ reserva }) => (
 // --- Componente Principal (Orquestrador) ---
 // ============================================================================
 
-export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: AgendaEspacoProps) {
+export default function AgendaEspaco({ isEditMode = false, espaco, reserva }: AgendaEspacoProps) {
     const { agendas } = espaco;
     const hoje = useMemo(() => new Date(new Date().setHours(0, 0, 0, 0)), []);
 
@@ -694,7 +725,6 @@ export default function AgendaEspaço({ isEditMode = false, espaco, reserva }: A
         const novaSelecao = isSlotSelecionado(slot)
             ? slotsSelecao.filter((s) => s.id !== slot.id)
             : [...slotsSelecao, slot].sort((a, b) => a.data.getTime() - b.data.getTime() || a.horario_inicio.localeCompare(b.horario_inicio));
-        console.log('Antes: ', slotsSelecao.length);
         setSlotsSelecao(novaSelecao);
     };
     useEffect(() => {
