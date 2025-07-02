@@ -87,6 +87,7 @@ export interface Instituicao {
     nome: string;
     sigla: string;
     endereco: string;
+    unidades?: Unidade[]; // Relação aninhada, array de unidades
 }
 
 export interface Unidade {
@@ -94,6 +95,8 @@ export interface Unidade {
     nome: string;
     sigla: string;
     instituicao?: Instituicao; // Relação aninhada
+    modulos?: Modulo[]; // Relação aninhada, array de módulos
+    setor?: Setor; // Relação aninhada
 }
 
 export interface Setor {
@@ -115,6 +118,7 @@ export interface Andar {
     nome: string;
     tipo_acesso: [];
     modulo?: Modulo; // Relação aninhada
+    espacos?: Espaco[]; // Relação aninhada, array de espaços
 }
 
 export interface Espaco {

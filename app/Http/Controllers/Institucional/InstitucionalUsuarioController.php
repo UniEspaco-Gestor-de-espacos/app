@@ -39,12 +39,14 @@ class InstitucionalUsuarioController extends Controller
         $permissionTypes = PermissionType::all()->map(function ($type) {
             return [
                 'id' => $type->id,
-                'name' => $type->name,
-                'label' => $type->label,
+                'nome' => $type->nome,
+                'label' => $type->nome,
             ];
         });
 
-        $instituicoes = Instituicao::all();
+        $instituicoes = Instituicao::with([
+            'unidades.modulos.andars.espacos.agendas'
+        ])->get();
 
         return Inertia::render('Administrativo/Usuarios/Usuarios', [
             'users' => $users,
