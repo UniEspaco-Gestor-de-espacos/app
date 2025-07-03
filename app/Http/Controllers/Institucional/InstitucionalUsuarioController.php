@@ -3,9 +3,17 @@
 namespace App\Http\Controllers\Institucional;
 
 use App\Http\Controllers\Controller;
+use App\Models\Agenda;
+use App\Models\Andar;
+use App\Models\Espaco;
+use App\Models\Instituicao;
+use App\Models\Modulo;
+use App\Models\PermissionType;
+use App\Models\Unidade;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\User; // Importar o modelo User para buscar o usuário
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule; // Importar Rule para validações
 
 
@@ -16,15 +24,69 @@ class InstitucionalUsuarioController extends Controller
      */
     public function index()
     {
-        // Exemplo de como você passaria dados para a tela de listagem de usuários
-        // Para uma tela de edição, geralmente você renderiza a tela `edit` ou `create`
-        $users = User::all(); // Busca todos os usuários
-        return Inertia::render('Editar/UserController', [
+        $users = User::with([
+            'setor.unidade.instituicao',
+            'agendas.espaco.andar.modulo.unidade.instituicao'
+        ])->get();
+
+        $permissionTypes = PermissionType::all()->map(function ($type) {
+            return [
+                'id' => $type->id,
+                'nome' => $type->nome,
+                'label' => $type->nome,
+            ];
+        });
+
+        return Inertia::render('Administrativo/Usuarios/Usuarios', [
             'users' => $users,
+            'permissionTypes' => $permissionTypes,
+            'instituicoes' => Instituicao::with([
+                'unidades.modulos.andars.espacos.agendas'
+            ])->get(),
+
         ]);
     }
 
-    
+
+
+    public function updatePermissions(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'permission_type_id' => ['required', 'exists:permission_types,id'],
+            'agendas' => ['array'], // Permite que agendas seja um array vazio ou com IDs
+        ]);
+        $userId = $user->id;
+        $agendaIds = $validated['agendas'] ?? []; // Pega os IDs das agendas ou um array vazio se não houver
+        try {
+            DB::transaction(function () use ($validated, $user, $userId, $agendaIds) {
+                // Atualiza a permissão do usuário
+                $user->permission_type_id = $validated['permission_type_id'];
+                $user->save();
+
+                if ($validated['permission_type_id'] == 1 || $validated['permission_type_id'] == 3) {
+                    // Se a permissão for de administrador, limpa as agendas associadas
+                    Agenda::where('user_id', $userId)
+                        ->update(['user_id' => null]);
+                } else {
+                    Agenda::where('user_id', $userId)
+                        ->whereNotIn('id', $agendaIds)
+                        ->update(['user_id' => null]);
+
+                    // 2. Associa as novas (ou existentes) agendas a este usuário
+                    // Pega agendas da nova lista e define o user_id para o ID deste usuário
+                    Agenda::whereIn('id', $agendaIds)
+                        ->update(['user_id' => $userId]);
+                }
+            });
+            DB::commit();
+            return redirect()->route('institucional.usuarios.index')->with('success', 'Permissões atualizadas com sucesso.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            // Captura qualquer erro e retorna uma resposta de erro
+            return redirect()->route('institucional.usuarios.index')->with('error', 'Erro ao atualizar permissões: ' . $th->getMessage());
+        }
+    }
+
 
     /**
      * Show the form for creating a new resource.
@@ -124,9 +186,13 @@ class InstitucionalUsuarioController extends Controller
      */
     public function destroy(string $id)
     {
-        $user = User::findOrFail($id);
-        $user->delete();
+        try {
+            $user = User::findOrFail($id);
+            $user->delete();
 
-        return redirect()->route('institucional.usuarios.index')->with('success', 'Usuário excluído com sucesso.');
+            return redirect()->route('institucional.usuarios.index')->with('success', 'Usuário excluído com sucesso.');
+        } catch (\Throwable $th) {
+            return redirect()->route('institucional.usuarios.index')->with('error', 'Erro ao Usuário excluir.');
+        }
     }
 }

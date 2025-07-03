@@ -199,34 +199,36 @@ export default function ModulosPage() {
                                                                 <div className="space-y-3">
                                                                     {modulo.andars
                                                                         .sort((a, b) => nomeParaNivel(a.nome) - nomeParaNivel(b.nome))
-                                                                        .map((andar) => (
-                                                                            <div key={andar.id} className="bg-card rounded-lg border p-4">
-                                                                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                                                                    <div>
-                                                                                        <h5 className="font-medium">
-                                                                                            {nivelParaLabel(nomeParaNivel(andar.nome))}
-                                                                                        </h5>
-                                                                                        <p className="text-muted-foreground text-sm">
-                                                                                            Nível: {nomeParaNivel(andar.nome)}
-                                                                                        </p>
-                                                                                    </div>
-                                                                                    <div className="flex flex-wrap gap-2">
-                                                                                        {andar.tipo_acesso.map((tipo) => (
-                                                                                            <Badge
-                                                                                                key={tipo}
-                                                                                                variant="outline"
-                                                                                                className={
-                                                                                                    tiposAcessoColors[tipo] ||
-                                                                                                    'bg-gray-100 text-gray-800'
-                                                                                                }
-                                                                                            >
-                                                                                                {tipo}
-                                                                                            </Badge>
-                                                                                        ))}
+                                                                        .map((andar) => {
+                                                                            return (
+                                                                                <div key={andar.id} className="bg-card rounded-lg border p-4">
+                                                                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                                                                        <div>
+                                                                                            <h5 className="font-medium">
+                                                                                                {nivelParaLabel(nomeParaNivel(andar.nome))}
+                                                                                            </h5>
+                                                                                            <p className="text-muted-foreground text-sm">
+                                                                                                Nível: {nomeParaNivel(andar.nome)}
+                                                                                            </p>
+                                                                                        </div>
+                                                                                        <div className="flex flex-wrap gap-2">
+                                                                                            {andar.tipo_acesso.map((tipo) => (
+                                                                                                <Badge
+                                                                                                    key={tipo}
+                                                                                                    variant="outline"
+                                                                                                    className={
+                                                                                                        tiposAcessoColors[tipo] ||
+                                                                                                        'bg-gray-100 text-gray-800'
+                                                                                                    }
+                                                                                                >
+                                                                                                    {tipo}
+                                                                                                </Badge>
+                                                                                            ))}
+                                                                                        </div>
                                                                                     </div>
                                                                                 </div>
-                                                                            </div>
-                                                                        ))}
+                                                                            );
+                                                                        })}
                                                                 </div>
                                                             ) : (
                                                                 <p className="text-muted-foreground text-sm">
@@ -243,7 +245,15 @@ export default function ModulosPage() {
                             )}
                         </div>
                         {removerModulo && (
-                            <DeleteItem itemName={removerModulo.nome} route={route('institucional.modulos.destroy', { modulo: removerModulo.id })} />
+                            <DeleteItem
+                                itemName={removerModulo.nome}
+                                isOpen={(open) => {
+                                    if (!open) {
+                                        setRemoverModulo(null);
+                                    }
+                                }}
+                                route={route('institucional.modulos.destroy', { modulo: removerModulo.id })}
+                            />
                         )}
                         {/* Resumo */}
                     </div>

@@ -3,49 +3,27 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SelectContent, SelectItem, SelectTrigger, Select as SelectUI, SelectValue } from '@/components/ui/select';
 import { Instituicao, Setor, Unidade } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, LoaderCircle } from 'lucide-react';
-import { FormEventHandler, useEffect, useState } from 'react';
+import { FormEventHandler, useState } from 'react';
 
 export default function Register() {
-    const { props } = usePage<{ instituicaos: Instituicao[]; unidades: Unidade[]; setores: Setor[] }>();
+    const { instituicaos } = usePage<{ instituicaos: Instituicao[] }>().props;
 
     // Filtra apenas a UESB das instituições disponíveis
-    const instituicaoUESB = props.instituicaos.find((inst) => inst.sigla === 'UESB');
-    const [instituicaoId, setInstituicaoId] = useState<string>('');
+    const [instituicaoId, setInstituicaoId] = useState<string | undefined>('');
     const [unidades, setUnidades] = useState<Unidade[]>([]);
-    const [unidadeId, setUnidadeId] = useState<string>('');
+    const [unidadeId, setUnidadeId] = useState<string | undefined>('');
     const [setores, setSetores] = useState<Setor[]>([]);
-    const [setorId, setSetorId] = useState<string>('');
+    const [setorId, setSetorId] = useState<string | undefined>('');
     const [showModal, setShowModal] = useState(false);
     const [novaInstituicao, setNovaInstituicao] = useState({
         nome: '',
         unidade: '',
         setor: '',
     });
-
-    useEffect(() => {
-        if (instituicaoId === 'UESB') {
-            const listUnidades = props.unidades.filter((unidade) => unidade.instituicao_id == instituicaoUESB?.id);
-            setUnidades(listUnidades);
-        } else {
-            setUnidades([]);
-            setUnidadeId('');
-            setSetores([]);
-            setSetorId('');
-        }
-    }, [instituicaoId]);
-
-    useEffect(() => {
-        if (unidadeId && instituicaoId === 'UESB') {
-            const listSetores = props.setores.filter((setor) => setor.unidade_id.toString() == unidadeId);
-            setSetores(listSetores);
-        } else {
-            setSetores([]);
-            setSetorId('');
-        }
-    }, [unidadeId]);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
@@ -180,67 +158,60 @@ export default function Register() {
                                 <InputError message={errors.phone} />
                             </div>
 
-                            <div>
-                                <Label htmlFor="instituicao">Instituição:</Label>
-                                <select
-                                    id="instituicao"
-                                    value={instituicaoId}
-                                    onChange={(e) => {
-                                        const selected = e.target.value;
-                                        setInstituicaoId(selected);
+                            <div className="space-y-2">
+                                <Label>Instituição</Label>
+                                <SelectUI
+                                    value={instituicaoId || ''}
+                                    onValueChange={(value) => {
+                                        console.log(instituicaos.find((i) => i.id.toString() === value));
+                                        setInstituicaoId(value);
+                                        setUnidades(instituicaos.find((i) => i.id.toString() === value)?.unidades || []);
                                         setUnidadeId('');
+                                        setSetores([]);
                                         setSetorId('');
-
-                                        if (selected === 'outra') {
-                                            setShowModal(true);
-                                        }
                                     }}
-                                    className="w-full rounded-md border border-gray-300 p-2"
-                                    required
+                                    disabled={processing}
                                 >
-                                    <option value="">Selecionar</option>
-                                    {instituicaoUESB && (
-                                        <option key={instituicaoUESB.id} value="UESB">
-                                            {instituicaoUESB.sigla}
-                                        </option>
-                                    )}
-                                    <option value="outra">Outra instituição</option>
-                                </select>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione uma instituição" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {instituicaos.map((instituicao) => (
+                                            <SelectItem key={instituicao.id} value={instituicao.id.toString()}>
+                                                {instituicao.nome}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </SelectUI>
                             </div>
 
-                            {instituicaoId !== 'nenhuma' && (
+                            {instituicaoId && (
                                 <>
-                                    <div>
-                                        <Label htmlFor="unidade">Unidade:</Label>
-                                        {instituicaoId === 'outra' ? (
-                                            <Input
-                                                id="unidade"
-                                                value={novaInstituicao.unidade}
-                                                onChange={(e) => setNovaInstituicao({ ...novaInstituicao, unidade: e.target.value })}
-                                                placeholder="Digite a unidade"
-                                                required
-                                            />
-                                        ) : (
-                                            <select
-                                                id="unidade"
-                                                value={unidadeId}
-                                                onChange={(e) => {
-                                                    const selected = e.target.value;
-                                                    setUnidadeId(selected);
-                                                    setSetorId('');
-                                                }}
-                                                className="w-full rounded-md border border-gray-300 p-2"
-                                                required={instituicaoId === 'UESB'}
-                                                disabled={instituicaoId !== 'UESB'}
-                                            >
-                                                <option value="">Selecionar</option>
-                                                {unidades.map((unidade: Unidade) => (
-                                                    <option key={unidade.id} value={unidade.id}>
-                                                        {unidade.sigla}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        )}
+                                    {/* Select de Unidade */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="unidade_id">Unidade</Label>
+                                        <SelectUI
+                                            value={unidadeId}
+                                            onValueChange={(value) => {
+                                                setUnidadeId(value);
+                                                setSetores(unidades.find((unidade) => unidade.id.toString() === value)?.setors || []);
+                                                setSetorId('');
+                                            }}
+                                            disabled={processing || !instituicaoId}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecione uma unidade" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {instituicaos
+                                                    .find((instituicao) => instituicao?.id.toString() === instituicaoId)
+                                                    ?.unidades?.map((unidade) => (
+                                                        <SelectItem key={unidade.id} value={unidade.id.toString()}>
+                                                            {unidade.nome}
+                                                        </SelectItem>
+                                                    ))}
+                                            </SelectContent>
+                                        </SelectUI>
                                     </div>
 
                                     <div>
@@ -254,25 +225,29 @@ export default function Register() {
                                                 required
                                             />
                                         ) : (
-                                            <select
-                                                id="setor"
-                                                value={setorId}
-                                                onChange={(e) => {
-                                                    const selected = e.target.value;
-                                                    setSetorId(selected);
-                                                    setData('setor_id', selected);
-                                                }}
-                                                className="w-full rounded-md border border-gray-300 p-2"
-                                                required={instituicaoId === 'UESB'}
-                                                disabled={instituicaoId !== 'UESB' || !unidadeId}
-                                            >
-                                                <option value="">Selecionar</option>
-                                                {setores.map((setor: Setor) => (
-                                                    <option key={setor.id} value={setor.id}>
-                                                        {setor.sigla}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                            <div className="space-y-2">
+                                                <SelectUI
+                                                    value={setorId}
+                                                    onValueChange={(value) => {
+                                                        setSetorId(value);
+                                                        setData('setor_id', value);
+                                                    }}
+                                                    disabled={processing || !instituicaoId}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Selecione um setor" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {unidades
+                                                            .find((unidade) => unidade?.id.toString() === unidadeId)
+                                                            ?.setors?.map((setor) => (
+                                                                <SelectItem key={setor.id} value={setor.id.toString()}>
+                                                                    {setor.nome}
+                                                                </SelectItem>
+                                                            ))}
+                                                    </SelectContent>
+                                                </SelectUI>
+                                            </div>
                                         )}
                                         <InputError message={errors.setor_id} />
                                     </div>

@@ -30,15 +30,24 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'profile_pic' => fake()->name(),
-            'telefone' => fake()->name(),
             'password' => static::$password ??= Hash::make('password'),
-            'setor_id' => Setor::pluck('id')->random(),
+            'telefone' => fake()->phoneNumber(),
+            'profile_pic' => '[https://placehold.co/400x400/000000/FFFFFF?text=](https://placehold.co/400x400/000000/FFFFFF?text=)' . fake()->lexify('??'),
+            'permission_type_id' => 3, // Seleciona um tipo de permissão aleatório
+            'setor_id' => null, // Por padrão, o usuário não tem setor.
             'remember_token' => Str::random(10),
-            'permission_type_id' => PermissionType::pluck('id')->random()
         ];
     }
 
+    /**
+     * Indicate that the user belongs to a setor.
+     */
+    public function withSetor(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'setor_id' => Setor::factory(),
+        ]);
+    }
     /**
      * Indicate that the model's email address should be unverified.
      */

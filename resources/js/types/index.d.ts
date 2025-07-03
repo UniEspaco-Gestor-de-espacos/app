@@ -35,8 +35,8 @@ export interface User {
     telefone: string;
     profile_pic?: string;
     permission_type_id: number;
-    setor_id: number;
     setor?: Setor; // Opcional, carregar com with('setor')
+    agendas?: Agenda[]; // Relação aninhada, array de agendas
     created_at: string;
     updated_at: string;
 }
@@ -87,6 +87,7 @@ export interface Instituicao {
     nome: string;
     sigla: string;
     endereco: string;
+    unidades?: Unidade[]; // Relação aninhada, array de unidades
 }
 
 export interface Unidade {
@@ -94,6 +95,8 @@ export interface Unidade {
     nome: string;
     sigla: string;
     instituicao?: Instituicao; // Relação aninhada
+    modulos?: Modulo[]; // Relação aninhada, array de módulos
+    setors?: Setor[]; // Relação aninhada
 }
 
 export interface Setor {
@@ -115,6 +118,7 @@ export interface Andar {
     nome: string;
     tipo_acesso: [];
     modulo?: Modulo; // Relação aninhada
+    espacos?: Espaco[]; // Relação aninhada, array de espaços
 }
 
 export interface Espaco {
@@ -299,4 +303,18 @@ export type AgendaSlotsPorTurnoType = {
     manha: Record<string, SlotCalendario[]>;
     tarde: Record<string, SlotCalendario[]>;
     noite: Record<string, SlotCalendario[]>;
+}
+export interface PermissionType {
+  id: number
+  name: "institucional" | "gestor" | "comum"
+  label: string
+}
+
+export interface SelectedAgenda {
+  agenda: Agenda
+  espaco: Espaco
+  andar: Andar
+  modulo: Modulo
+  unidade: Unidade
+  instituicao: Instituicao
 }

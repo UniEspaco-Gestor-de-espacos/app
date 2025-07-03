@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Modulo extends Model
 {
+    use HasFactory; // 2. Use o trait dentro da classe
     protected $fillable = [
         'nome',
         'unidade_id'
