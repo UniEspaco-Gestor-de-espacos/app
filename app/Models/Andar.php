@@ -24,29 +24,6 @@ class Andar extends Model
     protected $casts = [
         'tipo_acesso' => 'array'
     ];
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::saving(function ($andar) {
-            if ($andar->isDirty('nome') || empty($andar->nome_normalizado)) {
-                $andar->nome_normalizado = static::normalizarNome($andar->nome);
-            }
-        });
-    }
-    /**
-     * Normaliza o nome do andar para comparação e unicidade.
-     *
-     * @param  string  $nome
-     * @return string
-     */
-    public static function normalizarNome(string $nome): string
-    {
-        $nomeNormalizado = mb_strtolower($nome, 'UTF-8'); // Converte para minúsculas
-        $nomeNormalizado = str_replace(['º', 'ª', '°'], '', $nomeNormalizado); // Remove indicadores ordinais
-        $nomeNormalizado = preg_replace('/\s+/', '', $nomeNormalizado); // Remove todos os espaços em branco
-        return $nomeNormalizado;
-    }
 
     public function modulo()
     {

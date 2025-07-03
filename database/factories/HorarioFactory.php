@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\Agenda;
-use App\Enums\DiasSemana\DiasSemanaEnum;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Horario>
@@ -18,6 +17,12 @@ class HorarioFactory extends Factory
      */
     public function definition(): array
     {
-        return [];
+
+        return [
+            'agenda_id' => Agenda::factory(),
+            'horario_inicio' => $this->faker->time('H:00:00'),
+            'horario_fim' => $this->faker->time('H:00:00'),
+            'data' => $this->faker->dateTimeBetween('now', '+1 month')->format('Y-m-d'),
+        ];
     }
 }

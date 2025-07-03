@@ -35,8 +35,8 @@ export interface User {
     telefone: string;
     profile_pic?: string;
     permission_type_id: number;
-    setor_id: number;
     setor?: Setor; // Opcional, carregar com with('setor')
+    agendas?: Agenda[]; // Relação aninhada, array de agendas
     created_at: string;
     updated_at: string;
 }
@@ -96,7 +96,7 @@ export interface Unidade {
     sigla: string;
     instituicao?: Instituicao; // Relação aninhada
     modulos?: Modulo[]; // Relação aninhada, array de módulos
-    setor?: Setor; // Relação aninhada
+    setors?: Setor[]; // Relação aninhada
 }
 
 export interface Setor {

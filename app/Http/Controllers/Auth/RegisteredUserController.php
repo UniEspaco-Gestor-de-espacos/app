@@ -24,15 +24,11 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        $instituicaos = Instituicao::all();
-        $unidades = Unidade::All();
-        $setores = Setor::all();
+        $instituicaos = Instituicao::with(['unidades.setors'])->get();
         return Inertia::render(
             'auth/register',
             [
                 'instituicaos' => $instituicaos,
-                'unidades' => $unidades,
-                'setores' => $setores
             ]
         );
     }

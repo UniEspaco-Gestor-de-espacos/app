@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Instituicao;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -29,6 +30,9 @@ class InstituicaoSeeder extends Seeder
             'sigla' => 'nenhuma',
             'created_at' => now(),
             'updated_at' => now()
+        ]);
+        Instituicao::factory()->count(10)->create([
+            'endereco' => 'Endereço padrão',
         ]);
     }
 }

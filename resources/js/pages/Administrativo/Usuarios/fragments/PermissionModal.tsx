@@ -1,116 +1,50 @@
-'use client';
-
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Agenda, Andar, Espaco, Instituicao, Modulo, PermissionType, Unidade, User } from '@/types';
-import { Trash2 } from 'lucide-react';
+import { Agenda, Instituicao, PermissionType, SelectedAgenda, User } from '@/types';
 import { useEffect, useState } from 'react';
-
-interface SelectedAgenda {
-    agenda: Agenda;
-    espaco: Espaco;
-    andar: Andar;
-    modulo: Modulo;
-    unidade: Unidade;
-    instituicao: Instituicao;
-}
+import FiltroBuscaPermission from './FiltroBuscaPermission';
 
 interface PermissionModalProps {
-    user: User | null;
+    user: User | undefined;
     isOpen: boolean;
+    processing?: boolean;
     onClose: () => void;
     onUpdate: (userId: number, permissionTypeId: number, agendas?: number[]) => void;
     permissionTypes: PermissionType[];
     instituicoes: Instituicao[];
+    initialAgendas?: Agenda[];
 }
 
-export function PermissionModal({ user, isOpen, onClose, onUpdate, permissionTypes, instituicoes }: PermissionModalProps) {
+export function PermissionModal({ user, isOpen, onClose, onUpdate, permissionTypes, instituicoes, processing = false }: PermissionModalProps) {
     const [selectedPermissionType, setSelectedPermissionType] = useState<number>(0);
-    const [selectedInstituicao, setSelectedInstituicao] = useState<number>(0);
-    const [selectedUnidade, setSelectedUnidade] = useState<number>(0);
-    const [selectedModulo, setSelectedModulo] = useState<number>(0);
-    const [selectedAndar, setSelectedAndar] = useState<number>(0);
-    const [selectedEspaco, setSelectedEspaco] = useState<number>(0);
-    const [selectedAgendaId, setSelectedAgendaId] = useState<string>('');
-    const [selectedAgendas, setSelectedAgendas] = useState<SelectedAgenda[]>([]);
+    const [selectedAgendas, setSelectedAgendas] = useState<SelectedAgenda[]>(
+        user?.agendas!.map(
+            (agenda) =>
+                ({
+                    agenda: agenda,
+                    espaco: agenda.espaco,
+                    andar: agenda.espaco?.andar,
+                    modulo: agenda.espaco?.andar?.modulo,
+                    unidade: agenda.espaco?.andar?.modulo?.unidade,
+                    instituicao: agenda.espaco?.andar?.modulo?.unidade?.instituicao,
+                }) as SelectedAgenda,
+        ) || [],
+    );
 
+    console.log('Selected Agendas:', selectedAgendas);
     useEffect(() => {
         if (user) {
             setSelectedPermissionType(user.permission_type_id);
         }
     }, [user]);
 
-    const handleAddAgenda = () => {
-        const agendaId = Number(selectedAgendaId);
-        if (!agendaId) return;
-
-        const agenda = agendas.find((a) => a.id === agendaId);
-        if (!agenda) return;
-
-        const espaco = espacos.find((e) => e.id === selectedEspaco);
-        const andar = andares.find((a) => a.id === selectedAndar);
-        const modulo = modulos.find((m) => m.id === selectedModulo);
-        const unidade = unidades.find((u) => u.id === selectedUnidade);
-        const instituicao = instituicoes.find((i) => i.id === selectedInstituicao);
-
-        if (!espaco || !andar || !modulo || !unidade || !instituicao) return;
-
-        const selectedAgenda: SelectedAgenda = {
-            agenda,
-            espaco,
-            andar,
-            modulo,
-            unidade,
-            instituicao,
-        };
-
-        const isAlreadySelected = selectedAgendas.some((sa) => sa.agenda.id === agendaId);
-        if (!isAlreadySelected) {
-            setSelectedAgendas([...selectedAgendas, selectedAgenda]);
-            setSelectedAgendaId('');
-        }
-    };
-
-    const handleRemoveAgenda = (agendaId: number) => {
-        setSelectedAgendas(selectedAgendas.filter((sa) => sa.agenda.id !== agendaId));
-    };
-
     const handleSubmit = () => {
         if (!user) return;
 
         const agendaIds = selectedAgendas.map((sa) => sa.agenda.id);
         onUpdate(user.id, selectedPermissionType, agendaIds);
-    };
-
-    const resetForm = () => {
-        setSelectedInstituicao(0);
-        setSelectedUnidade(0);
-        setSelectedModulo(0);
-        setSelectedAndar(0);
-        setSelectedEspaco(0);
-        setSelectedAgendaId('');
-        setUnidades([]);
-        setModulos([]);
-        setAndares([]);
-        setEspacos([]);
-        setAgendas([]);
-    };
-
-    const getTurnoLabel = (turno: string) => {
-        switch (turno) {
-            case 'manha':
-                return 'Manhã';
-            case 'tarde':
-                return 'Tarde';
-            case 'noite':
-                return 'Noite';
-            default:
-                return turno;
-        }
     };
 
     if (!user) return null;
@@ -143,13 +77,18 @@ export function PermissionModal({ user, isOpen, onClose, onUpdate, permissionTyp
                     </div>
 
                     {selectedPermissionType === 2 && (
+                        <FiltroBuscaPermission
+                            instituicoes={instituicoes}
+                            selectedAgendas={selectedAgendas}
+                            setSelectedAgendas={setSelectedAgendas}
+                        />
                     )}
 
                     <div className="flex justify-end space-x-2">
                         <Button variant="outline" onClick={onClose}>
                             Cancelar
                         </Button>
-                        <Button onClick={handleSubmit} disabled={loading}>
+                        <Button onClick={handleSubmit} disabled={processing}>
                             Salvar Permissões
                         </Button>
                     </div>

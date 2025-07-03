@@ -8,32 +8,36 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { PermissionModal } from './fragments/PermissionModal';
 
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Edit, Search, Settings, Shield, Trash, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import DeleteItem from '@/components/delete-item';
 import AppLayout from '@/layouts/app-layout';
 import { Instituicao, PermissionType, User } from '@/types';
 import { toast } from 'sonner';
 const breadcrumbs = [
     {
-        title: 'Gerenciar Modulos',
-        href: '/institucional/modulos',
+        title: 'Gerenciar Usuarios',
+        href: '/institucional/usuarios',
     },
 ];
-interface Props {
-    users: User[];
-    permissionTypes: PermissionType[];
-    instituicoes: Instituicao[];
-}
 
-export default function UsersIndex({ users: initialUsers, permissionTypes, instituicoes }: Props) {
+export default function UsuariosPage() {
+    const { props } = usePage<{
+        users: User[];
+        permissionTypes: PermissionType[];
+        instituicoes: Instituicao[];
+    }>();
+    const { users: initialUsers, permissionTypes, instituicoes } = props;
+
     const [users, setUsers] = useState<User[]>(initialUsers);
     const [filteredUsers, setFilteredUsers] = useState<User[]>(initialUsers);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [selectedUser, setSelectedUser] = useState<User | undefined>();
     const [isModalOpen, setIsModalOpen] = useState(false);
-
+    const [processing, setProcessing] = useState(false);
+    const [removerUsuario, setRemoverUsuario] = useState<User | undefined>();
     useEffect(() => {
         const filtered = users.filter(
             (user) => user.name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -69,22 +73,11 @@ export default function UsersIndex({ users: initialUsers, permissionTypes, insti
         toast('Funcionalidade de edição ainda não implementada.');
     };
 
-    const handleDeleteUser = (user: User) => {
-        if (confirm(`Tem certeza que deseja excluir o usuário ${user.name}?`)) {
-            router.delete(route('users.destroy', user.id), {
-                onSuccess: () => {
-                    setUsers(users.filter((u) => u.id !== user.id));
-                },
-                onError: () => {},
-            });
-        }
-    };
-
     const handlePermissionUpdate = (userId: number, newPermissionTypeId: number, agendas?: number[]) => {
+        setProcessing(true);
         router.put(
-            route('users.update-permissions'),
+            route('institucional.usuarios.updatepermissions', { user: userId }),
             {
-                user_id: userId,
                 permission_type_id: newPermissionTypeId,
                 agendas: agendas || [],
             },
@@ -92,9 +85,15 @@ export default function UsersIndex({ users: initialUsers, permissionTypes, insti
                 onSuccess: () => {
                     setUsers(users.map((user) => (user.id === userId ? { ...user, permission_type_id: newPermissionTypeId } : user)));
                     setIsModalOpen(false);
-                    setSelectedUser(null);
+                    setSelectedUser(undefined);
+                    toast.success('Permissões do usuário atualizadas com sucesso.');
                 },
-                onError: () => {},
+                onError: () => {
+                    toast.error('Erro ao atualizar permissões do usuário.');
+                },
+                onFinish: () => {
+                    setProcessing(false);
+                },
             },
         );
     };
@@ -105,112 +104,135 @@ export default function UsersIndex({ users: initialUsers, permissionTypes, insti
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
-                    <div className="container mx-auto space-y-6 p-6"></div>
-                    <Head title="Gestão de Usuários" />
-
                     <div className="container mx-auto space-y-6 p-6">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                                <Users className="h-8 w-8 text-blue-600" />
-                                <h1 className="text-3xl font-bold">Gestão de Usuários</h1>
-                            </div>
-                            <Badge variant="outline" className="text-sm">
-                                {filteredUsers.length} usuários
-                            </Badge>
-                        </div>
+                        <Head title="Gestão de Usuários" />
 
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center justify-between">
-                                    <span>Lista de Usuários</span>
-                                    <div className="relative w-72">
-                                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
-                                        <Input
-                                            placeholder="Buscar por nome ou email..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="pl-10"
-                                        />
-                                    </div>
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid gap-4">
-                                    {filteredUsers.map((user) => (
-                                        <Card key={user.id} className="cursor-pointer transition-shadow hover:shadow-md">
-                                            <CardContent className="p-4">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center space-x-4">
-                                                        <Avatar>
-                                                            <AvatarImage src={user.profile_pic || '/placeholder.svg'} />
-                                                            <AvatarFallback>
-                                                                {user.name
-                                                                    .split(' ')
-                                                                    .map((n) => n[0])
-                                                                    .join('')
-                                                                    .toUpperCase()}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <div className="space-y-1">
-                                                            <h3 className="text-lg font-semibold">{user.name}</h3>
-                                                            <p className="text-gray-600">{user.email}</p>
-                                                            <p className="text-sm text-gray-500">{user.telefone}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center space-x-3">
-                                                        <Badge className={getPermissionColor(user.permission_type_id)}>
-                                                            {getPermissionLabel(user.permission_type_id)}
-                                                        </Badge>
-                                                        <div className="flex items-center space-x-2">
-                                                            <div
-                                                                className={`h-2 w-2 rounded-full ${user.email_verified_at ? 'bg-green-500' : 'bg-red-500'}`}
-                                                            />
-                                                            <span className="text-xs text-gray-500">
-                                                                {user.email_verified_at ? 'Verificado' : 'Não verificado'}
-                                                            </span>
-                                                        </div>
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="outline" size="sm">
-                                                                    <Settings className="mr-2 h-4 w-4" />
-                                                                    Gerenciar
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end">
-                                                                <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                                                                    <Edit className="mr-2 h-4 w-4" />
-                                                                    Editar
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem onClick={() => handleUserClick(user)}>
-                                                                    <Shield className="mr-2 h-4 w-4" />
-                                                                    Permissões
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem onClick={() => handleDeleteUser(user)} className="text-red-600">
-                                                                    <Trash className="mr-2 h-4 w-4" />
-                                                                    Excluir
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
+                        <div className="container mx-auto space-y-6 p-6">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                    <Users className="h-8 w-8 text-blue-600" />
+                                    <h1 className="text-3xl font-bold">Gestão de Usuários</h1>
                                 </div>
-                            </CardContent>
-                        </Card>
+                                <Badge variant="outline" className="text-sm">
+                                    {filteredUsers.length} usuários
+                                </Badge>
+                            </div>
 
-                        <PermissionModal
-                            user={selectedUser}
-                            isOpen={isModalOpen}
-                            onClose={() => {
-                                setIsModalOpen(false);
-                                setSelectedUser(null);
-                            }}
-                            onUpdate={handlePermissionUpdate}
-                            permissionTypes={permissionTypes}
-                            instituicoes={instituicoes}
-                        />
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center justify-between">
+                                        <span>Lista de Usuários</span>
+                                        <div className="relative w-72">
+                                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                                            <Input
+                                                placeholder="Buscar por nome ou email..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="pl-10"
+                                            />
+                                        </div>
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid gap-4">
+                                        {filteredUsers.map((user) => (
+                                            <div>
+                                                <Card key={user.id} className="cursor-pointer transition-shadow hover:shadow-md">
+                                                    <CardContent className="p-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center space-x-4">
+                                                                <Avatar>
+                                                                    <AvatarImage src={user.profile_pic || '/placeholder.svg'} />
+                                                                    <AvatarFallback>
+                                                                        {user.name
+                                                                            .split(' ')
+                                                                            .map((n) => n[0])
+                                                                            .join('')
+                                                                            .toUpperCase()}
+                                                                    </AvatarFallback>
+                                                                </Avatar>
+                                                                <div className="space-y-1">
+                                                                    <h3 className="text-lg font-semibold">{user.name}</h3>
+                                                                    <p className="text-gray-600">{user.email}</p>
+                                                                    <p className="text-sm text-gray-500">{user.telefone}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center space-x-3">
+                                                                <Badge className={getPermissionColor(user.permission_type_id)}>
+                                                                    {getPermissionLabel(user.permission_type_id)}
+                                                                </Badge>
+                                                                <div className="flex items-center space-x-2">
+                                                                    <div
+                                                                        className={`h-2 w-2 rounded-full ${user.email_verified_at ? 'bg-green-500' : 'bg-red-500'}`}
+                                                                    />
+                                                                    <span className="text-xs text-gray-500">
+                                                                        {user.email_verified_at ? 'Verificado' : 'Não verificado'}
+                                                                    </span>
+                                                                </div>
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button variant="outline" size="sm">
+                                                                            <Settings className="mr-2 h-4 w-4" />
+                                                                            Gerenciar
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                                                                            <Edit className="mr-2 h-4 w-4" />
+                                                                            Editar
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem onClick={() => handleUserClick(user)}>
+                                                                            <Shield className="mr-2 h-4 w-4" />
+                                                                            Permissões
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem
+                                                                            onClick={() => setRemoverUsuario(user)}
+                                                                            className="text-red-600"
+                                                                        >
+                                                                            <Trash className="mr-2 h-4 w-4" />
+                                                                            Excluir
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                                {removerUsuario && removerUsuario.id === user.id && (
+                                                    <div className="container mx-auto space-y-6 py-6">
+                                                        <DeleteItem
+                                                            key={user.id}
+                                                            itemName={removerUsuario.name}
+                                                            isOpen={(open) => {
+                                                                if (!open) {
+                                                                    setRemoverUsuario(undefined);
+                                                                }
+                                                            }}
+                                                            route={route('institucional.usuarios.destroy', { usuario: removerUsuario.id })}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {isModalOpen && selectedUser && (
+                                <PermissionModal
+                                    user={selectedUser}
+                                    isOpen={isModalOpen}
+                                    onClose={() => {
+                                        setIsModalOpen(false);
+                                        setSelectedUser(undefined);
+                                    }}
+                                    onUpdate={handlePermissionUpdate}
+                                    permissionTypes={permissionTypes}
+                                    instituicoes={instituicoes}
+                                    processing={processing}
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,35 +1,37 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Andar, Instituicao, Modulo, Unidade } from '@/types';
+import { getTurnoText } from '@/lib/utils';
+import { Andar, Espaco, Instituicao, Modulo, SelectedAgenda, Unidade } from '@/types';
 import { router } from '@inertiajs/react';
+import { Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 type FiltroBuscaPermissionProps = {
-    route: string;
     instituicoes: Instituicao[];
-    unidades: Unidade[];
-    modulos: Modulo[];
-    andares: Andar[];
-    filters: {
-        instituicao?: string;
-        unidade?: string;
-        modulo?: string;
-        andar?: string;
-        espaco?: string;
-    };
+    selectedAgendas: SelectedAgenda[];
+    setSelectedAgendas: React.Dispatch<React.SetStateAction<SelectedAgenda[]>>;
 };
 
-export default function FiltroBuscaPermission({ route, filters, instituicoes, unidades, modulos, andares }: FiltroBuscaPermissionProps) {
+export default function FiltroBuscaPermission({ instituicoes, selectedAgendas, setSelectedAgendas }: FiltroBuscaPermissionProps) {
+    console.log(selectedAgendas);
     const [localFilters, setLocalFilters] = useState({
-        selectedInstituicao: filters.instituicao || '',
-        selectedUnidade: filters.unidade || 'all',
-        selectedModulo: filters.modulo || 'all',
-        selectedAndar: filters.andar || 'all',
-        selectedEspaco: filters.espaco || 'all',
+        selectedInstituicao: '',
+        selectedUnidade: '',
+        selectedModulo: '',
+        selectedAndar: '',
+        selectedEspaco: '',
     });
     const isInitialMount = useRef(true);
+    const [selectedAgendaId, setSelectedAgendaId] = useState<string>('');
+    const [unidades, setUnidades] = useState<Unidade[]>(
+        instituicoes.find((i) => i.id.toString() === localFilters.selectedInstituicao)?.unidades || [],
+    );
+    const [modulos, setModulos] = useState<Modulo[]>(unidades.find((u) => u.id.toString() === localFilters.selectedUnidade)?.modulos || []);
+    const [andares, setAndares] = useState<Andar[]>(modulos.find((m) => m.id.toString() === localFilters.selectedModulo)?.andars || []);
+    const [espacos, setEspacos] = useState<Espaco[]>(andares.find((a) => a.id.toString() === localFilters.selectedAndar)?.espacos || []);
 
     useEffect(() => {
         if (isInitialMount.current) {
@@ -40,13 +42,12 @@ export default function FiltroBuscaPermission({ route, filters, instituicoes, un
         const queryParams = Object.fromEntries(
             Object.entries(localFilters).filter(([key, value]) => {
                 if (value === null || value === '') return false;
-                if (['unidade', 'modulo', 'andar'].includes(key) && value === 'all') return false;
-                if (key === 'capacidade' && value === 'qualquer') return false;
+                if (['unidade', 'modulo', 'andar', 'espaco'].includes(key) && value === 'all') return false;
                 return true;
             }),
         );
 
-        router.get(route, queryParams, {
+        router.get(route('institucional.usuarios.index'), queryParams, {
             preserveState: true, // Mantém o estado dos filtros na página
             preserveScroll: true, // Não rola a página para o topo
             replace: true,
@@ -57,21 +58,89 @@ export default function FiltroBuscaPermission({ route, filters, instituicoes, un
                 console.error('Erro ao aplicar filtros:', error);
             },
         });
-    }, [route, localFilters]);
+    }, [localFilters]);
+
     const handleFilterChange = (name: keyof typeof localFilters, value: string) => {
         setLocalFilters((prevFilters) => {
             const newFilters = { ...prevFilters, [name]: value };
 
+            if (name === 'selectedInstituicao') {
+                newFilters.selectedUnidade = '';
+                setUnidades(instituicoes.find((i) => i.id.toString() === value)?.unidades || []);
+                newFilters.selectedModulo = '';
+                setModulos([]);
+                newFilters.selectedAndar = '';
+                setAndares([]);
+                newFilters.selectedEspaco = '';
+                setEspacos([]);
+            }
             if (name === 'selectedUnidade') {
-                newFilters.selectedModulo = 'all';
-                newFilters.selectedAndar = 'all';
+                newFilters.selectedModulo = '';
+                setModulos(unidades.find((u) => u.id.toString() === value)?.modulos || []);
+                newFilters.selectedAndar = '';
+                setAndares([]);
+                newFilters.selectedEspaco = '';
+                setEspacos([]);
             }
             if (name === 'selectedModulo') {
-                newFilters.selectedModulo = 'all';
+                newFilters.selectedAndar = '';
+                setAndares(modulos.find((m) => m.id.toString() === value)?.andars || []);
+                newFilters.selectedEspaco = '';
+                setEspacos([]);
+            }
+            if (name === 'selectedAndar') {
+                newFilters.selectedEspaco = '';
+                setEspacos(andares.find((a) => a.id.toString() === value)?.espacos || []);
             }
 
             return newFilters;
         });
+    };
+
+    const handleAddAgenda = () => {
+        setSelectedAgendas((prevSelected) => {
+            const agendaId = Number(selectedAgendaId);
+            if (!agendaId) return prevSelected;
+
+            const instituicao = instituicoes.find((i) => i.id.toString() === localFilters.selectedInstituicao);
+            const unidade = instituicao?.unidades?.find((u) => u.id.toString() === localFilters.selectedUnidade);
+            const modulo = unidade?.modulos?.find((m) => m.id.toString() === localFilters.selectedModulo);
+            const andar = modulo?.andars?.find((a) => a.id.toString() === localFilters.selectedAndar);
+            const espaco = andar?.espacos?.find((e) => e.id.toString() === localFilters.selectedEspaco);
+            const agenda = espaco?.agendas?.find((a) => a.id === agendaId);
+            if (!espaco || !andar || !modulo || !unidade || !instituicao || !agenda) return prevSelected;
+
+            const isAlreadySelected = prevSelected.some((sa) => sa.agenda.id === agendaId);
+            if (isAlreadySelected) return prevSelected;
+
+            const selectedAgenda: SelectedAgenda = {
+                agenda,
+                espaco,
+                andar,
+                modulo,
+                unidade,
+                instituicao,
+            };
+
+            return [...prevSelected, selectedAgenda];
+        });
+        setSelectedAgendaId('');
+    };
+
+    const resetForm = () => {
+        setLocalFilters({
+            selectedInstituicao: '',
+            selectedUnidade: 'all',
+            selectedModulo: 'all',
+            selectedAndar: 'all',
+            selectedEspaco: 'all',
+        });
+        setSelectedAgendaId('');
+        setSelectedAgendas([]);
+    };
+
+    const handleRemoveAgenda = (agendaId: number) => {
+        setSelectedAgendas(selectedAgendas.filter((sa) => sa.agenda.id !== agendaId));
     };
 
     return (
@@ -86,7 +155,7 @@ export default function FiltroBuscaPermission({ route, filters, instituicoes, un
                             <Label>Instituição</Label>
                             <Select
                                 value={localFilters.selectedInstituicao.toString()}
-                                onValueChange={(value) => handleFilterChange('selectedInstituicao',Number.parseInt(value))}
+                                onValueChange={(value) => handleFilterChange('selectedInstituicao', value)}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Selecione a instituição" />
@@ -94,7 +163,7 @@ export default function FiltroBuscaPermission({ route, filters, instituicoes, un
                                 <SelectContent>
                                     {instituicoes.map((inst) => (
                                         <SelectItem key={inst.id} value={inst.id.toString()}>
-                                            {inst.nome} ({inst.sigla})
+                                            {inst.sigla}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -104,9 +173,9 @@ export default function FiltroBuscaPermission({ route, filters, instituicoes, un
                         <div className="space-y-2">
                             <Label>Unidade</Label>
                             <Select
-                                value={selectedUnidade.toString()}
-                                onValueChange={(value) => setSelectedUnidade(Number.parseInt(value))}
-                                disabled={!selectedInstituicao || loading}
+                                value={localFilters.selectedUnidade}
+                                onValueChange={(value) => handleFilterChange('selectedUnidade', value)}
+                                disabled={!localFilters.selectedInstituicao}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Selecione a unidade" />
@@ -114,7 +183,7 @@ export default function FiltroBuscaPermission({ route, filters, instituicoes, un
                                 <SelectContent>
                                     {unidades.map((unidade) => (
                                         <SelectItem key={unidade.id} value={unidade.id.toString()}>
-                                            {unidade.nome} ({unidade.sigla})
+                                            {unidade.nome}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -124,9 +193,9 @@ export default function FiltroBuscaPermission({ route, filters, instituicoes, un
                         <div className="space-y-2">
                             <Label>Módulo</Label>
                             <Select
-                                value={selectedModulo.toString()}
-                                onValueChange={(value) => setSelectedModulo(Number.parseInt(value))}
-                                disabled={!selectedUnidade || loading}
+                                value={localFilters.selectedModulo}
+                                onValueChange={(value) => handleFilterChange('selectedModulo', value)}
+                                disabled={!localFilters.selectedUnidade}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Selecione o módulo" />
@@ -144,9 +213,9 @@ export default function FiltroBuscaPermission({ route, filters, instituicoes, un
                         <div className="space-y-2">
                             <Label>Andar</Label>
                             <Select
-                                value={selectedAndar.toString()}
-                                onValueChange={(value) => setSelectedAndar(Number.parseInt(value))}
-                                disabled={!selectedModulo || loading}
+                                value={localFilters.selectedAndar}
+                                onValueChange={(value) => handleFilterChange('selectedAndar', value)}
+                                disabled={!localFilters.selectedModulo}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Selecione o andar" />
@@ -164,9 +233,9 @@ export default function FiltroBuscaPermission({ route, filters, instituicoes, un
                         <div className="space-y-2">
                             <Label>Espaço</Label>
                             <Select
-                                value={selectedEspaco.toString()}
-                                onValueChange={(value) => setSelectedEspaco(Number.parseInt(value))}
-                                disabled={!selectedAndar || loading}
+                                value={localFilters.selectedEspaco}
+                                onValueChange={(value) => handleFilterChange('selectedEspaco', value)}
+                                disabled={!localFilters.selectedAndar}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Selecione o espaço" />
@@ -185,20 +254,22 @@ export default function FiltroBuscaPermission({ route, filters, instituicoes, un
                             <Label>Agenda</Label>
                             <div className="flex space-x-2">
                                 <div className="flex-1">
-                                    <Select value={selectedAgendaId} onValueChange={setSelectedAgendaId} disabled={!selectedEspaco || loading}>
+                                    <Select value={selectedAgendaId} onValueChange={setSelectedAgendaId} disabled={!localFilters.selectedEspaco}>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Selecione a agenda" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {agendas.map((agenda) => (
-                                                <SelectItem key={agenda.id} value={agenda.id.toString()}>
-                                                    Turno: {getTurnoLabel(agenda.turno)}
-                                                </SelectItem>
-                                            ))}
+                                            {espacos
+                                                .find((e) => e.id.toString() === localFilters.selectedEspaco)
+                                                ?.agendas?.map((agenda) => (
+                                                    <SelectItem key={agenda.id} value={agenda.id.toString()}>
+                                                        Turno: {getTurnoText(agenda.turno)}
+                                                    </SelectItem>
+                                                ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <Button onClick={handleAddAgenda} disabled={!selectedAgendaId || loading} size="sm">
+                                <Button onClick={handleAddAgenda} disabled={!selectedAgendaId} size="sm">
                                     Adicionar
                                 </Button>
                             </div>
@@ -224,7 +295,7 @@ export default function FiltroBuscaPermission({ route, filters, instituicoes, un
                                 <div key={selectedAgenda.agenda.id} className="flex items-center justify-between rounded-lg border p-3">
                                     <div className="space-y-1">
                                         <div className="font-medium">
-                                            {selectedAgenda.espaco.nome} - {getTurnoLabel(selectedAgenda.agenda.turno)}
+                                            {selectedAgenda.espaco.nome} - {getTurnoText(selectedAgenda.agenda.turno)}
                                         </div>
                                         <div className="text-sm text-gray-600">
                                             {selectedAgenda.instituicao.nome} → {selectedAgenda.unidade.nome} → {selectedAgenda.modulo.nome} →{' '}

@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Andar;
 use App\Models\Modulo;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,9 +18,10 @@ class AndarFactory extends Factory
     public function definition(): array
     {
         return [
-            'nome' => (string) fake()->unique()->numberBetween(1, 10) . 'º andar',
-            'tipo_acesso' => ['terreo', 'escada', 'elevador', 'rampa'],
-            'modulo_id' => Modulo::pluck('id')->random()
+            // A vírgula dupla foi removida desta linha
+            'nome' => 'terreo',
+            'tipo_acesso' => $this->faker->randomElements(['escada', 'elevador', 'rampa'], 2),
+            'modulo_id' => Modulo::factory(),
         ];
     }
 }

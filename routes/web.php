@@ -63,7 +63,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware([InstitucionalMiddleware::class])->prefix('institucional')->name('institucional.')->group(function () {
 
         // Usuários
-        Route::resource('usuarios', InstitucionalUsuarioController::class)->except(['store', 'update']);
+        Route::resource('usuarios', InstitucionalUsuarioController::class);
+        Route::put('usuarios/{user}/edit-permissions', [InstitucionalUsuarioController::class, 'updatePermissions'])
+            ->name('usuarios.updatepermissions');
+
 
         // Instituições
         Route::resource('instituicoes', InstitucionalInstituicaoController::class)->except(['show']);
