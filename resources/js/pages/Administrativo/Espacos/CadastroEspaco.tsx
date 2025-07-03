@@ -11,10 +11,10 @@ import { toast } from 'sonner';
 
 // Importando os fragmentos
 import GenericHeader from '@/components/generic-header';
-import { AddAndarDialog } from './fragments/AddAndarDialog';
+import { AddAndarDialog } from '../Espacos/fragments/AddAndarDialog';
+import { LocationSelector } from '../Espacos/fragments/LocationSelector';
 import { EspacoFormFields } from './fragments/EspacoFormFields';
 import { ImageUpload, ImageWithPreview } from './fragments/ImageUpload';
-import { LocationSelector } from './fragments/LocationSelector';
 
 const breadcrumbs = [
     { title: 'Espaço', href: '/institucional/espacos' },

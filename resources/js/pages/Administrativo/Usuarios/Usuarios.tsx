@@ -9,10 +9,11 @@ import { Input } from '@/components/ui/input';
 import { PermissionModal } from './fragments/PermissionModal';
 
 import { Head, router, usePage } from '@inertiajs/react';
-import { Edit, Search, Settings, Shield, Trash, Users } from 'lucide-react';
+import { Edit, Search, Settings, Shield, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import DeleteItem from '@/components/delete-item';
+import GenericHeader from '@/components/generic-header';
 import AppLayout from '@/layouts/app-layout';
 import { Instituicao, PermissionType, User } from '@/types';
 import { toast } from 'sonner';
@@ -86,10 +87,6 @@ export default function UsuariosPage() {
                     setUsers(users.map((user) => (user.id === userId ? { ...user, permission_type_id: newPermissionTypeId } : user)));
                     setIsModalOpen(false);
                     setSelectedUser(undefined);
-                    toast.success('Permissões do usuário atualizadas com sucesso.');
-                },
-                onError: () => {
-                    toast.error('Erro ao atualizar permissões do usuário.');
                 },
                 onFinish: () => {
                     setProcessing(false);
@@ -100,24 +97,15 @@ export default function UsuariosPage() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Instituições" />
-
+            <Head title="Usuarios" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
                     <div className="container mx-auto space-y-6 p-6">
-                        <Head title="Gestão de Usuários" />
-
                         <div className="container mx-auto space-y-6 p-6">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                    <Users className="h-8 w-8 text-blue-600" />
-                                    <h1 className="text-3xl font-bold">Gestão de Usuários</h1>
-                                </div>
-                                <Badge variant="outline" className="text-sm">
-                                    {filteredUsers.length} usuários
-                                </Badge>
-                            </div>
-
+                            <GenericHeader
+                                titulo={'Gestão de usuarios'}
+                                descricao={'Aqui voce pode gerir os usuarios, editando ou alterando as permissoes'}
+                            />
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center justify-between">
@@ -136,7 +124,7 @@ export default function UsuariosPage() {
                                 <CardContent>
                                     <div className="grid gap-4">
                                         {filteredUsers.map((user) => (
-                                            <div>
+                                            <div key={user.id}>
                                                 <Card key={user.id} className="cursor-pointer transition-shadow hover:shadow-md">
                                                     <CardContent className="p-4">
                                                         <div className="flex items-center justify-between">

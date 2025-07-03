@@ -33,7 +33,6 @@ export function PermissionModal({ user, isOpen, onClose, onUpdate, permissionTyp
         ) || [],
     );
 
-    console.log('Selected Agendas:', selectedAgendas);
     useEffect(() => {
         if (user) {
             setSelectedPermissionType(user.permission_type_id);

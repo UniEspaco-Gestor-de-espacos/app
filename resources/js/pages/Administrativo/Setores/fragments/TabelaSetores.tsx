@@ -95,8 +95,8 @@ export function TabelaSetores({ setores, usuarios, onEdit, onViewUsuarios }: Pro
                                             </TableCell>
                                         </TableRow>
                                         {removerSetor && removerSetor.id === setor.id && (
-                                            <TableRow>
-                                                <TableCell style={{alignItems:"flex-end"}}>
+                                            <TableRow key={setor.id}>
+                                                <TableCell style={{ alignItems: 'flex-end' }}>
                                                     <DeleteItem
                                                         showHeading={false}
                                                         itemName={removerSetor.sigla}

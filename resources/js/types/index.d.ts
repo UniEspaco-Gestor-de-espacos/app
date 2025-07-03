@@ -319,3 +319,11 @@ export interface SelectedAgenda {
   unidade: Unidade
   instituicao: Instituicao
 }
+
+export interface FiltrosEspacosType {
+    search?: string;
+    unidade?: string;
+    modulo?: string;
+    andar?: string;
+    capacidade?: string;
+}

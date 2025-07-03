@@ -51,12 +51,6 @@ export default function FiltroBuscaPermission({ instituicoes, selectedAgendas, s
             preserveState: true, // Mantém o estado dos filtros na página
             preserveScroll: true, // Não rola a página para o topo
             replace: true,
-            onSuccess: (data) => {
-                console.log('Filtros aplicados com sucesso:', data);
-            },
-            onError: (error) => {
-                console.error('Erro ao aplicar filtros:', error);
-            },
         });
     }, [localFilters]);
 

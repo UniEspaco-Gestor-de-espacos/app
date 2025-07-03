@@ -147,6 +147,34 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        echo "Atribuindo setores aos usuarios";
+        DB::transaction(function () {
+            // 1. Pega todos os IDs dos setores disponíveis.
+            // Usar `pluck('id')` é muito mais eficiente do que `all()`
+            // porque carrega apenas a coluna de ID na memória.
+            $setoresIds = Setor::pluck('id');
+
+            // 2. Verifica se existem setores para atribuir.
+            // Se não houver setores, exibe um aviso e interrompe o seeder.
+            if ($setoresIds->isEmpty()) {
+                $this->command->warn('Nenhum setor encontrado. Nenhum usuário foi atualizado.');
+                return;
+            }
+
+            // 3. Pega todos os usuários que ainda não têm um setor_id definido.
+            $usuariosSemSetor = User::whereNull('setor_id')->get();
+
+            $this->command->info("Atribuindo setores para {$usuariosSemSetor->count()} usuários...");
+
+            // 4. Itera sobre cada usuário e atribui um ID de setor aleatório.
+            foreach ($usuariosSemSetor as $usuario) {
+                // O método `random()` da Collection do Laravel é perfeito para isso.
+                $usuario->setor_id = $setoresIds->random();
+                $usuario->save();
+            }
+
+            $this->command->info('Setores atribuídos com sucesso!');
+        });
 
         echo "Seed concluído com sucesso!\n";
     }
