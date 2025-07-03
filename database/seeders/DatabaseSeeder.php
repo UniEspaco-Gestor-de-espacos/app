@@ -7,9 +7,11 @@ namespace Database\Seeders;
 use App\Models\Agenda;
 use App\Models\Espaco;
 use App\Models\Horario;
+use App\Models\Instituicao;
 use App\Models\PermissionType;
 use App\Models\Reserva;
 use App\Models\Setor;
+use App\Models\Unidade;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +36,8 @@ class DatabaseSeeder extends Seeder
         Agenda::truncate();
         Espaco::truncate();
         User::truncate(); // Assumindo que você queira limpar os usuários
-
+        Instituicao::truncate();
+        Unidade::truncate();
 
         DB::statement("SET session_replication_role = 'origin';");
 
@@ -45,6 +48,7 @@ class DatabaseSeeder extends Seeder
             PermissionTypeSeeder::class,
         ]);
 
+        DB::beginTransaction();
         DB::table('instituicaos')->insert([
             'nome' => 'Universidade Estadual do Sudoeste da Bahia',
             'sigla' => 'UESB',
@@ -63,11 +67,27 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now()
         ]);
+        DB::table('unidades')->insert([
+            'nome' => 'Campus Jequié',
+            'sigla' => 'JQ',
+            'instituicao_id' => 1,
+        ]);
+        DB::table('unidades')->insert([
+            'nome' => 'Campus Vitória da Conquista',
+            'sigla' => 'VCA',
+            'instituicao_id' => 1,
+        ]);
+        DB::table('unidades')->insert([
+            'nome' => 'Campus Itapetinga',
+            'sigla' => 'ITA',
+            'instituicao_id' => 1,
 
+        ]);
+        DB::commit();
 
         // --- ETAPA 1: Criar a infraestrutura e os horários disponíveis ---
         // Também cria alguns usuários avulsos que poderão fazer reservas.
-        
+
         echo "Criando usuários...\n";
         $users = User::factory()->count(10)->create([
             'password' => Hash::make('123123123'), // Senha padrão para todos os usuários

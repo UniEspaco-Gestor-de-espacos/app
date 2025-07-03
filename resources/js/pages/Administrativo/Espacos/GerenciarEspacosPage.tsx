@@ -2,12 +2,12 @@ import DeleteItem from '@/components/delete-item';
 import GenericHeader from '@/components/generic-header';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import EspacoCard from '@/pages/Espacos/fragments/EspacoCard';
+import EspacoFiltroBusca from '@/pages/Espacos/fragments/EspacoFiltroBusca';
 import { Andar, Espaco, Modulo, Unidade, User } from '@/types'; // Importe seus tipos
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { PlusCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import EspacoCard from '../fragments/EspacoCard';
-import EspacoFiltroBusca from '../fragments/EspacoFiltroBusca';
 
 const breadcrumbs = [
     { title: 'Início', href: '/' },

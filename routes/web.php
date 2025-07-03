@@ -12,6 +12,7 @@ use App\Http\Controllers\Institucional\InstitucionalAndarController;
 use App\Http\Controllers\Institucional\InstitucionalEspacoController;
 use App\Http\Controllers\Institucional\InstitucionalInstituicaoController;
 use App\Http\Controllers\Institucional\InstitucionalModuloController;
+use App\Http\Controllers\Institucional\InstitucionalSetorController;
 use App\Http\Controllers\Institucional\InstitucionalUnidadeController;
 use App\Http\Controllers\Institucional\InstitucionalUsuarioController;
 use App\Http\Controllers\ReservaController;
@@ -62,6 +63,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ---------------------------
     Route::middleware([InstitucionalMiddleware::class])->prefix('institucional')->name('institucional.')->group(function () {
 
+        Route::get('/', function () {
+            return Inertia::render('Administrativo/Dashboard',);
+        })->name('dashboard');
+
         // Usuários
         Route::resource('usuarios', InstitucionalUsuarioController::class);
         Route::put('usuarios/{user}/edit-permissions', [InstitucionalUsuarioController::class, 'updatePermissions'])
@@ -78,7 +83,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('modulos', InstitucionalModuloController::class);
 
         // Andares
-        Route::resource('andares', InstitucionalAndarController::class);
+        Route::resource('andars', InstitucionalAndarController::class);
+
+        Route::resource('setors', InstitucionalSetorController::class);
 
         // Espaços
         Route::resource('espacos', InstitucionalEspacoController::class);

@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
-import { Link } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
+import { useCallback } from 'react';
 
 type HeaderEspacoProps = {
     titulo: string;
@@ -8,9 +9,19 @@ type HeaderEspacoProps = {
     buttonText?: string;
     ButtonIcon?: React.ComponentType<{ className?: string }>;
     buttonLink?: string;
+    buttonOnClick?: () => void;
 };
 
-export default function GenericHeader({ canSeeButton, titulo, descricao, ButtonIcon, buttonText, buttonLink }: HeaderEspacoProps) {
+export default function GenericHeader({ canSeeButton, titulo, descricao, ButtonIcon, buttonText, buttonLink, buttonOnClick }: HeaderEspacoProps) {
+    const handleOnClick = useCallback(() => {
+        if (buttonOnClick) {
+            buttonOnClick();
+        }
+        if (buttonLink) {
+            router.get(buttonLink);
+        }
+    }, [buttonLink, buttonOnClick]);
+
     return (
         <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -18,12 +29,10 @@ export default function GenericHeader({ canSeeButton, titulo, descricao, ButtonI
                 <p className="text-muted-foreground">{descricao}</p>
             </div>
             {canSeeButton && (
-                <Link href={buttonLink || '#'}>
-                    <Button className="flex items-center gap-2">
-                        {ButtonIcon && <ButtonIcon className="h-4 w-4" />}
-                        {buttonText || 'N/A'}
-                    </Button>
-                </Link>
+                <Button className="flex items-center gap-2" onClick={handleOnClick}>
+                    {ButtonIcon && <ButtonIcon className="h-4 w-4" />}
+                    {buttonText || 'N/A'}
+                </Button>
             )}
         </header>
     );

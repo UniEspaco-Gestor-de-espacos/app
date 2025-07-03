@@ -39,7 +39,7 @@ const institucionalExtras: MenuItem[] = [
     { title: 'Gerenciar Instituicoes', href: '/institucional/instituicoes', icon: Users }, // Ícone 'Users' é mais adequado para gerenciamento de usuários
     { title: 'Gerenciar Unidades', href: '/institucional/unidades', icon: Users }, // Ícone 'Users' é mais adequado para gerenciamento de usuários
     { title: 'Gerenciar Modulos', href: '/institucional/modulos', icon: Users }, // Ícone 'Users' é mais adequado para gerenciamento de usuários
-    { title: 'Gerenciar Setores', href: '/institucional/setores', icon: Users }, // Ícone 'Users' é mais adequado para gerenciamento de usuários
+    { title: 'Gerenciar Setores', href: '/institucional/setors', icon: Users }, // Ícone 'Users' é mais adequado para gerenciamento de usuários
 ];
 
 /* Rotulagem da seção extra --------------------------------------------- */

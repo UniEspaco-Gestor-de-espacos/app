@@ -104,6 +104,7 @@ export interface Setor {
     nome: string;
     sigla: string;
     unidade?: Unidade; // Relação aninhada
+    users?: User[]; // Relação aninhada, array de usuários
 }
 
 export interface Modulo {
