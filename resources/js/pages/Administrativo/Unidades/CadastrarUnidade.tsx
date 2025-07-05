@@ -3,6 +3,16 @@ import AppLayout from '@/layouts/app-layout';
 import { Instituicao } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import UnidadeForm from './fragments/UnidadesForm';
+const breadcrumbs = [
+    {
+        title: 'Gerenciar Unidades',
+        href: '/institucional/unidades',
+    },
+    {
+        title: 'Cadastrar Unidade',
+        href: '/institucional/unidades/create',
+    },
+];
 
 export interface CadastrarUnidadeForm {
     nome: string;
@@ -21,7 +31,7 @@ export default function CadastrarUnidadePage() {
     };
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Criar Unidade" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">

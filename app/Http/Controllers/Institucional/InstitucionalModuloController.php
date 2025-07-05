@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateModuloRequest;
 use App\Models\Instituicao;
 use App\Models\Modulo;
 use App\Models\Unidade;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -19,7 +20,10 @@ class InstitucionalModuloController extends Controller
      */
     public function index()
     {
-        $modulos = Modulo::with(['andars', 'unidade.instituicao'])->latest()->paginate(10);
+        $user = Auth::user();
+        $instituicao_id = $user->setor->unidade->instituicao_id;
+
+        $modulos = Modulo::whereHas('unidade', fn($q) => $q->where('instituicao_id', $instituicao_id))->with(['andars', 'unidade.instituicao'])->latest()->paginate(10);
 
         return Inertia::render('Administrativo/Modulos/Modulos', [
             'modulos' => $modulos,
@@ -96,24 +100,51 @@ class InstitucionalModuloController extends Controller
      */
     public function update(UpdateModuloRequest $request, Modulo $modulo)
     {
+        $dadosValidados = $request->validated();
         try {
             DB::beginTransaction();
 
             // Atualizar dados básicos do módulo
             $modulo->update([
-                'nome' => $request->validated('nome'),
-                'unidade_id' => $request->validated('unidade_id'),
+                'nome' => $dadosValidados['nome'],
+                'unidade_id' => $dadosValidados['unidade_id'],
             ]);
 
-            // Remover andares existentes e recriar
-            $modulo->andars()->delete();
+            // Pega os nomes dos andares que vieram da request.
+            // Usar uma Collection do Laravel facilita a manipulação.
+            $nomesDosAndaresRequest = collect($dadosValidados['andares'])->pluck('nome');
 
-            // Criar novos andares
-            foreach ($request->validated('andares') as $andarData) {
-                $modulo->andars()->create([
-                    'nome' => $andarData['nome'],
-                    'tipo_acesso' => $andarData['tipo_acesso'],
-                ]);
+            $andaresAtuais = $modulo->andars;
+            $andaresParaRemover = $andaresAtuais->whereNotIn('nome', $nomesDosAndaresRequest);
+
+            foreach ($andaresParaRemover as $andar) {
+                // **IMPORTANTE: Verificação de segurança!**
+                // Não permite remover um andar se ele já tiver espaços vinculados.
+                // Isso previne a perda de dados que era o problema original.
+                if ($andar->espacos()->exists()) {
+                    // Lança uma exceção que será capturada pelo bloco catch.
+                    throw new \Exception(
+                        "Não é possível remover o andar '{$andar->nome}' pois ele já possui espaços cadastrados."
+                    );
+                }
+                // Se não tiver espaços, pode deletar com segurança.
+                $andar->delete();
+            }
+            // **ETAPA DE ATUALIZAÇÃO E CRIAÇÃO**
+            // Itera sobre os andares enviados no formulário.
+            foreach ($dadosValidados['andares'] as $andarData) {
+                // Usa o método updateOrCreate para sincronizar.
+                // 1º argumento: As condições para encontrar o registro (chave única).
+                // 2º argumento: Os valores para atualizar (se encontrar) ou criar (se não encontrar).
+                $modulo->andars()->updateOrCreate(
+                    [
+                        'nome' => $andarData['nome'], // Procura por um andar com este nome...
+                    ],
+                    [
+                        // ...e atualiza/cria com estes dados.
+                        'tipo_acesso' => $andarData['tipo_acesso'],
+                    ]
+                );
             }
 
             DB::commit();

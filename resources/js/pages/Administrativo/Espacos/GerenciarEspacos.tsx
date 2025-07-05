@@ -1,82 +1,96 @@
 import GenericHeader from '@/components/generic-header';
 import AppLayout from '@/layouts/app-layout';
 import { Andar, Espaco, FiltrosEspacosType, Modulo, Unidade, User } from '@/types';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { PlusCircle } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { DialogConfirmacao } from './fragments/DialogConfirmacao';
+import { useEffect, useMemo, useState } from 'react';
 import { FiltrosEspacos } from './fragments/FiltrosEspacos';
 import { GerenciarGestoresDialog } from './fragments/GerenciarGestoresDialog';
+import { Paginacao } from './fragments/Paginacao';
 import { TabelaEspacos } from './fragments/TabelaEspacos';
 const breadcrumbs = [
-    { title: 'Início', href: '/' },
-    { title: 'Espaços', href: '/espacos' },
+    {
+        title: 'Gerenciar Espaços',
+        href: '/institucional/espacos',
+    },
 ];
 export default function GerenciarEspacos() {
     const {
         unidades,
         modulos,
         andares,
-        espacos: { data: espacos, links },
-        filters,
+        espacos, // Agora é um array completo, não um objeto paginado
         users,
     } = usePage<{
-        espacos: {
-            data: Espaco[];
-            links: { url: string | null; label: string; active: boolean }[];
-            meta: object; // Contém 'from', 'to', 'total', etc.
-        };
+        espacos: Espaco[];
         unidades: Unidade[];
         modulos: Modulo[];
         andares: Andar[];
-        filters: FiltrosEspacosType;
         users: User[];
     }>().props;
 
-    const [filtros, setFiltros] = useState<FiltrosEspacosType>(filters);
-    const [espacoParaExcluir, setEspacoParaExcluir] = useState<Espaco | null>(null);
+    // Estado para os filtros, inicializado como vazio
+    const [filtros, setFiltros] = useState<FiltrosEspacosType>({
+        search: '',
+        unidade: undefined,
+        modulo: undefined,
+        andar: undefined,
+        capacidade: '',
+    });
     const [espacoParaGerenciar, setEspacoParaGerenciar] = useState<Espaco | null>(null);
 
-    const isInitialMount = useRef(true);
+    // Estado para a paginação
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10; // Defina quantos itens por página
 
-    // Filtrar espaços baseado nos filtros aplicados
+    // Lógica de filtragem que roda no frontend
+    const espacosFiltrados = useMemo(() => {
+        let espacosFiltradosTemp = [...espacos];
 
-    const handleFiltrar = () => {
-        if (isInitialMount.current) {
-            isInitialMount.current = false;
-            return;
+        // 1. Filtro de busca por nome
+        if (filtros.search) {
+            espacosFiltradosTemp = espacosFiltradosTemp.filter((espaco) => espaco.nome.toLowerCase().includes(filtros.search.toLowerCase()));
         }
-        router.get(
-            route('institucional.espacos.index'),
-            { ...filtros },
-            {
-                preserveState: true, // Mantém o estado dos filtros na página
-                preserveScroll: true, // Não rola a página para o topo
-                replace: true,
-            },
-        );
-    };
 
-    const handleEditar = (espaco: Espaco) => {
-        console.log('Editar espaço:', espaco.nome);
-        // Aqui você redirecionaria para a página de edição
-    };
+        // 2. Filtro por capacidade mínima
+        if (filtros.capacidade) {
+            espacosFiltradosTemp = espacosFiltradosTemp.filter((espaco) => espaco.capacidade_pessoas >= Number(filtros.capacidade));
+        }
 
-    const handleExcluir = (espaco: Espaco) => {
-        console.log('Espaço excluído:', espaco.nome);
-    };
+        // 3. Filtros de localização (Unidade, Módulo, Andar)
+        if (filtros.unidade) {
+            espacosFiltradosTemp = espacosFiltradosTemp.filter((espaco) => espaco.andar?.modulo?.unidade?.id.toString() === filtros.unidade);
+        }
+        if (filtros.modulo) {
+            espacosFiltradosTemp = espacosFiltradosTemp.filter((espaco) => espaco.andar?.modulo?.id.toString() === filtros.modulo);
+        }
+        if (filtros.andar) {
+            espacosFiltradosTemp = espacosFiltradosTemp.filter((espaco) => espaco.andar?.id.toString() === filtros.andar);
+        }
 
+        return espacosFiltradosTemp;
+    }, [espacos, filtros]);
+
+    // Quando os filtros mudam, resetamos para a primeira página
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filtros]);
+
+    // Lógica de paginação
+    const espacosPaginados = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return espacosFiltrados.slice(startIndex, startIndex + itemsPerPage);
+    }, [currentPage, espacosFiltrados, itemsPerPage]);
+
+    const handleCadastrarEspaco = () => {
+        router.visit(route('institucional.espacos.create'));
+    };
     const handleGerenciarGestores = (espaco: Espaco) => {
         setEspacoParaGerenciar(espaco);
     };
 
     const handleSalvarGestores = (espacoId: number, gestores: Record<string, number | null>) => {
         console.log('Gestores salvos para espaço', espacoId, ':', gestores);
-    };
-
-    const handleCadastrarEspaco = () => {
-        console.log('Redirecionar para cadastro de espaço');
-        // Aqui você redirecionaria para a página de cadastro
     };
 
     return (
@@ -96,21 +110,13 @@ export default function GerenciarEspacos() {
                         />
 
                         {/* Filtros */}
-                        <FiltrosEspacos
-                            filtros={filtros}
-                            setFiltros={setFiltros}
-                            unidades={unidades}
-                            onFiltrar={handleFiltrar}
-                            modulos={modulos}
-                            andares={andares}
-                        />
+                        <FiltrosEspacos filtros={filtros} setFiltros={setFiltros} unidades={unidades} modulos={modulos} andares={andares} />
 
                         {/* Tabela de Espaços */}
                         <TabelaEspacos
-                            espacos={espacos}
-                            onEditar={handleEditar}
-                            onExcluir={setEspacoParaExcluir}
+                            espacos={espacosPaginados}
                             onGerenciarGestores={handleGerenciarGestores}
+                            totalFiltrado={espacosFiltrados.length}
                         />
 
                         {/* Dialog para gerenciar gestores */}
@@ -123,34 +129,12 @@ export default function GerenciarEspacos() {
                             onSave={handleSalvarGestores}
                         />
 
-                        {/* Dialog de confirmação para exclusão */}
-                        <DialogConfirmacao
-                            espaco={espacoParaExcluir}
-                            isOpen={!!espacoParaExcluir}
-                            onClose={() => setEspacoParaExcluir(null)}
-                            onConfirm={handleExcluir}
+                        <Paginacao
+                            totalItems={espacosFiltrados.length}
+                            itemsPerPage={itemsPerPage}
+                            currentPage={currentPage}
+                            onPageChange={setCurrentPage}
                         />
-                        {/* Componente de Paginação */}
-                        <div className="mt-6 flex justify-center">
-                            <div className="flex gap-1">
-                                {links.map((link, index) =>
-                                    link.url ? (
-                                        <Link
-                                            key={index}
-                                            href={link.url}
-                                            className={`rounded-md border px-4 py-2 text-sm ${link.active ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent'}`}
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                        />
-                                    ) : (
-                                        <span
-                                            key={index}
-                                            className="text-muted-foreground rounded-md border px-4 py-2 text-sm"
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                        />
-                                    ),
-                                )}
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

@@ -1,5 +1,3 @@
-'use client';
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,10 +11,9 @@ interface FiltrosEspacosProps {
     unidades: Unidade[];
     modulos: Modulo[];
     andares: Andar[];
-    onFiltrar: () => void;
 }
 
-export function FiltrosEspacos({ filtros, setFiltros, unidades, modulos, andares, onFiltrar }: FiltrosEspacosProps) {
+export function FiltrosEspacos({ filtros, setFiltros, unidades, modulos, andares }: FiltrosEspacosProps) {
     // Filtrar módulos baseado na unidade selecionada
     const modulosFiltrados = filtros.unidade ? modulos.filter((modulo) => modulo.unidade?.id.toString() === filtros.unidade) : modulos;
 
@@ -46,7 +43,16 @@ export function FiltrosEspacos({ filtros, setFiltros, unidades, modulos, andares
             andar: value === '0' ? undefined : value,
         });
     };
-
+    // Função para limpar todos os filtros
+    const handleLimparFiltros = () => {
+        setFiltros({
+            search: '',
+            unidade: undefined,
+            modulo: undefined,
+            andar: undefined,
+            capacidade: '',
+        });
+    };
     return (
         <Card>
             <CardHeader>
@@ -135,7 +141,7 @@ export function FiltrosEspacos({ filtros, setFiltros, unidades, modulos, andares
 
                 {/* Botão de filtrar e limpar */}
                 <div className="mt-4 flex gap-2">
-                    <Button onClick={onFiltrar} className="flex-1">
+                    <Button onClick={handleLimparFiltros} className="flex-1">
                         <Search className="mr-2 h-4 w-4" />
                         Aplicar Filtros
                     </Button>

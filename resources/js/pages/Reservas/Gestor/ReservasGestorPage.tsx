@@ -11,10 +11,6 @@ import { ReservasLoading } from '../fragments/reservasLoading';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Reservas',
-        href: '/gestor/reservas',
-    },
-    {
         title: 'Gerenciar Reservas',
         href: '/gestor/reservas',
     },

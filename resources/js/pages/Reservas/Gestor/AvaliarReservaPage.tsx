@@ -15,6 +15,10 @@ import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
+        title: 'Gerenciar Reservas',
+        href: '/gestor/reservas',
+    },
+    {
         title: 'Avaliar reserva',
         href: '/gestor/reservas',
     },

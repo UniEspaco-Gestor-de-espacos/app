@@ -21,11 +21,17 @@ class EspacoController extends Controller
         $user = Auth::user();
         // Pega os parâmetros de filtro da URL (query string)
         $filters = Request::only(['search', 'unidade', 'modulo', 'andar', 'capacidade']);
-
+        $user = Auth::user();
+        $instituicao_id = $user->setor->unidade->instituicao_id;
         $espacos = Espaco::query()
             // O join com 'andars' e 'modulos' é necessário para filtrar por eles
             ->join('andars', 'espacos.andar_id', '=', 'andars.id')
             ->join('modulos', 'andars.modulo_id', '=', 'modulos.id')
+            ->join('unidades', 'modulos.unidade_id', '=', 'unidades.id')
+            ->when(function ($query) use ($instituicao_id) {
+                // Filtra os espaços apenas da unidade do usuário autenticado
+                $query->where('unidades.instituicao_id', $instituicao_id);
+            })
             // Começa a aplicar os filtros
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
@@ -60,12 +66,17 @@ class EspacoController extends Controller
             ->paginate(6)
             // Adiciona a query string à paginação para que os filtros sejam mantidos ao mudar de página
             ->withQueryString();
+        $unidades = Unidade::where('instituicao_id', $instituicao_id)->with('modulos.andars')->get();
+
+        $modulos = Modulo::whereHas('unidade', fn($q) => $q->where('instituicao_id', $instituicao_id))->with(['unidade', 'andars'])->get();
+
+        $andares = Andar::whereHas('modulo.unidade', fn($q) => $q->where('instituicao_id', $instituicao_id))->with(['modulo', 'espacos'])->get();
 
         return Inertia::render('Espacos/EspacosPage', [
             'espacos' => $espacos, // Agora é um objeto paginador
-            'andares' => Andar::all(), // Ainda precisa de todos para popular os selects
-            'modulos' => Modulo::all(),
-            'unidades' => Unidade::all(),
+            'andares' => $andares, // Ainda precisa de todos para popular os selects
+            'modulos' => $modulos,
+            'unidades' => $unidades,
             'filters' => $filters, // Envia os filtros de volta para a view
             'user' => $user
         ]);

@@ -6,7 +6,16 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 import { AndarFormData } from './fragments/AndarFormCard';
 import ModuloForm from './fragments/ModuloForm';
-
+const breadcrumbs = [
+    {
+        title: 'Gerenciar Modulos',
+        href: '/institucional/modulo',
+    },
+    {
+        title: 'Cadastrar Modulo',
+        href: `/institucional/modulos/create`,
+    },
+];
 export interface CadastrarModuloForm {
     nome: string;
     unidade_id: string;
@@ -16,6 +25,7 @@ export interface CadastrarModuloForm {
 
 export default function CadastrarModuloPage() {
     const { instituicoes, unidades } = usePage<{ instituicoes: Instituicao[]; unidades: Unidade[] }>().props;
+
     const { data, setData, post, processing, errors } = useForm<CadastrarModuloForm>({
         nome: '',
         unidade_id: '',
@@ -47,7 +57,7 @@ export default function CadastrarModuloPage() {
     };
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Criar Modulo" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">

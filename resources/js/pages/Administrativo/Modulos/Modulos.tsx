@@ -64,41 +64,43 @@ export default function ModulosPage() {
                 <div className="container mx-auto space-y-6 py-6">
                     <div className="container mx-auto space-y-6 p-6">
                         {/* Header */}
-                        <div className="flex flex-col space-y-4">
-                            <GenericHeader
-                                titulo="Módulos Cadastrados"
-                                descricao="Visualize todos os módulos, unidades e andares do sistema"
-                                canSeeButton
-                                buttonLink={route('institucional.modulos.create')}
-                                buttonText="Cadastrar modulo"
-                                ButtonIcon={PlusCircle}
-                            />
+                        <GenericHeader
+                            titulo="Módulos Cadastrados"
+                            descricao="Visualize todos os módulos, unidades e andares do sistema"
+                            canSeeButton
+                            buttonLink={route('institucional.modulos.create')}
+                            buttonText="Cadastrar modulo"
+                            ButtonIcon={PlusCircle}
+                        />
 
-                            {/* Filtros */}
-                            <div className="flex flex-col gap-4 sm:flex-row">
-                                <div className="flex-1">
-                                    <Input
-                                        placeholder="Filtrar por nome do módulo..."
-                                        value={filtroNome}
-                                        onChange={(e) => setFiltroNome(e.target.value)}
-                                        className="max-w-sm"
-                                    />
+                        {/* Filtros */}
+                        <Card>
+                            <CardContent>
+                                <div className="flex flex-col gap-4 sm:flex-row">
+                                    <div className="flex-1">
+                                        <Input
+                                            placeholder="Filtrar por nome do módulo..."
+                                            value={filtroNome}
+                                            onChange={(e) => setFiltroNome(e.target.value)}
+                                            className="w-full max-w-sm"
+                                        />
+                                    </div>
+                                    <Select value={filtroUnidade} onValueChange={setFiltroUnidade}>
+                                        <SelectTrigger className="w-full sm:w-[200px]">
+                                            <SelectValue placeholder="Filtrar por unidade" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Todas as unidades</SelectItem>
+                                            {unidadesUnicas.map((unidade) => (
+                                                <SelectItem key={unidade} value={unidade!}>
+                                                    {unidade}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                                <Select value={filtroUnidade} onValueChange={setFiltroUnidade}>
-                                    <SelectTrigger className="w-full sm:w-[200px]">
-                                        <SelectValue placeholder="Filtrar por unidade" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Todas as unidades</SelectItem>
-                                        {unidadesUnicas.map((unidade) => (
-                                            <SelectItem key={unidade} value={unidade!}>
-                                                {unidade}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
 
                         {/* Lista de Módulos */}
                         <div className="space-y-4">
