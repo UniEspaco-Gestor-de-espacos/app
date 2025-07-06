@@ -38,11 +38,9 @@ export default function EspacosPage() {
         };
         user: User;
     }>().props;
-
     // Função para solicitar reserva
     const handleSolicitarReserva = (espacoId: string) => {
-        console.log('Funçaõ Solicitar reserva para o espaço:', espacoId);
-        router.visit(`/espacos/${espacoId}`);
+        router.get(`/espacos/${espacoId}`);
     };
 
     return (

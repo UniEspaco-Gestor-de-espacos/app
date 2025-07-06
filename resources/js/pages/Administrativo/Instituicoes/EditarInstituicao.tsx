@@ -1,4 +1,3 @@
-// Arquivo: resources/js/Pages/Admin/Instituicoes/Edit.jsx
 import AppLayout from '@/layouts/app-layout';
 import { Instituicao } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
@@ -13,6 +12,16 @@ export interface EditarInstituicaoForm {
 
 export default function EditarInstituicao() {
     const { instituicao } = usePage<{ instituicao: Instituicao }>().props;
+    const breadcrumbs = [
+        {
+            title: 'Gerenciar Instituicões',
+            href: '/institucional/instituicao',
+        },
+        {
+            title: 'Editar Instituicao',
+            href: `/institucional/instituicao/${instituicao.id}/edit`,
+        },
+    ];
     const { data, setData, put, processing, errors } = useForm<EditarInstituicaoForm>({
         nome: instituicao.nome,
         sigla: instituicao.sigla,
@@ -25,7 +34,7 @@ export default function EditarInstituicao() {
     };
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Editar ${instituicao.nome}`} />
             <div className="container mx-auto py-10">
                 <div className="container mx-auto space-y-6 p-6">

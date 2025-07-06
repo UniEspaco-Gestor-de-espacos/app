@@ -14,9 +14,10 @@ type DeleteItemProps = {
     itemName: string;
     isOpen?: (open: boolean) => void;
     route: string;
+    showHeading?: boolean;
 };
 
-export default function DeleteItem({ isOpen, route, itemName }: DeleteItemProps) {
+export default function DeleteItem({ isOpen, route, itemName, showHeading = true }: DeleteItemProps) {
     const passwordInput = useRef<HTMLInputElement>(null);
     const { data, setData, delete: destroy, processing, reset, errors, clearErrors } = useForm<Required<{ password: string }>>({ password: '' });
 
@@ -42,7 +43,7 @@ export default function DeleteItem({ isOpen, route, itemName }: DeleteItemProps)
 
     return (
         <div className="space-y-6">
-            <HeadingSmall title={`${itemName}`} description={`Excluir o(a) ${itemName} e as informações permanentemente`} />
+            {showHeading && <HeadingSmall title={`${itemName}`} description={`Excluir o(a) ${itemName} e as informações permanentemente`} />}
 
             <div className="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10">
                 <div className="relative space-y-0.5 text-red-600 dark:text-red-100">

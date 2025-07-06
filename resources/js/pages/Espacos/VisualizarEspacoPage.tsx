@@ -25,7 +25,7 @@ export default function VisualizarEspaço() {
                 <div className="container mx-auto space-y-6 py-6">
                     <div className="container mx-auto space-y-6 p-6">
                         <AgendaEspaço isEditMode={reserva != undefined} reserva={reserva} espaco={espaco} />
-                    </div>{' '}
+                    </div>
                 </div>
             </div>
         </AppLayout>

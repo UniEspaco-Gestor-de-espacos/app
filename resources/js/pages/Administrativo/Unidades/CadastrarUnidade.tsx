@@ -3,6 +3,16 @@ import AppLayout from '@/layouts/app-layout';
 import { Instituicao } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import UnidadeForm from './fragments/UnidadesForm';
+const breadcrumbs = [
+    {
+        title: 'Gerenciar Unidades',
+        href: '/institucional/unidades',
+    },
+    {
+        title: 'Cadastrar Unidade',
+        href: '/institucional/unidades/create',
+    },
+];
 
 export interface CadastrarUnidadeForm {
     nome: string;
@@ -12,16 +22,19 @@ export interface CadastrarUnidadeForm {
 }
 
 export default function CadastrarUnidadePage() {
-    const { instituicoes } = usePage<{ instituicoes: Instituicao[] }>().props;
+    const { instituicao } = usePage<{ instituicao: Instituicao }>().props;
     const { data, setData, post, processing, errors } = useForm<CadastrarUnidadeForm>();
 
     const submit = (e: React.FormEvent<HTMLFormElement>) => {
+        setData((prevData) => ({ ...prevData, instituicao_id: instituicao.id.toString() }));
+
         e.preventDefault();
+
         post(route('institucional.unidades.store'));
     };
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Criar Unidade" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
@@ -35,7 +48,7 @@ export default function CadastrarUnidadePage() {
                             processing={processing}
                             title="Criar Novo Módulo"
                             description="Preencha os dados abaixo para cadastrar um novo modulo."
-                            instituicoes={instituicoes}
+                            instituicao={instituicao}
                         />
                     </div>
                 </div>

@@ -168,14 +168,8 @@ class GestorReservaController extends Controller
             //    b) Ainda estão com o status 'em_analise'.
             $horariosIdsParaAvaliar = $reserva->horarios()
                 ->whereIn('agenda_id', $agendasDoGestorIds)
-                ->wherePivot('situacao', 'em_analise')
                 ->pluck('horarios.id');
 
-            // Se não houver horários pendentes para este gestor nesta reserva, informa e sai.
-            if ($horariosIdsParaAvaliar->isEmpty()) {
-                DB::rollBack(); // Não há nada para fazer, então desfazemos a transação.
-                return redirect()->route('gestor.reservas.index')->with('error', 'Reserva já avaliada!');
-            }
 
             // 4. Atualiza a 'situacao' na tabela pivô APENAS para os horários encontrados.
             $reserva->horarios()->updateExistingPivot($horariosIdsParaAvaliar, [

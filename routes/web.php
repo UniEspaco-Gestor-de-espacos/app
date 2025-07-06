@@ -12,6 +12,7 @@ use App\Http\Controllers\Institucional\InstitucionalAndarController;
 use App\Http\Controllers\Institucional\InstitucionalEspacoController;
 use App\Http\Controllers\Institucional\InstitucionalInstituicaoController;
 use App\Http\Controllers\Institucional\InstitucionalModuloController;
+use App\Http\Controllers\Institucional\InstitucionalSetorController;
 use App\Http\Controllers\Institucional\InstitucionalUnidadeController;
 use App\Http\Controllers\Institucional\InstitucionalUsuarioController;
 use App\Http\Controllers\ReservaController;
@@ -41,6 +42,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ---------------------------
     // Visualização de Espaços
     // ---------------------------
+    Route::get('/espacos/favoritos', [EspacoController::class, 'meusFavoritos'])->name('espacos.favoritos');
+    Route::post('/espacos/{espaco}/favoritar', [EspacoController::class, 'favoritar'])->name('espacos.favoritar');
+    Route::delete('/espacos/{espaco}/desfavoritar', [EspacoController::class, 'desfavoritar'])->name('espacos.desfavoritar');
     Route::get('espacos', [EspacoController::class, 'index'])->name('espacos.index');
     Route::get('espacos/{espaco}', [EspacoController::class, 'show'])->name('espacos.show');
 
@@ -62,6 +66,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ---------------------------
     Route::middleware([InstitucionalMiddleware::class])->prefix('institucional')->name('institucional.')->group(function () {
 
+        Route::get('/', function () {
+            return Inertia::render('Administrativo/Dashboard',);
+        })->name('dashboard');
+
         // Usuários
         Route::resource('usuarios', InstitucionalUsuarioController::class);
         Route::put('usuarios/{user}/edit-permissions', [InstitucionalUsuarioController::class, 'updatePermissions'])
@@ -77,8 +85,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Módulos
         Route::resource('modulos', InstitucionalModuloController::class);
 
-        // Andares
-        Route::resource('andares', InstitucionalAndarController::class);
+        //Setores
+        Route::resource('setors', InstitucionalSetorController::class);
 
         // Espaços
         Route::resource('espacos', InstitucionalEspacoController::class);

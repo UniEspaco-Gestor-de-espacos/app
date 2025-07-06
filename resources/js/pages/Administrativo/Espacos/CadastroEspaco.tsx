@@ -1,4 +1,4 @@
-// CadastroEspacoPage.tsx
+import GenericHeader from '@/components/generic-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
@@ -8,13 +8,10 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import { Loader2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
-
-// Importando os fragmentos
-import GenericHeader from '@/components/generic-header';
-import { AddAndarDialog } from './fragments/AddAndarDialog';
+import { AddAndarDialog } from '../Espacos/fragments/AddAndarDialog';
+import { LocationSelector } from '../Espacos/fragments/LocationSelector';
 import { EspacoFormFields } from './fragments/EspacoFormFields';
 import { ImageUpload, ImageWithPreview } from './fragments/ImageUpload';
-import { LocationSelector } from './fragments/LocationSelector';
 
 const breadcrumbs = [
     { title: 'Espaço', href: '/institucional/espacos' },

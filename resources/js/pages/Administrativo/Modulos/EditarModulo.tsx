@@ -8,7 +8,17 @@ import { CadastrarModuloForm } from './CadastrarModulo';
 import ModuloForm from './fragments/ModuloForm';
 
 export default function EditarModulo() {
-    const { instituicoes, unidades, modulo } = usePage<{ instituicoes: Instituicao[]; unidades: Unidade[]; modulo: Modulo }>().props;
+    const { instituicao, unidades, modulo } = usePage<{ instituicao: Instituicao; unidades: Unidade[]; modulo: Modulo }>().props;
+    const breadcrumbs = [
+        {
+            title: 'Gerenciar Modulos',
+            href: '/institucional/modulo',
+        },
+        {
+            title: 'Editar Modulo',
+            href: `/institucional/modulos/${modulo.id}/edit`,
+        },
+    ];
     const { data, setData, patch, processing, errors } = useForm<CadastrarModuloForm>({
         nome: '',
         unidade_id: '',
@@ -40,7 +50,7 @@ export default function EditarModulo() {
     };
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Criar Modulo" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
@@ -54,7 +64,7 @@ export default function EditarModulo() {
                             processing={processing}
                             title="Criar Novo Módulo"
                             description="Preencha os dados abaixo para cadastrar um novo modulo."
-                            instituicoes={instituicoes}
+                            instituicao={instituicao}
                             unidades={unidades}
                             modulo={modulo}
                         />

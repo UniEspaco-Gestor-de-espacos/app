@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { diasSemanaParser, formatDate, getTurnoText } from '@/lib/utils';
-import { Paginator, Reserva, SituacaoReserva } from '@/types';
+import { Paginator, Reserva, SituacaoReserva, User as UserType } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { Separator } from '@radix-ui/react-separator';
 import { CalendarDays, CheckCircle, Clock, Edit, Eye, FileText, User, XCircle, XSquare } from 'lucide-react';
 import type React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SituacaoIndicator } from './ReservaCard';
 
 // Tipos baseados no modelo de dados fornecido
@@ -60,12 +60,51 @@ interface ReservasListProps {
     paginator: Paginator<Reserva>;
     fallback: React.ReactNode;
     isGestor: boolean;
+    user?: UserType;
 }
 // Componente principal da lista de reservas
-export function ReservasList({ paginator, fallback, isGestor }: ReservasListProps) {
+export function ReservasList({ paginator, fallback, isGestor, user }: ReservasListProps) {
     const { data: reservas, links } = paginator;
     const [selectedReserva, setSelectedReserva] = useState<Reserva | null>(null);
     const [removerReserva, setRemoverReserva] = useState<Reserva | null>(null);
+    const [reservasFiltradas, setReservasFiltradas] = useState<Reserva[]>(reservas);
+
+    useEffect(() => {
+        if (isGestor) {
+            const reservasParaExibir = reservas.map((reserva) => {
+                const horariosQueGerencio = reserva.horarios.filter((horario) => {
+                    return horario.agenda?.user?.id === user?.id;
+                });
+
+                if (reserva.situacao === 'parcialmente_deferida') {
+                    const situacoes = horariosQueGerencio.map((horario) => horario.pivot?.situacao);
+                    if (situacoes.includes('em_analise')) {
+                        return {
+                            ...reserva,
+                            situacao: 'em_analise' as SituacaoReserva,
+                        };
+                    }
+                    if (situacoes.includes('deferida')) {
+                        return {
+                            ...reserva,
+                            situacao: 'deferida' as SituacaoReserva,
+                        };
+                    }
+                    if (situacoes.includes('indeferida')) {
+                        return {
+                            ...reserva,
+                            situacao: 'indeferida' as SituacaoReserva,
+                        };
+                    }
+                }
+
+                return reserva;
+            });
+            setReservasFiltradas(reservasParaExibir);
+        } else {
+            setReservasFiltradas(reservas);
+        }
+    }, [isGestor, reservas, user?.id]);
 
     if (reservas.length === 0) {
         return fallback;
@@ -89,7 +128,7 @@ export function ReservasList({ paginator, fallback, isGestor }: ReservasListProp
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {reservas.map((reserva) => (
+                        {reservasFiltradas.map((reserva) => (
                             <TableRow key={reserva.id}>
                                 <TableCell className="font-medium">
                                     <div>
@@ -143,7 +182,7 @@ export function ReservasList({ paginator, fallback, isGestor }: ReservasListProp
                                                             size="sm"
                                                             title="Editar"
                                                             onClick={() => {
-                                                                router.visit(`reservas/${reserva.id}/edit`);
+                                                                router.get(`reservas/${reserva.id}/edit`);
                                                             }}
                                                         >
                                                             <Edit />
@@ -254,7 +293,7 @@ export function ReservasList({ paginator, fallback, isGestor }: ReservasListProp
                                     <Button
                                         variant="outline"
                                         onClick={() => {
-                                            router.visit(`/gestor/reservas/${selectedReserva.id}`);
+                                            router.get(`/gestor/reservas/${selectedReserva.id}`);
                                         }}
                                     >
                                         <Edit className="mr-1 h-4 w-4" />

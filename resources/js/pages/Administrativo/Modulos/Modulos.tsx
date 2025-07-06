@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { nivelParaLabel, nomeParaNivel } from '@/lib/utils/andars/AndarHelpers';
@@ -64,41 +65,47 @@ export default function ModulosPage() {
                 <div className="container mx-auto space-y-6 py-6">
                     <div className="container mx-auto space-y-6 p-6">
                         {/* Header */}
-                        <div className="flex flex-col space-y-4">
-                            <GenericHeader
-                                titulo="Módulos Cadastrados"
-                                descricao="Visualize todos os módulos, unidades e andares do sistema"
-                                canSeeButton
-                                buttonLink={route('institucional.modulos.create')}
-                                buttonText="Cadastrar modulo"
-                                ButtonIcon={PlusCircle}
-                            />
+                        <GenericHeader
+                            titulo="Módulos Cadastrados"
+                            descricao="Visualize todos os módulos, unidades e andares do sistema"
+                            canSeeButton
+                            buttonLink={route('institucional.modulos.create')}
+                            buttonText="Cadastrar modulo"
+                            ButtonIcon={PlusCircle}
+                        />
 
-                            {/* Filtros */}
-                            <div className="flex flex-col gap-4 sm:flex-row">
-                                <div className="flex-1">
-                                    <Input
-                                        placeholder="Filtrar por nome do módulo..."
-                                        value={filtroNome}
-                                        onChange={(e) => setFiltroNome(e.target.value)}
-                                        className="max-w-sm"
-                                    />
+                        {/* Filtros */}
+                        <Card>
+                            <CardContent>
+                                <div className="flex flex-col gap-4 sm:flex-row">
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium">Buscar</Label>
+                                        <Input
+                                            placeholder="Filtrar por nome do módulo..."
+                                            value={filtroNome}
+                                            onChange={(e) => setFiltroNome(e.target.value)}
+                                            className="w-full max-w-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium">Buscar</Label>
+                                        <Select value={filtroUnidade} onValueChange={setFiltroUnidade}>
+                                            <SelectTrigger className="w-full sm:w-[200px]">
+                                                <SelectValue placeholder="Filtrar por unidade" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">Todas as unidades</SelectItem>
+                                                {unidadesUnicas.map((unidade) => (
+                                                    <SelectItem key={unidade} value={unidade!}>
+                                                        {unidade}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
-                                <Select value={filtroUnidade} onValueChange={setFiltroUnidade}>
-                                    <SelectTrigger className="w-full sm:w-[200px]">
-                                        <SelectValue placeholder="Filtrar por unidade" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Todas as unidades</SelectItem>
-                                        {unidadesUnicas.map((unidade) => (
-                                            <SelectItem key={unidade} value={unidade!}>
-                                                {unidade}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
 
                         {/* Lista de Módulos */}
                         <div className="space-y-4">
@@ -143,7 +150,7 @@ export default function ModulosPage() {
                                                                 size="sm"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    router.visit(route('institucional.modulos.edit', { modulo: modulo.id }));
+                                                                    router.get(route('institucional.modulos.edit', { modulo: modulo.id }));
                                                                 }}
                                                                 className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                                                             >

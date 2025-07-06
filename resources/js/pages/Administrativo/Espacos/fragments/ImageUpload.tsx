@@ -7,7 +7,7 @@ import { useForm } from '@inertiajs/react';
 import { X } from 'lucide-react';
 import React from 'react';
 import { toast } from 'sonner';
-import { FormCadastroValues } from '../CadastroEspacoPage';
+import { FormCadastroValues } from '../CadastroEspaco';
 export interface ImageWithPreview {
     file: File;
     preview: string;

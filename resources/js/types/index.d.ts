@@ -104,6 +104,7 @@ export interface Setor {
     nome: string;
     sigla: string;
     unidade?: Unidade; // Relação aninhada
+    users?: User[]; // Relação aninhada, array de usuários
 }
 
 export interface Modulo {
@@ -130,6 +131,7 @@ export interface Espaco {
     main_image_index: string | null;
     andar?: Andar; // Relação aninhada
     agendas?: Agenda[];
+    is_favorited_by_user?: boolean; // Indica se o usuário favoritou este espaço
 }
 
 // =============================================================================
@@ -317,4 +319,12 @@ export interface SelectedAgenda {
   modulo: Modulo
   unidade: Unidade
   instituicao: Instituicao
+}
+
+export interface FiltrosEspacosType {
+    search?: string;
+    unidade?: string;
+    modulo?: string;
+    andar?: string;
+    capacidade?: string;
 }

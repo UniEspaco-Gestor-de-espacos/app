@@ -62,4 +62,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(Reserva::class);
     }
+    public function favoritos()
+    {
+        return $this->belongsToMany(Espaco::class, 'espaco_user', 'user_id', 'espaco_id');
+    }
 }

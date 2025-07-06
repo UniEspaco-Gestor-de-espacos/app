@@ -2,13 +2,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { SelectContent, SelectItem, SelectTrigger, Select as SelectUI, SelectValue } from '@/components/ui/select';
-import { Instituicao, Unidade } from '@/types';
+import { Instituicao } from '@/types';
 import { useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { CadastrarUnidadeForm } from '../CadastrarUnidade';
-
-// Componente reutilizável para os formulários de Criar e Editar
 
 type UnidadeFormProps = {
     data: CadastrarUnidadeForm;
@@ -18,12 +15,12 @@ type UnidadeFormProps = {
     processing: boolean;
     title: string;
     description: string;
-    instituicoes: Instituicao[];
-    unidade?: Unidade;
+    instituicao: Instituicao;
 };
-export default function UnidadeForm({ data, setData, submit, errors, processing, title, description, instituicoes, unidade }: UnidadeFormProps) {
-    const [instituicaoSelecionada, setInstituicaoSelecionada] = useState<Instituicao | undefined>(unidade?.instituicao);
-
+export default function UnidadeForm({ data, setData, submit, errors, processing, title, description, instituicao }: UnidadeFormProps) {
+    useEffect(() => {
+        setData((prevData) => ({ ...prevData, instituicao_id: instituicao.id.toString() }));
+    }, [instituicao, setData]);
     return (
         <form onSubmit={submit}>
             <Card>
@@ -33,27 +30,8 @@ export default function UnidadeForm({ data, setData, submit, errors, processing,
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Instituicao</label>
-                        <SelectUI
-                            value={instituicaoSelecionada?.id.toString()}
-                            onValueChange={(value) => {
-                                setInstituicaoSelecionada(instituicoes.find((i) => i.id.toString() === value));
-                                setData((prevData) => ({ ...prevData, instituicao_id: value }));
-                            }}
-                            disabled={processing}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione uma instituicao" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {instituicoes.map((instituicao) => (
-                                    <SelectItem key={instituicao.id.toString()} value={instituicao.id.toString()}>
-                                        {instituicao.nome}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </SelectUI>
-                        {errors.instituicao_id && <p className="mt-1 text-sm text-red-500">{errors.instituicao_id}</p>}
+                        <Label htmlFor="instituicao">Instituicao</Label>
+                        <Input id="instituicao" value={instituicao.nome} disabled />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="nome">Nome da unidade</Label>

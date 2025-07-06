@@ -55,16 +55,9 @@ export default function EspacoFiltroBusca(props: FiltroBuscaEspacosProps) {
             preserveState: true, // Mantém o estado dos filtros na página
             preserveScroll: true, // Não rola a página para o topo
             replace: true,
-            onSuccess: (data) => {
-                console.log('Filtros aplicados com sucesso:', data);
-            },
-            onError: (error) => {
-                console.error('Erro ao aplicar filtros:', error);
-            },
         });
     }, [debouncedSearchTerm, route, localFilters]);
     const handleFilterChange = (name: keyof typeof localFilters, value: string) => {
-        console.log(`Filtro alterado: ${name} = ${value}`);
         setLocalFilters((prevFilters) => {
             const newFilters = { ...prevFilters, [name]: value };
 
@@ -73,12 +66,11 @@ export default function EspacoFiltroBusca(props: FiltroBuscaEspacosProps) {
                 newFilters.selectedAndar = 'all';
             }
             if (name === 'selectedModulo') {
-                newFilters.selectedModulo = 'all';
+                newFilters.selectedAndar = 'all';
             }
 
             return newFilters;
         });
-        console.log('Filtros atualizados:', localFilters);
     };
 
     return (

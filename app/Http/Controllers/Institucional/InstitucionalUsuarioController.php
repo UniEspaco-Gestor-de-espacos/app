@@ -9,10 +9,12 @@ use App\Models\Espaco;
 use App\Models\Instituicao;
 use App\Models\Modulo;
 use App\Models\PermissionType;
+use App\Models\Setor;
 use App\Models\Unidade;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\User; // Importar o modelo User para buscar o usuário
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule; // Importar Rule para validações
 
@@ -24,7 +26,9 @@ class InstitucionalUsuarioController extends Controller
      */
     public function index()
     {
-        $users = User::with([
+        $user = Auth::user();
+        $instituicao_id = $user->setor->unidade->instituicao_id;
+        $users = User::whereHas('setor.unidade', fn($q) => $q->where('instituicao_id', $instituicao_id))->with([
             'setor.unidade.instituicao',
             'agendas.espaco.andar.modulo.unidade.instituicao'
         ])->get();
@@ -42,6 +46,10 @@ class InstitucionalUsuarioController extends Controller
             'permissionTypes' => $permissionTypes,
             'instituicoes' => Instituicao::with([
                 'unidades.modulos.andars.espacos.agendas'
+            ])->get(),
+            'setores' => Setor::with([
+                'unidade.instituicao',
+                'users.agendas.espaco.andar.modulo.unidade.instituicao'
             ])->get(),
 
         ]);

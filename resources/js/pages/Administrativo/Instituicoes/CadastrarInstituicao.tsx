@@ -3,7 +3,16 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, useForm } from '@inertiajs/react';
 import { PlusCircle } from 'lucide-react';
 import InstituicaoForm from './fragments/InstituicaoForm';
-
+const breadcrumbs = [
+    {
+        title: 'Gerenciar Instituicão',
+        href: '/institucional/instituicao',
+    },
+    {
+        title: 'Cadastrar Instituicão',
+        href: `/institucional/instituicao/create`,
+    },
+];
 export interface CadastrarInstituicaoForm {
     nome: string;
     sigla: string;
@@ -20,7 +29,7 @@ export default function CadastrarInstituicaoPage() {
     };
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Criar Instituição" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">

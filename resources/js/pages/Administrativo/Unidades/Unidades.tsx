@@ -2,7 +2,7 @@ import DeleteItem from '@/components/delete-item';
 import GenericHeader from '@/components/generic-header';
 import Paginacao from '@/components/paginacao-listas';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { Instituicao, Unidade } from '@/types';
@@ -12,12 +12,12 @@ import { useEffect, useState } from 'react';
 import { UnidadeFilters } from './fragments/UnidadeFilters';
 const breadcrumbs = [
     {
-        title: 'Gerenciar Modulos',
-        href: '/institucional/modulos',
+        title: 'Gerenciar Unidades',
+        href: '/institucional/unidades',
     },
 ];
 
-export default function InstituicoesPage() {
+export default function UnidadesPage() {
     const { unidades, instituicoes } = usePage<{
         unidades: {
             data: Unidade[];
@@ -48,7 +48,7 @@ export default function InstituicoesPage() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Instituições" />
+            <Head title="Unidades" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="container mx-auto space-y-6 py-6">
@@ -62,15 +62,14 @@ export default function InstituicoesPage() {
                             canSeeButton={true}
                         />
                         <Card>
-                            <CardHeader className="flex justify-between">
+                            <CardContent>
                                 <UnidadeFilters
                                     searchTerm={searchTerm}
                                     onSearchTermChange={setSearchTerm}
-                                    instituicoes={instituicoes}
-                                    selectedInstituicao={selectedInstituicao}
-                                    onInstituicaoChange={setSelectedInstituicao}
                                 />
-                            </CardHeader>
+                            </CardContent>
+                        </Card>
+                        <Card>
                             <CardContent>
                                 <Table>
                                     <TableHeader>
