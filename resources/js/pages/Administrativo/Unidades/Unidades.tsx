@@ -66,9 +66,6 @@ export default function UnidadesPage() {
                                 <UnidadeFilters
                                     searchTerm={searchTerm}
                                     onSearchTermChange={setSearchTerm}
-                                    instituicoes={instituicoes}
-                                    selectedInstituicao={selectedInstituicao}
-                                    onInstituicaoChange={setSelectedInstituicao}
                                 />
                             </CardContent>
                         </Card>

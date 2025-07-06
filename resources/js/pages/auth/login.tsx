@@ -62,7 +62,7 @@ export default function Login() {
                                     <button
                                         type="button"
                                         className="text-primary text-sm hover:underline"
-                                        onClick={() => router.visit(route('password.request'))}
+                                        onClick={() => router.get(route('password.request'))}
                                     >
                                         Esqueceu a senha?
                                     </button>
@@ -157,7 +157,7 @@ export default function Login() {
                                 <button
                                     type="button"
                                     className="text-primary font-medium hover:underline"
-                                    onClick={() => router.visit(route('register'))}
+                                    onClick={() => router.get(route('register'))}
                                 >
                                     Cadastre-se gratuitamente
                                 </button>

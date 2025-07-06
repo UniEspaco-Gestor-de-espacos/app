@@ -42,6 +42,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ---------------------------
     // Visualização de Espaços
     // ---------------------------
+    Route::get('/espacos/favoritos', [EspacoController::class, 'meusFavoritos'])->name('espacos.favoritos');
+    Route::post('/espacos/{espaco}/favoritar', [EspacoController::class, 'favoritar'])->name('espacos.favoritar');
+    Route::delete('/espacos/{espaco}/desfavoritar', [EspacoController::class, 'desfavoritar'])->name('espacos.desfavoritar');
     Route::get('espacos', [EspacoController::class, 'index'])->name('espacos.index');
     Route::get('espacos/{espaco}', [EspacoController::class, 'show'])->name('espacos.show');
 
@@ -82,9 +85,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Módulos
         Route::resource('modulos', InstitucionalModuloController::class);
 
-        // Andares
-        Route::resource('andars', InstitucionalAndarController::class);
-
+        //Setores
         Route::resource('setors', InstitucionalSetorController::class);
 
         // Espaços

@@ -8,7 +8,7 @@ import { CadastrarModuloForm } from './CadastrarModulo';
 import ModuloForm from './fragments/ModuloForm';
 
 export default function EditarModulo() {
-    const { instituicoes, unidades, modulo } = usePage<{ instituicoes: Instituicao[]; unidades: Unidade[]; modulo: Modulo }>().props;
+    const { instituicao, unidades, modulo } = usePage<{ instituicao: Instituicao; unidades: Unidade[]; modulo: Modulo }>().props;
     const breadcrumbs = [
         {
             title: 'Gerenciar Modulos',
@@ -64,7 +64,7 @@ export default function EditarModulo() {
                             processing={processing}
                             title="Criar Novo Módulo"
                             description="Preencha os dados abaixo para cadastrar um novo modulo."
-                            instituicoes={instituicoes}
+                            instituicao={instituicao}
                             unidades={unidades}
                             modulo={modulo}
                         />

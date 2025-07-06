@@ -7,7 +7,7 @@ import { criarTerreoInicial, garantirTerreo, nivelParaNome } from '@/lib/utils/a
 import { isEditMode, transformModuloToFormData } from '@/lib/utils/andars/ModuloDataFormTransformer';
 import { Instituicao, Modulo, Unidade } from '@/types';
 import { useForm } from '@inertiajs/react';
-import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useMemo, useRef } from 'react';
 import { CadastrarModuloForm } from '../CadastrarModulo';
 import { AndarFormData } from './AndarFormCard';
 import AndaresManager from './AndarManager';
@@ -21,7 +21,7 @@ export type ModuloFormProps = {
     processing: boolean;
     title: string;
     description: string;
-    instituicoes: Instituicao[];
+    instituicao: Instituicao;
     unidades: Unidade[];
     modulo?: Modulo;
 };
@@ -33,12 +33,10 @@ export default function ModuloForm({
     processing,
     title,
     description,
-    instituicoes,
+    instituicao,
     unidades,
     modulo,
 }: ModuloFormProps) {
-    const [instituicaoSelecionada, setInstituicaoSelecionada] = useState<Instituicao | undefined>(modulo?.unidade?.instituicao);
-
     const topRef = useRef<HTMLDivElement>(null);
     const andaresRef = useRef<HTMLDivElement>(null);
 
@@ -56,10 +54,6 @@ export default function ModuloForm({
                 ...formData,
                 andares: andaresComTerreo.map((andar) => ({ ...andar, nome: nivelParaNome(andar.nivel) })),
             });
-
-            if (modulo.unidade?.instituicao) {
-                setInstituicaoSelecionada(modulo.unidade.instituicao);
-            }
         } else if (data.andares.length === 0) {
             // Se não é edição e não tem andares, criar térreo inicial
             setData((prev) => ({
@@ -70,9 +64,8 @@ export default function ModuloForm({
     }, [modulo, setData]);
 
     const unidadesFiltradas = useMemo(() => {
-        if (!instituicaoSelecionada) return [];
-        return unidades.filter((unidade) => unidade.instituicao?.id === instituicaoSelecionada.id);
-    }, [instituicaoSelecionada, unidades]);
+        return unidades.filter((unidade) => unidade.instituicao?.id === instituicao.id);
+    }, [instituicao.id, unidades]);
 
     const handleAddAndar = (novoAndar: AndarFormData) => {
         setData((prev) => {
@@ -137,29 +130,8 @@ export default function ModuloForm({
                     <CardContent className="space-y-4">
                         {/* Select de Instituição */}
                         <div className="space-y-2">
-                            <Label>Instituição</Label>
-                            <SelectUI
-                                value={instituicaoSelecionada?.id.toString()}
-                                onValueChange={(value) => {
-                                    const instituicao = instituicoes.find((i) => i.id.toString() === value);
-                                    setInstituicaoSelecionada(instituicao);
-                                    if (!editMode) {
-                                        setData((prev) => ({ ...prev, unidade_id: '' }));
-                                    }
-                                }}
-                                disabled={processing}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Selecione uma instituição" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {instituicoes.map((instituicao) => (
-                                        <SelectItem key={instituicao.id} value={instituicao.id.toString()}>
-                                            {instituicao.nome}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </SelectUI>
+                            <Label htmlFor="instituicao">Instituição</Label>
+                            <Input id="instituicao" value={instituicao.nome} disabled />
                         </div>
 
                         {/* Select de Unidade */}
@@ -168,7 +140,7 @@ export default function ModuloForm({
                             <SelectUI
                                 value={data.unidade_id}
                                 onValueChange={(value) => setData((prev) => ({ ...prev, unidade_id: value }))}
-                                disabled={processing || !instituicaoSelecionada}
+                                disabled={processing}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Selecione uma unidade" />

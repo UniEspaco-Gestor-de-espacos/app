@@ -18,25 +18,18 @@ const breadcrumbs = [
 ];
 
 export default function SetoresPage() {
-    const { instituicoes, unidades, setores, usuarios } = usePage<{
-        instituicoes: Instituicao[];
+    const { instituicao, unidades, setores, usuarios } = usePage<{
+        instituicao: Instituicao;
         unidades: Unidade[];
         setores: Setor[];
         usuarios: User[];
     }>().props;
 
-    const {
-        searchTerm,
-        setSearchTerm,
-        selectedInstituicao,
-        setSelectedInstituicao,
-        selectedUnidade,
-        setSelectedUnidade,
-        filteredUnidades,
-        filteredSetores,
-        clearFilters,
-    } = useFiltros(instituicoes, unidades, setores);
-
+    const { searchTerm, setSearchTerm, selectedUnidade, setSelectedUnidade, filteredUnidades, filteredSetores, clearFilters } = useFiltros(
+        instituicao,
+        unidades,
+        setores,
+    );
     // Estados dos modais
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingSetor, setEditingSetor] = useState<Setor | null>(null);
@@ -91,11 +84,8 @@ export default function SetoresPage() {
                         <FiltrosSetor
                             searchTerm={searchTerm}
                             setSearchTerm={setSearchTerm}
-                            selectedInstituicao={selectedInstituicao}
-                            setSelectedInstituicao={setSelectedInstituicao}
                             selectedUnidade={selectedUnidade}
                             setSelectedUnidade={setSelectedUnidade}
-                            instituicoes={instituicoes}
                             unidades={unidades}
                             filteredUnidades={filteredUnidades}
                             onClearFilters={clearFilters}
@@ -115,7 +105,7 @@ export default function SetoresPage() {
                             setEditingSetor={setEditingSetor}
                             viewingUsuarios={viewingUsuarios}
                             setViewingUsuarios={setViewingUsuarios}
-                            instituicoes={instituicoes}
+                            instituicao={instituicao}
                             unidades={unidades}
                             usuarios={usuarios}
                             onCreateSetor={(data) => handleCreateSetor(data)}

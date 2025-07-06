@@ -57,7 +57,7 @@ export default function Register() {
     };
 
     const handleBackToLogin = () => {
-        router.visit(route('login'));
+        router.get(route('login'));
     };
 
     return (

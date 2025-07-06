@@ -24,7 +24,7 @@ export interface CadastrarModuloForm {
 }
 
 export default function CadastrarModuloPage() {
-    const { instituicoes, unidades } = usePage<{ instituicoes: Instituicao[]; unidades: Unidade[] }>().props;
+    const { instituicao, unidades } = usePage<{ instituicao: Instituicao; unidades: Unidade[] }>().props;
 
     const { data, setData, post, processing, errors } = useForm<CadastrarModuloForm>({
         nome: '',
@@ -71,7 +71,7 @@ export default function CadastrarModuloPage() {
                             processing={processing}
                             title="Criar Novo Módulo"
                             description="Preencha os dados abaixo para cadastrar um novo modulo."
-                            instituicoes={instituicoes}
+                            instituicao={instituicao}
                             unidades={unidades}
                         />
                     </div>

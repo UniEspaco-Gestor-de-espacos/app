@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Espaco extends Model
 {
@@ -29,6 +30,9 @@ class Espaco extends Model
         'imagens' => 'array'
     ];
 
+    protected $appends = ['is_favorited_by_user']; // Adicione este atributo
+
+
     public function agendas()
     {
         return $this->hasMany(Agenda::class);
@@ -40,5 +44,21 @@ class Espaco extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function favoritadoPor()
+    {
+        return $this->belongsToMany(User::class, 'espaco_user', 'espaco_id', 'user_id');
+    }
+
+    public function getIsFavoritedByUserAttribute(): bool
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return false;
+        }
+
+        // Essa linha é a crucial e deve estar como abaixo
+        return $user->favoritos()->where('espaco_id', $this->id)->exists();
     }
 }

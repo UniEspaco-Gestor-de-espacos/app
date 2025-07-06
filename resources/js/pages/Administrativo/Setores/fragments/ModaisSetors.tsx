@@ -19,7 +19,7 @@ interface Props {
     setViewingUsuarios: (setor: Setor | null) => void;
 
     // Dados
-    instituicoes: Instituicao[];
+    instituicao: Instituicao;
     unidades: Unidade[];
     usuarios: User[];
 
@@ -35,7 +35,7 @@ export function ModaisSetor({
     setEditingSetor,
     viewingUsuarios,
     setViewingUsuarios,
-    instituicoes,
+    instituicao,
     unidades,
     usuarios,
     onCreateSetor,
@@ -55,7 +55,7 @@ export function ModaisSetor({
                         <DialogDescription>Cadastre um novo setor para uma unidade</DialogDescription>
                     </DialogHeader>
                     <SetorForm
-                        instituicoes={instituicoes}
+                        instituicao={instituicao}
                         unidades={unidades}
                         onSubmit={(data) => {
                             onCreateSetor(data);
@@ -76,7 +76,7 @@ export function ModaisSetor({
                     {editingSetor && (
                         <SetorForm
                             setor={editingSetor}
-                            instituicoes={instituicoes}
+                            instituicao={instituicao}
                             unidades={unidades}
                             onSubmit={(data) => {
                                 onUpdateSetor(editingSetor.id, data);

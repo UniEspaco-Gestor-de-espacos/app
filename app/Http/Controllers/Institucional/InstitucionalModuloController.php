@@ -35,10 +35,11 @@ class InstitucionalModuloController extends Controller
      */
     public function create()
     {
-        $instituicoes = Instituicao::all();
-        $unidades = Unidade::with(['instituicao'])->get();
+        $user = Auth::user();
+        $instituicao = $user->setor->unidade->instituicao;
+        $unidades = Unidade::whereInstituicaoId($instituicao->id)->with(['instituicao'])->get();
         return Inertia::render('Administrativo/Modulos/CadastrarModulo', [
-            'instituicoes' => $instituicoes,
+            'instituicao' => $instituicao,
             'unidades' => $unidades,
         ]);
     }
@@ -84,12 +85,14 @@ class InstitucionalModuloController extends Controller
      */
     public function edit(Modulo $modulo) // Corrigido o nome do parâmetro para $instituico
     {
+        $user = Auth::user();
+        $instituicao = $user->setor->unidade->instituicao;
+        $unidades = Unidade::whereInstituicaoId($instituicao->id)->with(['instituicao'])->get();
         $modulo->load(['andars', 'unidade.instituicao']); // Carrega a unidade e a instituição associada ao módulo
-        // Verifica se o módulo existe
-        $instituicoes = Instituicao::all();
-        $unidades = Unidade::with(['instituicao'])->get();
+
+
         return Inertia::render('Administrativo/Modulos/EditarModulo', [
-            'instituicoes' => $instituicoes,
+            'instituicao' => $instituicao,
             'unidades' => $unidades,
             'modulo' => $modulo,
         ]);

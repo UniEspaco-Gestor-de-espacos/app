@@ -22,11 +22,14 @@ export interface CadastrarUnidadeForm {
 }
 
 export default function CadastrarUnidadePage() {
-    const { instituicoes } = usePage<{ instituicoes: Instituicao[] }>().props;
+    const { instituicao } = usePage<{ instituicao: Instituicao }>().props;
     const { data, setData, post, processing, errors } = useForm<CadastrarUnidadeForm>();
 
     const submit = (e: React.FormEvent<HTMLFormElement>) => {
+        setData((prevData) => ({ ...prevData, instituicao_id: instituicao.id.toString() }));
+
         e.preventDefault();
+
         post(route('institucional.unidades.store'));
     };
 
@@ -45,7 +48,7 @@ export default function CadastrarUnidadePage() {
                             processing={processing}
                             title="Criar Novo Módulo"
                             description="Preencha os dados abaixo para cadastrar um novo modulo."
-                            instituicoes={instituicoes}
+                            instituicao={instituicao}
                         />
                     </div>
                 </div>

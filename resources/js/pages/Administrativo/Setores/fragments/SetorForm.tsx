@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Instituicao, Setor, Unidade } from '@/types';
-import { Building2, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -16,13 +16,13 @@ export interface SetorFormData {
 
 interface Props {
     setor?: Setor;
-    instituicoes: Instituicao[];
+    instituicao: Instituicao;
     unidades: Unidade[];
     onSubmit: (data: SetorFormData) => void;
     onCancel: () => void;
 }
 
-export function SetorForm({ setor, instituicoes, onSubmit, onCancel }: Props) {
+export function SetorForm({ setor, instituicao, onSubmit, onCancel }: Props) {
     const [selectedInstituicao, setSelectedInstituicao] = useState<string>('');
     const [filteredUnidades, setFilteredUnidades] = useState<Unidade[]>([]);
     const [processing, setProcessing] = useState<boolean>(false);
@@ -33,7 +33,6 @@ export function SetorForm({ setor, instituicoes, onSubmit, onCancel }: Props) {
     const [sigla, setSigla] = useState<string>(setor?.sigla || '');
     const [unidadeId, setUnidadeId] = useState<string>(setor?.unidade?.id?.toString() || '');
 
-    console.log(unidadeId, setor?.unidade?.id);
     // Inicializar valores se estiver editando
     useEffect(() => {
         if (setor?.unidade?.instituicao) {
@@ -43,18 +42,13 @@ export function SetorForm({ setor, instituicoes, onSubmit, onCancel }: Props) {
 
     // Filtrar unidades baseado na instituição selecionada
     useEffect(() => {
-        if (selectedInstituicao) {
-            const instituicao = instituicoes.find((i) => i.id.toString() === selectedInstituicao);
-            const newFilteredUnidades = instituicao?.unidades || [];
-            setFilteredUnidades(newFilteredUnidades);
+        const newFilteredUnidades = instituicao?.unidades || [];
+        setFilteredUnidades(newFilteredUnidades);
 
-            if (unidadeId && !newFilteredUnidades.find((u) => u.id.toString() === unidadeId)) {
-                setUnidadeId('');
-            }
-        } else {
-            setFilteredUnidades([]);
+        if (unidadeId && !newFilteredUnidades.find((u) => u.id.toString() === unidadeId)) {
+            setUnidadeId('');
         }
-    }, [selectedInstituicao, instituicoes, unidadeId, setor?.unidade?.id]);
+    }, [selectedInstituicao, unidadeId, setor?.unidade?.id, instituicao?.unidades]);
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
@@ -88,28 +82,14 @@ export function SetorForm({ setor, instituicoes, onSubmit, onCancel }: Props) {
         <form onSubmit={handleSubmit} className="space-y-4">
             {/* Seleção de Instituição */}
             <div className="space-y-2">
-                <Label>Instituição *</Label>
-                <Select value={selectedInstituicao} onValueChange={setSelectedInstituicao}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma instituição" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {instituicoes.map((instituicao) => (
-                            <SelectItem key={instituicao.id} value={instituicao.id.toString()}>
-                                <div className="flex items-center gap-2">
-                                    <Building2 className="h-4 w-4" />
-                                    {instituicao.sigla} - {instituicao.nome}
-                                </div>
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                <Label>Instituição</Label>
+                <Input value={instituicao.nome} disabled />
             </div>
 
             {/* Seleção de Unidade */}
             <div className="space-y-2">
                 <Label>Unidade *</Label>
-                <Select value={unidadeId} onValueChange={setUnidadeId} disabled={!selectedInstituicao}>
+                <Select value={unidadeId} onValueChange={setUnidadeId} >
                     <SelectTrigger>
                         <SelectValue placeholder="Selecione uma unidade" />
                     </SelectTrigger>

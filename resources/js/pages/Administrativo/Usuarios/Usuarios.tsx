@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { PermissionModal } from './fragments/PermissionModal';
 
 import { Head, router, usePage } from '@inertiajs/react';
-import { Edit, Search, Settings, Shield, Trash } from 'lucide-react';
+import { Edit, Settings, Shield, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import DeleteItem from '@/components/delete-item';
@@ -122,16 +122,16 @@ export default function UsuariosPage() {
                             descricao={'Aqui voce pode gerir os usuarios, editando ou alterando as permissoes'}
                         />
                         <Card>
-                            <CardContent className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                                <div className="flex w-full flex-col gap-2 sm:flex-row">
-                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                            <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium">Buscar</Label>
                                     <Input
                                         placeholder="Buscar por nome ou email..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
                                 </div>
-                                <div className="flex flex-col gap-2 sm:flex-row">
+                                <div className="space-y-2">
                                     <Label>Setores</Label>
                                     <Select
                                         value={selectedSetor?.id.toString() || 'all'} // 5. O valor vem das props
@@ -145,7 +145,7 @@ export default function UsuariosPage() {
                                         <SelectContent>
                                             <SelectItem value="all">Todas</SelectItem>
                                             {setores.map((setor) => (
-                                                <SelectItem value={setor.id.toString()}>{setor.sigla}</SelectItem>
+                                                <SelectItem key={setor.id} value={setor.id.toString()}>{setor.sigla}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
@@ -234,6 +234,7 @@ export default function UsuariosPage() {
 
                         {isModalOpen && selectedUser && (
                             <PermissionModal
+                                key={selectedUser.id}
                                 user={selectedUser}
                                 isOpen={isModalOpen}
                                 onClose={() => {

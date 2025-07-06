@@ -112,4 +112,48 @@ class EspacoController extends Controller
             'espaco' => $espaco,
         ]);
     }
+    public function favoritar(Espaco $espaco)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if (!$user->favoritos()->where('espaco_id', $espaco->id)->exists()) {
+            $user->favoritos()->attach($espaco->id);
+            return redirect()->back()->with('success', 'Espaço adicionado aos favoritos!');
+        }
+
+        return redirect()->back()->with('error', 'Espaço já está nos seus favoritos.');
+    }
+
+    public function desfavoritar(Espaco $espaco)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if ($user->favoritos()->where('espaco_id', $espaco->id)->exists()) {
+            $user->favoritos()->detach($espaco->id);
+            return redirect()->back()->with('success', 'Espaço removido dos favoritos!');
+        }
+
+        return redirect()->back()->with('error', 'Espaço não encontrado nos seus favoritos.');
+    }
+
+    // Método para listar os espaços favoritados de um usuário
+    public function meusFavoritos()
+    {
+
+        $user = Auth::user();
+        $favoritos = $user->favoritos()->with([
+            'andar.modulo.unidade.instituicao', // Carrega a hierarquia completa
+            'agendas.user' // Se você precisa dos gestores por turno
+        ])->paginate(9); // Exemplo: 9 espaços por página
+        // Passa os dados para o componente React via Inertia
+        return Inertia::render('Espacos/FavoritosPage', [
+            'favoritos' => $favoritos,
+            // Também é útil passar o tipo de permissão do usuário, como você já faz em EspacosPage
+            'user' => [
+                'permission_type_id' => $user->permission_type_id,
+            ],
+        ]);
+    }
 }

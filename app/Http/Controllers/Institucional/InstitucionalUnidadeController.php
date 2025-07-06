@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Instituicao;
 use App\Models\Unidade;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class InstitucionalUnidadeController extends Controller
@@ -15,12 +16,13 @@ class InstitucionalUnidadeController extends Controller
      */
     public function index()
     {
-        $instituicoes = Instituicao::all();
-        $unidades = Unidade::with(['instituicao'])->latest()->paginate(10);
+        $user = Auth::user();
+        $instituicao_id = $user->setor->unidade->instituicao_id;
+
+        $unidades = Unidade::whereInstituicaoId($instituicao_id)->with(['instituicao'])->latest()->paginate(10);
 
         return Inertia::render('Administrativo/Unidades/Unidades', [
             'unidades' => $unidades,
-            'instituicoes' => $instituicoes,
         ]);
     }
 
@@ -29,9 +31,10 @@ class InstitucionalUnidadeController extends Controller
      */
     public function create()
     {
-        $instituicoes = Instituicao::all();
+        $user = Auth::user();
+        $instituicao = $user->setor->unidade->instituicao;
         return Inertia::render('Administrativo/Unidades/CadastrarUnidade', [
-            'instituicoes' => $instituicoes,
+            'instituicao' => $instituicao,
         ]);
     }
 
@@ -58,11 +61,10 @@ class InstitucionalUnidadeController extends Controller
      */
     public function edit(Unidade $unidade) // Corrigido o nome do parâmetro para $instituico
     {
-        $unidade->load('instituicao'); // Carrega a unidade e a instituição associada ao módulo
-        // Verifica se o módulo existe
-        $instituicoes = Instituicao::all();
+        $user = Auth::user();
+        $instituicao = $user->setor->unidade->instituicao;
         return Inertia::render('Administrativo/Unidades/EditarUnidade', [
-            'instituicoes' => $instituicoes,
+            'instituicao' => $instituicao,
             'unidade' => $unidade,
         ]);
     }

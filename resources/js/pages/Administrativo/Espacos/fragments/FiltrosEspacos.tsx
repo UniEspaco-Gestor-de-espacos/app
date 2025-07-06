@@ -1,9 +1,9 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Andar, FiltrosEspacosType, Modulo, Unidade } from '@/types';
-import { Filter, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 interface FiltrosEspacosProps {
     filtros: FiltrosEspacosType;
@@ -55,12 +55,6 @@ export function FiltrosEspacos({ filtros, setFiltros, unidades, modulos, andares
     };
     return (
         <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Filter className="h-5 w-5" />
-                    Filtros
-                </CardTitle>
-            </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                     {/* Busca por nome */}

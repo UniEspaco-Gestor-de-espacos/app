@@ -131,6 +131,7 @@ export interface Espaco {
     main_image_index: string | null;
     andar?: Andar; // Relação aninhada
     agendas?: Agenda[];
+    is_favorited_by_user?: boolean; // Indica se o usuário favoritou este espaço
 }
 
 // =============================================================================

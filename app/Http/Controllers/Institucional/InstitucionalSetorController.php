@@ -14,6 +14,7 @@ use App\Models\Setor;
 use App\Models\Unidade;
 use App\Models\User;
 use GuzzleHttp\Psr7\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -24,11 +25,12 @@ class InstitucionalSetorController extends Controller
      */
     public function index()
     {
-
+        $user = Auth::user();
+        $instituicao = $user->setor->unidade->instituicao->load(['unidades']);
         return Inertia::render('Administrativo/Setores/Setores', [
-            'instituicoes' => Instituicao::with(['unidades.setors'])->get(),
-            'unidades' => Unidade::with(['instituicao', 'setors'])->get(), // Carrega unidades com instituições e setores
-            'setores' => Setor::with(['unidade.instituicao'])->get(),
+            'instituicao' => $instituicao,
+            'unidades' => Unidade::whereInstituicaoId($instituicao->id)->with(['instituicao', 'setors'])->get(), // Carrega unidades com instituições e setores
+            'setores' => Setor::whereHas('unidade', fn($q) => $q->where('instituicao_id', $instituicao->id))->with(['unidade.instituicao'])->get(),
             'usuarios' => User::with(['setor'])->get(), // Carrega setores com unidade e instituição
         ]);
     }

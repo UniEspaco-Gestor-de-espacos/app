@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react"
 import type { Instituicao, Unidade, Setor } from "../types"
 
-export function useFiltros(instituicoes: Instituicao[], unidades: Unidade[], setores: Setor[]) {
+export function useFiltros(instituicao: Instituicao, unidades: Unidade[], setores: Setor[]) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedInstituicao, setSelectedInstituicao] = useState<string>("all")
   const [selectedUnidade, setSelectedUnidade] = useState<string>("all")
@@ -10,18 +10,13 @@ export function useFiltros(instituicoes: Instituicao[], unidades: Unidade[], set
 
   // Filtrar unidades baseado na instituição selecionada
   useEffect(() => {
-    if (selectedInstituicao === "all") {
-      setFilteredUnidades(unidades)
-    } else {
-      const instituicao = instituicoes.find((i) => i.id.toString() === selectedInstituicao)
-      const newFilteredUnidades = instituicao?.unidades || []
+      const newFilteredUnidades = instituicao?.unidades || [];
       setFilteredUnidades(newFilteredUnidades)
-
       if (selectedUnidade !== "all" && !newFilteredUnidades.find((u) => u.id.toString() === selectedUnidade)) {
         setSelectedUnidade("all")
       }
-    }
-  }, [selectedInstituicao, instituicoes, unidades, selectedUnidade])
+
+  }, [selectedInstituicao, unidades, selectedUnidade, instituicao?.unidades])
 
   // Filtrar setores baseado nos filtros aplicados
   const filteredSetores = useMemo(() => {

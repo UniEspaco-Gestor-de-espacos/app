@@ -83,7 +83,7 @@ export default function GerenciarEspacos() {
     }, [currentPage, espacosFiltrados, itemsPerPage]);
 
     const handleCadastrarEspaco = () => {
-        router.visit(route('institucional.espacos.create'));
+        router.get(route('institucional.espacos.create'));
     };
     const handleGerenciarGestores = (espaco: Espaco) => {
         setEspacoParaGerenciar(espaco);

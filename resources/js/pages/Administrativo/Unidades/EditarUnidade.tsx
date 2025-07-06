@@ -12,7 +12,7 @@ export interface EditarUnidadeForm {
 }
 
 export default function EditarUnidade() {
-    const { instituicoes, unidade } = usePage<{ instituicoes: Instituicao[]; unidade: Unidade }>().props;
+    const { instituicao, unidade } = usePage<{ instituicao: Instituicao; unidade: Unidade }>().props;
     const breadcrumbs = [
         {
             title: 'Gerenciar Unidades',
@@ -49,8 +49,7 @@ export default function EditarUnidade() {
                             processing={processing}
                             title="Editar Modulo"
                             description="Altere os dados do modulo abaixo."
-                            instituicoes={instituicoes}
-                            unidade={unidade}
+                            instituicao={instituicao}
                         />
                     </div>
                 </div>
