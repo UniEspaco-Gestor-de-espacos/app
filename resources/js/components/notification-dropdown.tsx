@@ -9,7 +9,8 @@ import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 
 interface NotificationData {
-    mensagem: string;
+    titulo: string;
+    descricao: string;
     url?: string;
 }
 
@@ -176,7 +177,9 @@ export function NotificationDropdown() {
                                     key={notification.id}
                                     className={`mb-3 rounded-md p-2 last:mb-0 ${notification.read_at ? 'bg-muted/50 text-muted-foreground' : 'bg-card'}`}
                                 >
-                                    <p className="text-sm font-medium">{notification.data.mensagem}</p>
+                                    <p className="text-sm font-medium">{notification.data.titulo}</p>
+                                    <p className="font-regular text-sm">{notification.data.descricao}</p>
+
                                     <p className="mt-1 text-xs text-gray-500">{formatNotificationTime(notification.created_at)}</p>
                                     {notification.data.url && (
                                         <a href={notification.data.url} className="mt-1 block text-xs text-blue-500 hover:underline">

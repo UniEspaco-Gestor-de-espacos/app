@@ -6,7 +6,7 @@ import { Link, usePage } from '@inertiajs/react';
 import AppLogo from './app-logo';
 
 /* Ícones ---------------------------------------------------------------- */
-import { Bell, BookOpen, Building, Calendar, Eye, LayoutGrid, Star, Users } from 'lucide-react';
+import { BookOpen, Building, Calendar, Eye, LayoutGrid, Star, Users } from 'lucide-react';
 
 // Adicione 'Users' para um ícone mais adequado
 
@@ -23,15 +23,11 @@ type MenuItem = {
 const commonNav: MenuItem[] = [
     { title: 'Painel Inicial', href: '/dashboard', icon: LayoutGrid },
     { title: 'Consultar Espaços', href: '/espacos', icon: Calendar },
-    { title: 'Notificações', href: '/notificacoes', icon: Bell },
     { title: 'Minhas Reservas', href: '/reservas', icon: BookOpen },
     { title: 'Espaços Favoritos', href: route('espacos.favoritos'), icon: Star },
 ];
 
-const gestorExtras: MenuItem[] = [
-    { title: 'Gerir Reservas', href: '/gestor/reservas', icon: Eye },
-    { title: 'Gerir Espacos', href: '/gestor/espacos', icon: Star },
-];
+const gestorExtras: MenuItem[] = [{ title: 'Gerir Reservas', href: '/gestor/reservas', icon: Eye }];
 
 const institucionalExtras: MenuItem[] = [
     { title: 'Gerir Espaços', href: '/institucional/espacos', icon: Building },
@@ -82,15 +78,10 @@ export function AppSidebar() {
             {/* Conteúdo -------------------------------------------------------- */}
             <SidebarContent>
                 {/* Itens comuns */}
-                {<NavMain items={commonNav} />}
+                {<NavMain label='Painel' items={commonNav} />}
 
                 {/* Seção do cargo */}
-                {extraItems.length > 0 && (
-                    <div className="my-2 border-t pt-2">
-                        <span className="text-muted-foreground block px-4 pb-1 text-xs font-semibold tracking-wide uppercase">{label}</span>
-                        <NavMain items={extraItems} />
-                    </div>
-                )}
+                {extraItems.length > 0 && <NavMain label='Gerir' items={extraItems} />}
             </SidebarContent>
 
             {/* Rodapé ---------------------------------------------------------- */}
