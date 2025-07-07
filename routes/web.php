@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\ReservaEvent;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Institucional\InstitucionalModuloController;
 use App\Http\Controllers\Institucional\InstitucionalSetorController;
 use App\Http\Controllers\Institucional\InstitucionalUnidadeController;
 use App\Http\Controllers\Institucional\InstitucionalUsuarioController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Middleware\AtualizarUsuarioMiddleware;
 use App\Http\Middleware\AvaliarReservaMiddleware;
@@ -24,6 +26,7 @@ use App\Http\Middleware\CadastroReservaMiddleware;
 use App\Http\Middleware\EditarEspacoMiddleware;
 use App\Http\Middleware\GestorMiddleware;
 use App\Http\Middleware\InstitucionalMiddleware;
+use Illuminate\Http\Request;
 
 // Página inicial: redireciona para dashboard se autenticado, senão para login
 Route::get('/', function () {
@@ -31,6 +34,14 @@ Route::get('/', function () {
         ? redirect()->route('dashboard')
         : redirect()->route('login');
 })->name('home');
+Route::get('/trigger-event', function () {
+    $data = [
+        'message' => 'Hello, this is a test event!',
+        'time' => now()->toDateTimeString(),
+    ];
+    event(new ReservaEvent($data));
+    return 'Event Enviado!';
+})->name('trigger-event');
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -38,6 +49,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Painel Geral
     // ---------------------------
     Route::get('dashboard', [HomeController::class, 'index'])->name('dashboard');
+
+    // Rota para buscar as notificações do usuário logado
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+
+    // Rota para marcar notificações como lidas
+    Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
 
     // ---------------------------
     // Visualização de Espaços

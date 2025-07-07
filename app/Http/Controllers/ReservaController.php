@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreReservaRequest;
+use App\Models\Agenda;
 use App\Models\Horario;
 use App\Models\Reserva;
+use App\Notifications\NovaSolicitacaoReservaNotification;
 use Exception;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -100,17 +102,30 @@ class ReservaController extends Controller
 
                 $horariosData = $request->validated('horarios_solicitados');
                 // Prepara os dados para inserção em massa e os IDs para o anexo.
+                $gestores = [];
                 $horariosParaAnexar = [];
                 foreach ($horariosData as $horarioInfo) {
+                    $gestor = Agenda::whereId($horarioInfo['agenda_id'])
+                        ->with('user') // Carrega o gestor da agenda
+                        ->first()
+                        ->user;
+                    $gestores[] = $gestor; // Coleta os gestores para notificação
+
                     // Cria cada horário individualmente
                     $horario = Horario::create($horarioInfo);
                     // Prepara o array para anexar com o status 'em_analise' na tabela pivô
                     $horariosParaAnexar[$horario->id] = ['situacao' => 'em_analise'];
                 }
+                $gestores = array_unique($gestores); // Remove gestores duplicados
 
                 // 3. Anexa TODOS os horários à reserva com o status pivô correto.
                 $reserva->horarios()->attach($horariosParaAnexar);
 
+
+                foreach ($gestores as $gestor) {
+                    // 4. Notifica cada gestor sobre a nova solicitação de reserva.
+                    $gestor->notify(new NovaSolicitacaoReservaNotification($reserva));
+                }
                 return $reserva;
             });
 

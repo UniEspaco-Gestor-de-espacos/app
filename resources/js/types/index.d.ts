@@ -37,6 +37,7 @@ export interface User {
     permission_type_id: number;
     setor?: Setor; // Opcional, carregar com with('setor')
     agendas?: Agenda[]; // Relação aninhada, array de agendas
+    unread_notifications: []; // Adicionado no AppServiceProvider
     created_at: string;
     updated_at: string;
 }
@@ -327,4 +328,12 @@ export interface FiltrosEspacosType {
     modulo?: string;
     andar?: string;
     capacidade?: string;
+}
+
+interface ReservaAvaliadaNotificationPayload {
+    type: string; // 'App\\Notifications\\ReservaAvaliadaNotification'
+    reserva_id: number;
+    status_avaliacao: string;
+    mensagem: string;
+    url: string;
 }

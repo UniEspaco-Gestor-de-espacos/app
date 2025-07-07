@@ -1,12 +1,28 @@
 import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/react';
+import Echo from 'laravel-echo';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import Pusher from 'pusher-js';
 import { createRoot } from 'react-dom/client';
 import { initializeTheme } from './hooks/use-appearance';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+window.Pusher = Pusher; // Certifique-se de que o Pusher está disponível globalmente
 
+window.Echo = new Echo({
+    broadcaster: 'pusher',
+    key: import.meta.env.VITE_PUSHER_APP_KEY as string, // Cast para string, pois .env pode ser string | undefined
+    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER as string,
+    forceTLS: true,
+    authEndpoint: '/broadcasting/auth',
+    auth: {
+        headers: {
+            Authorization: 'Bearer ' + (localStorage.getItem('auth_token') || ''), // Lidar com null/undefined
+        },
+    },
+});
+
+const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),
