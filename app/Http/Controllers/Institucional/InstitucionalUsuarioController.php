@@ -16,6 +16,7 @@ use Inertia\Inertia;
 use App\Models\User; // Importar o modelo User para buscar o usuário
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule; // Importar Rule para validações
 
 
@@ -192,8 +193,18 @@ class InstitucionalUsuarioController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
+        $request->validate([
+            'password' => 'required',
+        ]);
+
+        $user = Auth::user(); // Obtém o usuário logado
+
+        // 2. Verificar se o usuário existe e se a senha fornecida corresponde à senha do usuário
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            return back()->with('error', 'A senha fornecida está incorreta.');
+        }
         try {
             $user = User::findOrFail($id);
             $user->delete();

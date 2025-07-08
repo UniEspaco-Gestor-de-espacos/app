@@ -3,20 +3,15 @@
 namespace App\Http\Controllers\Institucional;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreModuloRequest;
 use App\Http\Requests\StoreSetorRequest;
-use App\Http\Requests\UpdateEspacoRequest;
-use App\Http\Requests\UpdateModuloRequest;
 use App\Http\Requests\UpdateSetorRequest;
-use App\Models\Instituicao;
-use App\Models\Modulo;
 use App\Models\Setor;
 use App\Models\Unidade;
 use App\Models\User;
 use App\Notifications\NotificationModel;
-use GuzzleHttp\Psr7\Request;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
 class InstitucionalSetorController extends Controller
@@ -111,8 +106,18 @@ class InstitucionalSetorController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Setor $setor)
+    public function destroy(Request $request, Setor $setor)
     {
+        $request->validate([
+            'password' => 'required',
+        ]);
+
+        $user = Auth::user(); // Obtém o usuário logado
+
+        // 2. Verificar se o usuário existe e se a senha fornecida corresponde à senha do usuário
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            return back()->with('error', 'A senha fornecida está incorreta.');
+        }
         try {
             $setor->delete();
             return redirect()

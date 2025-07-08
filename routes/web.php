@@ -25,14 +25,7 @@ Route::get('/', function () {
         ? redirect()->route('dashboard')
         : redirect()->route('login');
 })->name('home');
-Route::get('/trigger-event', function () {
-    $data = [
-        'message' => 'Hello, this is a test event!',
-        'time' => now()->toDateTimeString(),
-    ];
-    event(new ReservaEvent($data));
-    return 'Event Enviado!';
-})->name('trigger-event');
+
 
 Route::middleware(['auth', 'verified'])->group(function () {
 

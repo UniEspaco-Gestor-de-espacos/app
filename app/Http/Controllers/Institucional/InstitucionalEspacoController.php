@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -266,9 +267,20 @@ class InstitucionalEspacoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Espaco $espaco)
+    public function destroy(Request $request, Espaco $espaco)
     {
+        $request->validate([
+            'password' => 'required',
+        ]);
+
+        $user = Auth::user(); // Obtém o usuário logado
+
+        // 2. Verificar se o usuário existe e se a senha fornecida corresponde à senha do usuário
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            return back()->with('error', 'A senha fornecida está incorreta.');
+        }
         try {
+
             $espaco->delete();
             return redirect()->route('institucional.espacos.index')->with('success', 'Espaço excluído com sucesso!');
         } catch (Exception $error) {

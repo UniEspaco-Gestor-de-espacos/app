@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Institucional;
 use App\Http\Controllers\Controller;
 use App\Models\Instituicao;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
 class InstitucionalInstituicaoController extends Controller
@@ -84,8 +86,18 @@ class InstitucionalInstituicaoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Instituicao $instituico)
+    public function destroy(Request $request, Instituicao $instituico)
     {
+        $request->validate([
+            'password' => 'required',
+        ]);
+
+        $user = Auth::user(); // Obtém o usuário logado
+
+        // 2. Verificar se o usuário existe e se a senha fornecida corresponde à senha do usuário
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            return back()->with('error', 'A senha fornecida está incorreta.');
+        }
         $instituico->delete();
 
         // O 'back()' é útil aqui para que o usuário permaneça na mesma página da paginação

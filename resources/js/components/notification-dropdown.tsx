@@ -1,7 +1,7 @@
 import { User } from '@/types';
 import { router, usePage } from '@inertiajs/react';
 import { Bell, MailCheck } from 'lucide-react'; // Ícones, instale lucide-react: npm install lucide-react
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
@@ -33,11 +33,10 @@ export function NotificationDropdown() {
     const [unreadCount, setUnreadCount] = useState<number>(user.unread_notifications.length);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isOpen, setIsOpen] = useState<boolean>(false);
-
     const fetchTimeoutRef = useRef<number | null>(null);
 
     // Função para buscar notificações do backend
-    const fetchNotifications = async () => {
+    const fetchNotifications = useCallback(async () => {
         if (!user || isLoading) return;
 
         setIsLoading(true);
@@ -53,7 +52,7 @@ export function NotificationDropdown() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [user, isLoading]);
 
     // Função para marcar notificações como lidas
     const markAllAsRead = () => {
@@ -84,8 +83,6 @@ export function NotificationDropdown() {
     useEffect(() => {
         if (user && window.Echo) {
             window.Echo.private(`App.Models.User.${user.id}`).notification((notification: any) => {
-                console.log('Nova notificação recebida via Echo:', notification);
-
                 setNotifications((prev) => [
                     {
                         id: notification.id || String(Date.now()),
@@ -121,13 +118,13 @@ export function NotificationDropdown() {
             }
             fetchTimeoutRef.current = setTimeout(() => {
                 fetchNotifications(); // Sempre busca as últimas notificações ao abrir
-            }, 300);
+            }, 5000);
         } else {
             if (fetchTimeoutRef.current) {
                 clearTimeout(fetchTimeoutRef.current);
             }
         }
-    }, [isOpen, user]); // Depende de isOpen e user (para re-fetch se o user mudar)
+    }, [fetchNotifications, isOpen, user]); // Depende de isOpen e user (para re-fetch se o user mudar)
 
     // Função auxiliar para formatar a data
     const formatNotificationTime = (dateString: string) => {

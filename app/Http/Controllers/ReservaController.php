@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -289,9 +290,20 @@ class ReservaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Reserva $reserva)
+    public function destroy(Request $request, Reserva $reserva)
     {
         $this->authorize('delete', $reserva);
+        $request->validate([
+            'password' => 'required',
+        ]);
+
+        $user = Auth::user(); // Obtém o usuário logado
+
+        // 2. Verificar se o usuário existe e se a senha fornecida corresponde à senha do usuário
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            return back()->with('error', 'A senha fornecida está incorreta.');
+        }
+
         try {
             DB::transaction(function () use ($reserva) {
 

@@ -7,6 +7,7 @@ use App\Models\Instituicao;
 use App\Models\Unidade;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
 class InstitucionalUnidadeController extends Controller
@@ -98,8 +99,18 @@ class InstitucionalUnidadeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Unidade $unidade)
+    public function destroy(Request $request, Unidade $unidade)
     {
+        $request->validate([
+            'password' => 'required',
+        ]);
+
+        $user = Auth::user(); // Obtém o usuário logado
+
+        // 2. Verificar se o usuário existe e se a senha fornecida corresponde à senha do usuário
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            return back()->with('error', 'A senha fornecida está incorreta.');
+        }
         try {
             $unidade->delete();
 
