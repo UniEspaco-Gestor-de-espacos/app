@@ -26,7 +26,7 @@ class ReservaController extends Controller
     {
         $user = Auth::user();
         // Pega os parâmetros de filtro da URL (query string), exatamente como no outro controller
-        $filters = $request->only(['search', 'situacao']);
+        $filters = $request->only(['search', 'situacao', 'reserva']);
 
         $reservas = Reserva::query()
             ->where('user_id', $user->id) // Query base para as reservas do usuário logado
@@ -63,11 +63,16 @@ class ReservaController extends Controller
             ->latest() // Ordena as reservas da mais nova para a mais antiga.
             ->paginate(10) // Pagina os resultados
             ->withQueryString(); // Anexa os filtros aos links de paginação
-
+        $reservaToShow = Reserva::find($filters['reserva'] ?? null);
+        $reservaToShow != null ? $reservaToShow->load([
+            'horarios.agenda.espaco.andar.modulo.unidade.instituicao',
+            'horarios.agenda.user.setor'
+        ]) : null;
 
         return Inertia::render('Reservas/ReservasPage', [
             'reservas' => $reservas, // Envia o objeto paginador completo
             'filters' => $filters,   // Envia os filtros de volta para a view
+            'reservaToShow' => $reservaToShow, // Envia a reserva selecionada para exibição
         ]);
     }
 

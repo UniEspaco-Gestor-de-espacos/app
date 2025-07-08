@@ -159,7 +159,7 @@ export default function AgendaDialogReserva({
                                     <Label htmlFor="data-inicial" className="text-xs">
                                         Início
                                     </Label>
-                                    <Popover>
+                                    <Popover key={formData.data_inicial?.toString()} modal>
                                         <PopoverTrigger asChild>
                                             <Button
                                                 variant={'outline'}
@@ -191,7 +191,7 @@ export default function AgendaDialogReserva({
                                     <Label htmlFor="data-final" className="text-xs">
                                         Término
                                     </Label>
-                                    <Popover>
+                                    <Popover key={formData.data_final?.toString()} modal>
                                         <PopoverTrigger asChild>
                                             <Button
                                                 variant={'outline'}

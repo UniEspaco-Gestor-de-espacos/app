@@ -35,7 +35,7 @@ class GestorReservaController extends Controller
         $agendasDoGestorIds = Agenda::where('user_id', $gestor->id)->pluck('id');
 
         // Pega os filtros da requisição (URL query string)
-        $filters = $request->only(['search', 'situacao']);
+        $filters = $request->only(['search', 'situacao', 'reserva']);
 
         // 2. Inicia a query a partir do modelo Reserva.
         $reservasQuery = Reserva::query()
@@ -82,10 +82,16 @@ class GestorReservaController extends Controller
         // 6. Pagina o resultado final.
         $reservasParaAvaliar = $reservasQuery->paginate(10)->withQueryString();
 
+        $reservaToShow = Reserva::find($filters['reserva'] ?? null);
+        $reservaToShow != null ? $reservaToShow->load([
+            'horarios.agenda.espaco.andar.modulo.unidade.instituicao',
+            'horarios.agenda.user.setor'
+        ]) : null;
         // 7. Renderiza a view do Inertia com os dados no formato esperado pelo front-end.
         return Inertia::render('Reservas/Gestor/ReservasGestorPage', [
             'reservas' => $reservasParaAvaliar,
             'filters' => $filters,
+            'reservaToShow' => $reservaToShow, // Envia a reserva selecionada para exibição
         ]);
     }
 

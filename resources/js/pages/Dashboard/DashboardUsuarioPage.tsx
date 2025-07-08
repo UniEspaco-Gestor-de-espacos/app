@@ -1,11 +1,12 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
+import { formatDate } from '@/lib/utils';
 import { DashboardStatusReservasType, Espaco, Reserva, User, type BreadcrumbItem } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { CalendarClock, Clock, History, Plus } from 'lucide-react';
+import { SituacaoBadge } from '../Reservas/fragments/ReservasList';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: '🏠 Painel Inicial',
@@ -13,59 +14,15 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Dados de exemplo
-const nextReservation = {
-    spaceName: 'Laboratório de Informática 3',
-    date: '15/05/2023',
-    startTime: '14:00',
-    endTime: '16:00',
-};
-
-const reservationHistory = [
-    {
-        id: '1',
-        spaceName: 'Auditório Principal',
-        date: '10/05/2023',
-        time: '09:00 - 11:00',
-        status: 'approved',
-    },
-    {
-        id: '2',
-        spaceName: 'Sala de Reuniões 2',
-        date: '05/05/2023',
-        time: '13:00 - 14:00',
-        status: 'approved',
-    },
-    {
-        id: '3',
-        spaceName: 'Laboratório de Química',
-        date: '03/05/2023',
-        time: '15:00 - 17:00',
-        status: 'rejected',
-    },
-    {
-        id: '4',
-        spaceName: 'Sala 101',
-        date: '28/04/2023',
-        time: '08:00 - 10:00',
-        status: 'approved',
-    },
-    {
-        id: '5',
-        spaceName: 'Sala de Videoconferência',
-        date: '25/04/2023',
-        time: '14:00 - 15:00',
-        status: 'pending',
-    },
-];
 export default function Dashboard() {
     const { props } = usePage<{
         user: User;
         statusDasReservas: DashboardStatusReservasType;
         proximaReserva: Reserva;
         espacoDaProximaReserva: Espaco;
+        reservas: Reserva[];
     }>();
-    const { statusDasReservas, proximaReserva, espacoDaProximaReserva } = props;
+    const { statusDasReservas, proximaReserva, espacoDaProximaReserva, reservas } = props;
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />
@@ -80,11 +37,17 @@ export default function Dashboard() {
                             <CardContent>
                                 <div className="truncate text-xl font-bold md:text-2xl">{espacoDaProximaReserva.nome}</div>
                                 <p className="text-muted-foreground text-xs">
-                                    {nextReservation.date} • {nextReservation.startTime} às {nextReservation.endTime}
+                                    {formatDate(proximaReserva.data_inicial)} • {proximaReserva.horarios[0].horario_inicio} às
+                                    {formatDate(proximaReserva.data_final)}
                                 </p>
                             </CardContent>
                             <CardFooter>
-                                <Button variant="outline" size="sm" className="w-full">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={() => router.get(route('reservas.index', { reserva: proximaReserva.id }))}
+                                >
                                     Ver detalhes
                                 </Button>
                             </CardFooter>
@@ -112,12 +75,16 @@ export default function Dashboard() {
                                     <p className="text-muted-foreground text-xs">Aguardando</p>
                                 </div>
                                 <div className="text-center">
+                                    <div className="text-xl font-bold md:text-2xl">{statusDasReservas.parcialmente_deferida}</div>
+                                    <p className="text-muted-foreground text-xs">Parcialmente deferida</p>
+                                </div>
+                                <div className="text-center">
                                     <div className="text-xl font-bold md:text-2xl">{statusDasReservas.deferida}</div>
-                                    <p className="text-muted-foreground text-xs">Aprovadas</p>
+                                    <p className="text-muted-foreground text-xs">deferida</p>
                                 </div>
                                 <div className="text-center">
                                     <div className="text-xl font-bold md:text-2xl">{statusDasReservas.indeferida}</div>
-                                    <p className="text-muted-foreground text-xs">Recusadas</p>
+                                    <p className="text-muted-foreground text-xs">indeferida</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -160,21 +127,23 @@ export default function Dashboard() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {reservationHistory.map((reservation) => (
-                                            <TableRow key={reservation.id}>
-                                                <TableCell className="font-medium">{reservation.spaceName}</TableCell>
-                                                <TableCell className="hidden sm:table-cell">{reservation.date}</TableCell>
-                                                <TableCell className="hidden md:table-cell">{reservation.time}</TableCell>
+                                        {reservas.map((reserva) => (
+                                            <TableRow key={reserva.id}>
+                                                <TableCell className="font-medium">{reserva.horarios[0].agenda?.espaco?.nome}</TableCell>
+                                                <TableCell className="hidden sm:table-cell">{formatDate(reserva.data_inicial)}</TableCell>
+                                                <TableCell className="hidden md:table-cell">{reserva.horarios[0].horario_inicio}</TableCell>
                                                 <TableCell>
-                                                    {reservation.status === 'approved' && (
-                                                        <Badge className="bg-green-500 hover:bg-green-600">Aprovada</Badge>
-                                                    )}
-                                                    {reservation.status === 'pending' && (
-                                                        <Badge variant="outline" className="border-amber-500 text-amber-500">
-                                                            Pendente
-                                                        </Badge>
-                                                    )}
-                                                    {reservation.status === 'rejected' && <Badge variant="destructive">Recusada</Badge>}
+                                                    <SituacaoBadge situacao={reserva.situacao} />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="w-full"
+                                                        onClick={() => router.get(route('reservas.index', { reserva: reserva.id }))}
+                                                    >
+                                                        Ver detalhes
+                                                    </Button>
                                                 </TableCell>
                                             </TableRow>
                                         ))}

@@ -32,7 +32,12 @@ export default function EspacoFiltroBusca(props: FiltroBuscaEspacosProps) {
     });
     const isInitialMount = useRef(true);
     const [debouncedSearchTerm] = useDebounce(localFilters.search, 300);
-
+    const [filteredModulos, setFilteredModulos] = useState<Modulo[]>(modulos.filter((m) => m.unidade?.id.toString() == localFilters.unidade));
+    const [filteredAndares, setFilteredAndares] = useState<Modulo[]>(andares.filter((a) => a.modulo?.id.toString() == localFilters.modulo));
+    useEffect(() => {
+        setFilteredModulos(modulos.filter((m) => m.unidade?.id.toString() === filters.unidade));
+        setFilteredAndares(andares.filter((a) => a.modulo?.id.toString() === filters.modulo));
+    }, [andares, filters.modulo, filters.unidade, localFilters, modulos]);
     useEffect(() => {
         if (isInitialMount.current) {
             isInitialMount.current = false;
@@ -50,6 +55,7 @@ export default function EspacoFiltroBusca(props: FiltroBuscaEspacosProps) {
                 return true;
             }),
         );
+        console.log(queryParams);
 
         router.get(route, queryParams, {
             preserveState: true, // Mantém o estado dos filtros na página
@@ -57,16 +63,19 @@ export default function EspacoFiltroBusca(props: FiltroBuscaEspacosProps) {
             replace: true,
         });
     }, [debouncedSearchTerm, route, localFilters]);
+
     const handleFilterChange = (name: keyof typeof localFilters, value: string) => {
-        console.log(`Filtro alterado: ${name} = ${value}`);
         setLocalFilters((prevFilters) => {
             const newFilters = { ...prevFilters, [name]: value };
 
             if (name === 'unidade') {
                 newFilters.modulo = 'all';
                 newFilters.andar = 'all';
+                setFilteredModulos(modulos.filter((m) => m.unidade?.id.toString() === filters.unidade));
             }
             if (name === 'modulo') {
+                setFilteredAndares(andares.filter((a) => a.modulo?.id.toString() === filters.modulo));
+
                 newFilters.andar = 'all';
             }
 
@@ -117,7 +126,7 @@ export default function EspacoFiltroBusca(props: FiltroBuscaEspacosProps) {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos os Módulos</SelectItem>
-                                {modulos.map((modulo) => (
+                                {filteredModulos.map((modulo) => (
                                     <SelectItem key={modulo.id} value={modulo.id.toString()}>
                                         {modulo.nome}
                                     </SelectItem>
@@ -136,7 +145,7 @@ export default function EspacoFiltroBusca(props: FiltroBuscaEspacosProps) {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos os Andares</SelectItem>
-                                {andares.map((andar) => (
+                                {filteredAndares.map((andar) => (
                                     <SelectItem key={andar.id} value={andar.id.toString()}>
                                         {andar.nome}
                                     </SelectItem>

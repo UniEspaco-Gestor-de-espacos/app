@@ -223,6 +223,7 @@ export interface ReservaFormData {
  */
 export type DashboardStatusReservasType = {
     em_analise: number;
+    parcialmente_deferida: number; // Novo status adicionado
     deferida: number;
     indeferida: number;
 };

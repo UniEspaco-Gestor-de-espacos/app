@@ -19,8 +19,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function MinhasReservas() {
     // 1. Pegamos o paginador completo e os filtros iniciais das props
-    const { props } = usePage<{ user: User; reservas: Paginator<Reserva>; filters: { search?: string; situacao?: string } }>();
-    const { reservas: paginator, filters } = props;
+    const { props } = usePage<{
+        user: User;
+        reservas: Paginator<Reserva>;
+        filters: { search?: string; situacao?: string };
+        reservaToShow?: Reserva;
+    }>();
+    const { reservas: paginator, filters, reservaToShow } = props;
 
     // 2. O estado dos filtros agora "mora" aqui, no componente pai
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
@@ -67,7 +72,7 @@ export default function MinhasReservas() {
                             onDateChange={setData}
                         />
                         <Suspense fallback={<ReservasLoading />}>
-                            <ReservasList fallback={<ReservasEmpty />} paginator={paginator} isGestor={false} />
+                            <ReservasList fallback={<ReservasEmpty />} paginator={paginator} isGestor={false} reservaToShow={reservaToShow} />
                         </Suspense>
                     </div>
                 </div>

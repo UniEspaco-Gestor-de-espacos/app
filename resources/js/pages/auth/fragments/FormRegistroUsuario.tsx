@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { Instituicao } from '@/types';
-import { LoaderCircle, Plus } from 'lucide-react';
+import { LoaderCircle } from 'lucide-react';
 import type React from 'react';
 import { SeletorInstituicao } from './SeletorInstituicao';
 
@@ -104,10 +104,6 @@ export function FormRegistroUsuario({
                 <div className="border-t pt-6">
                     <div className="mb-4 flex items-center justify-between">
                         <h3 className="text-lg font-medium text-gray-900">Informações Institucionais</h3>
-                        <Button type="button" variant="outline" size="sm" onClick={onOpenNewInstitutionModal} className="bg-transparent text-sm">
-                            <Plus className="mr-1 h-4 w-4" />
-                            Nova Instituição
-                        </Button>
                     </div>
                     <SeletorInstituicao
                         instituicaos={instituicaos}

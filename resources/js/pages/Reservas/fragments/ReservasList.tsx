@@ -7,7 +7,7 @@ import { diasSemanaParser, formatDate, getStatusReservaColor, getStatusReservaTe
 import { Paginator, Reserva, SituacaoReserva, User as UserType } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { Separator } from '@radix-ui/react-separator';
-import { CalendarDays, CheckCircle, Clock, Edit, Eye, FileText, User, XCircle, XSquare } from 'lucide-react';
+import { CalendarDays, CheckCircle, Clock, Edit, Eye, FileText, Home, User, XCircle, XSquare } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -63,15 +63,17 @@ export function SituacaoBadge({ situacao }: { situacao: SituacaoReserva }) {
     }
 }
 interface ReservasListProps {
+    reservaToShow?: Reserva | undefined;
+
     paginator: Paginator<Reserva>;
     fallback: React.ReactNode;
     isGestor: boolean;
     user?: UserType;
 }
 // Componente principal da lista de reservas
-export function ReservasList({ paginator, fallback, isGestor, user }: ReservasListProps) {
+export function ReservasList({ paginator, fallback, isGestor, user, reservaToShow }: ReservasListProps) {
     const { data: reservas, links } = paginator;
-    const [selectedReserva, setSelectedReserva] = useState<Reserva | null>(null);
+    const [selectedReserva, setSelectedReserva] = useState<Reserva | undefined>(undefined);
     const [removerReserva, setRemoverReserva] = useState<Reserva | null>(null);
     const [reservasFiltradas, setReservasFiltradas] = useState<Reserva[]>(reservas);
 
@@ -111,7 +113,11 @@ export function ReservasList({ paginator, fallback, isGestor, user }: ReservasLi
             setReservasFiltradas(reservas);
         }
     }, [isGestor, reservas, user?.id]);
-
+    useEffect(() => {
+        if (reservaToShow) {
+            setSelectedReserva(reservaToShow);
+        }
+    }, [reservaToShow]);
     if (reservas.length === 0) {
         return fallback;
     }
@@ -231,7 +237,7 @@ export function ReservasList({ paginator, fallback, isGestor, user }: ReservasLi
                     open={!!selectedReserva}
                     onOpenChange={(isOpen) => {
                         if (!isOpen) {
-                            setSelectedReserva(null); // Fecha o dialog limpando o estado
+                            setSelectedReserva(undefined); // Fecha o dialog limpando o estado
                         }
                     }}
                 >
@@ -241,12 +247,18 @@ export function ReservasList({ paginator, fallback, isGestor, user }: ReservasLi
                                 <FileText className="h-5 w-5" />
                                 {selectedReserva.titulo}
                             </DialogTitle>
-                            <DialogDescription className="flex-col items-center gap-2">
-                                <div className="flex items-center gap-2">
+                            <DialogDescription className="flex-col justify-between ">
+                                <div className="flex items-center gap-2 p-1">
                                     <User className="h-4 w-4" />
                                     Solicitado por: {selectedReserva.user?.name}
                                 </div>
-                                <SituacaoIndicator situacao={selectedReserva.situacao} />
+                                <div className="flex items-center gap-2 p-1">
+                                    <Home className="h-4 w-4" />
+                                    Espaço: {selectedReserva.horarios[0]?.agenda?.espaco?.nome ?? ' '}
+                                </div>
+                                <div className="flex items-center gap-2 p-1">
+                                    <SituacaoIndicator situacao={selectedReserva.situacao} />
+                                </div>
                             </DialogDescription>
                         </DialogHeader>
                         <div>
@@ -304,7 +316,7 @@ export function ReservasList({ paginator, fallback, isGestor, user }: ReservasLi
                         </div>
 
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setSelectedReserva(null)}>
+                            <Button variant="outline" onClick={() => setSelectedReserva(undefined)}>
                                 Fechar
                             </Button>
                             {isGestor ? (

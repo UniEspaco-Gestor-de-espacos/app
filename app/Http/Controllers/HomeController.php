@@ -29,26 +29,25 @@ class HomeController extends Controller
                 })->with(['horarios.agenda.espaco'])->get();
                 return Inertia::render('Dashboard/DashboardGestorPage', compact('user', 'espacos', 'reservas'));
             default: // Usuario Comum
-                $baseUserReservasQuery = Reserva::where('user_id', $user->id);
+                $baseUserReservasQuery = Reserva::where('user_id', $user->id)->with(['horarios.agenda.espaco']);
                 $reservas = (clone $baseUserReservasQuery)->get();
                 $statusDasReservas = [
                     'em_analise' => (clone $baseUserReservasQuery)->where('situacao', 'em_analise')->count(),
+                    'parcialmente_deferida' => (clone $baseUserReservasQuery)->where('situacao', 'parcialmente_deferida')->count(), // Novo status adicionado
                     'deferida'   => (clone $baseUserReservasQuery)->where('situacao', 'deferida')->count(),
                     'indeferida' => (clone $baseUserReservasQuery)->where('situacao', 'indeferida')->count(),
                 ];
 
                 // 1. Primeiro, busca apenas o objeto da próxima reserva
                 $proximaReserva = (clone $baseUserReservasQuery)
-                    ->where('data_inicial', '>=', now())->where('situacao', 'deferida')
+                    ->where('data_inicial', '>=', now())->whereIn('situacao', ['deferida', 'parcialmente_deferida'])
                     ->orderBy('data_inicial', 'asc')
                     ->first();
                 // 2. Se a reserva existir, carregue os relacionamentos nela
 
                 if ($proximaReserva) {
-                    // A MÁGICA ACONTECE AQUI:
                     $proximaReserva->load('horarios.agenda.espaco');
                 }
-
                 // 3. Agora você pode acessar o espaço da mesma forma
                 $espacoDaProximaReserva = null;
                 if ($proximaReserva && $proximaReserva->horarios->isNotEmpty()) {

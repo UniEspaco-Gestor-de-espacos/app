@@ -151,6 +151,16 @@ export default function Dashboard() {
                                                     <TableCell>
                                                         <SituacaoBadge situacao={reserva.situacao} />
                                                     </TableCell>
+                                                    <TableCell>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="w-full"
+                                                            onClick={() => router.get(route('gestor.reservas.index', { reserva: reserva.id }))}
+                                                        >
+                                                            Ver detalhes
+                                                        </Button>
+                                                    </TableCell>
                                                 </TableRow>
                                             ) : null,
                                         )}
