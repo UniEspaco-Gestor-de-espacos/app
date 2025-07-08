@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { nivelParaLabel, nomeParaNivel } from '@/lib/utils/andars/AndarHelpers';
 import { Andar, FiltrosEspacosType, Modulo, Unidade } from '@/types';
 import { Search } from 'lucide-react';
 
@@ -114,7 +115,7 @@ export function FiltrosEspacos({ filtros, setFiltros, unidades, modulos, andares
                                 <SelectItem value="0">Todos os andares</SelectItem>
                                 {andaresFiltrados.map((andar) => (
                                     <SelectItem key={andar.id} value={andar.id.toString()}>
-                                        {andar.nome}
+                                        {nivelParaLabel(nomeParaNivel(andar.nome))}
                                     </SelectItem>
                                 ))}
                             </SelectContent>

@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-import { Bell, CheckCircle, Clock, History, Home, Plus, XCircle } from 'lucide-react';
+import { Espaco, Reserva, User, type BreadcrumbItem } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
+import { Bell, Clock, History, Home, Plus } from 'lucide-react';
+import { SituacaoBadge } from '../Reservas/fragments/ReservasList';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: '🏠 Painel Inicial',
@@ -15,29 +16,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 // Dados de exemplo
 const pendingRequests = 8;
-
-const managedSpaces = [
-    {
-        id: '1',
-        name: 'Laboratório de Informática 3',
-        status: 'available',
-    },
-    {
-        id: '2',
-        name: 'Laboratório de Informática 4',
-        status: 'reserved',
-    },
-    {
-        id: '3',
-        name: 'Sala de Videoconferência',
-        status: 'unavailable',
-    },
-    {
-        id: '4',
-        name: 'Laboratório de Redes',
-        status: 'available',
-    },
-];
 
 const scheduledUnavailability = [
     {
@@ -56,44 +34,8 @@ const scheduledUnavailability = [
     },
 ];
 
-const decisionHistory = [
-    {
-        id: '1',
-        spaceName: 'Laboratório de Informática 3',
-        requester: 'Prof. Carlos Silva',
-        date: '12/05/2023',
-        time: '14:00 - 16:00',
-        decision: 'approved',
-    },
-    {
-        id: '2',
-        spaceName: 'Laboratório de Redes',
-        requester: 'Prof. Ana Oliveira',
-        date: '11/05/2023',
-        time: '10:00 - 12:00',
-        decision: 'rejected',
-        reason: 'Conflito de horário',
-    },
-    {
-        id: '3',
-        spaceName: 'Sala de Videoconferência',
-        requester: 'Prof. Marcos Santos',
-        date: '10/05/2023',
-        time: '15:00 - 17:00',
-        decision: 'approved',
-    },
-    {
-        id: '4',
-        spaceName: 'Laboratório de Informática 4',
-        requester: 'Prof. Juliana Costa',
-        date: '09/05/2023',
-        time: '08:00 - 10:00',
-        decision: 'approved',
-    },
-];
-
 export default function Dashboard() {
-    //const { props } = usePage<{ user: User }>();
+    const { espacos, reservas } = usePage<{ user: User; espacos: Espaco[]; reservas: Reserva[] }>().props;
     // const { user } = props;
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -120,30 +62,31 @@ export default function Dashboard() {
                             <Home className="text-muted-foreground h-4 w-4" />
                         </CardHeader>
                         <CardContent>
-                            <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
-                                {managedSpaces.map((space) => (
-                                    <div key={space.id} className="flex items-center justify-between rounded-lg border p-2">
-                                        <div className="mr-2 truncate font-medium">{space.name}</div>
-                                        <Badge
-                                            className={
-                                                space.status === 'available'
-                                                    ? 'bg-green-500 hover:bg-green-600'
-                                                    : space.status === 'reserved'
-                                                      ? 'bg-amber-500 hover:bg-amber-600'
-                                                      : 'bg-red-500 hover:bg-red-600'
-                                            }
-                                        >
-                                            {space.status === 'available' ? 'Livre' : space.status === 'reserved' ? 'Reservado' : 'Indisponível'}
-                                        </Badge>
-                                    </div>
-                                ))}
+                            <div className="flex-col space-y-2">
+                                {espacos.map((espaco, index) =>
+                                    index < 4 ? (
+                                        <div key={espaco.id} className="flex items-center justify-between gap-2 rounded-lg border p-2">
+                                            <div className="mr-2 truncate font-medium">{espaco.nome}</div>
+                                            <Badge className={'bg-yellow-500 hover:bg-yellow-600'}>
+                                                {espaco.agendas?.filter((a) => a.horarios?.filter((h) => h.pivot?.situacao === 'em_analise'))
+                                                    .length || 0}{' '}
+                                                Em analise
+                                            </Badge>
+                                            <Badge className={'bg-green-500 hover:bg-green-600'}>
+                                                {espaco.agendas?.filter((a) => a.horarios?.filter((h) => h.pivot?.situacao === 'deferida')).length ||
+                                                    0}{' '}
+                                                Deferidas
+                                            </Badge>
+                                            <Badge className={'bg-red-500 hover:bg-red-600'}>
+                                                {espaco.agendas?.filter((a) => a.horarios?.filter((h) => h.pivot?.situacao === 'indeferida'))
+                                                    .length || 0}{' '}
+                                                indeferidas
+                                            </Badge>
+                                        </div>
+                                    ) : null,
+                                )}
                             </div>
                         </CardContent>
-                        <CardFooter>
-                            <Button variant="outline" size="sm" className="w-full">
-                                Gerenciar Espaços
-                            </Button>
-                        </CardFooter>
                     </Card>
 
                     <Card className="col-span-1">
@@ -192,33 +135,31 @@ export default function Dashboard() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {decisionHistory.map((decision) => (
-                                            <TableRow key={decision.id}>
-                                                <TableCell className="font-medium">{decision.spaceName}</TableCell>
-                                                <TableCell className="hidden sm:table-cell">{decision.requester}</TableCell>
-                                                <TableCell className="hidden md:table-cell">{decision.date}</TableCell>
-                                                <TableCell className="hidden lg:table-cell">{decision.time}</TableCell>
-                                                <TableCell>
-                                                    {decision.decision === 'approved' ? (
-                                                        <div className="flex items-center">
-                                                            <CheckCircle className="mr-1 h-4 w-4 text-green-500" />
-                                                            <span className="text-green-500">Aprovada</span>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center">
-                                                            <XCircle className="mr-1 h-4 w-4 text-red-500" />
-                                                            <span className="text-red-500">Recusada</span>
-                                                        </div>
-                                                    )}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
+                                        {reservas.map((reserva, index) =>
+                                            index < 6 ? (
+                                                <TableRow key={reserva.id}>
+                                                    <TableCell className="font-medium">
+                                                        {reserva.horarios.find((h) => h.agenda?.espaco != undefined)?.agenda?.espaco?.nome}
+                                                    </TableCell>
+                                                    <TableCell className="hidden sm:table-cell"> {reserva.user?.name}</TableCell>
+                                                    <TableCell className="hidden md:table-cell">
+                                                        {new Date(reserva.data_inicial).toISOString()}
+                                                    </TableCell>
+                                                    <TableCell className="hidden lg:table-cell">
+                                                        {reserva.horarios.find((h) => h.horario_inicio != undefined)?.horario_inicio}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <SituacaoBadge situacao={reserva.situacao} />
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : null,
+                                        )}
                                     </TableBody>
                                 </Table>
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button variant="outline" size="sm" className="w-full">
+                            <Button variant="outline" size="sm" className="w-full" onClick={() => router.get(route('gestor.reservas.index'))}>
                                 Ver histórico completo
                             </Button>
                         </CardFooter>

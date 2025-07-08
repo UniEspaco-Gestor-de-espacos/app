@@ -153,6 +153,8 @@ export interface Pivot {
     reserva_id: number;
     horario_id: number;
     situacao: 'em_analise' | 'indeferida' | 'deferida' | 'inativa';
+    justificativa?: string | null; // Justificativa opcional para indeferimento
+    user?:User
 }
 
 /**

@@ -86,10 +86,11 @@ class ReservaController extends Controller
 
     public function store(StoreReservaRequest $request)
     {
+        $user = Auth::user();
         // A validação já foi executada pela Form Request.
         // Usamos uma transação para garantir que tudo seja salvo, ou nada.
         try {
-            DB::transaction(function () use ($request) {
+            DB::transaction(function () use ($request, $user) {
                 // 1. Cria a reserva com o status inicial 'em_analise'.
                 $reserva = Reserva::create([
                     'titulo' => $request->validated('titulo'),
@@ -115,18 +116,28 @@ class ReservaController extends Controller
                     // Cria cada horário individualmente
                     $horario = Horario::create($horarioInfo);
                     // Prepara o array para anexar com o status 'em_analise' na tabela pivô
-                    $horariosParaAnexar[$horario->id] = ['situacao' => 'em_analise'];
+                    $horariosParaAnexar[$horario->id] = [
+                        'situacao' => $gestor->id === $user->id ? 'deferida' : 'em_analise'
+                    ];
                 }
                 $gestores = array_unique($gestores); // Remove gestores duplicados
+
+                if ($gestor->id === $user->id)
+                    $reserva->update([
+                        'situacao' => count($gestores) > 1 ? 'parcialmente_deferida' : 'deferida'
+                    ]);
 
                 // 3. Anexa TODOS os horários à reserva com o status pivô correto.
                 $reserva->horarios()->attach($horariosParaAnexar);
                 foreach ($gestores as $gestor) {
                     // 4. Notifica cada gestor sobre a nova solicitação de reserva.
+                    $partesDoNome = explode(' ', Auth::user()->name);
+                    $doisPrimeirosNomesArray = array_slice($partesDoNome, 0, 2);
+                    $resultado = implode(' ', $doisPrimeirosNomesArray);
                     $gestor->notify(
                         new NotificationModel(
                             'Nova solicitação de reserva',
-                            'O usuário ' . Auth::user()->name .
+                            'O usuário ' . $resultado .
                                 ' solicitou uma reserva.',
                             route('gestor.reservas.show', ['reserva' => $reserva->id])
                         )
@@ -192,10 +203,13 @@ class ReservaController extends Controller
                 $reserva->horarios()->attach($horariosParaAnexar);
                 foreach ($gestores as $gestor) {
                     // 4. Notifica cada gestor sobre a nova solicitação de reserva.
+                    $partesDoNome = explode(' ', Auth::user()->name);
+                    $doisPrimeirosNomesArray = array_slice($partesDoNome, 0, 2);
+                    $resultado = implode(' ', $doisPrimeirosNomesArray);
                     $gestor->notify(
                         new NotificationModel(
                             'Reserva atualizada',
-                            'O usuário ' . Auth::user()->name .
+                            'O usuário ' . $resultado .
                                 ' atualizou uma reserva.',
                             route(
                                 'gestor.reservas.show',
@@ -291,11 +305,14 @@ class ReservaController extends Controller
                 $gestores = array_unique($gestores); // Remove gestores duplicados
 
                 foreach ($gestores as $gestor) {
+                    $partesDoNome = explode(' ', Auth::user()->name);
+                    $doisPrimeirosNomesArray = array_slice($partesDoNome, 0, 2);
+                    $resultado = implode(' ', $doisPrimeirosNomesArray);
                     // 3. Notifica cada gestor sobre o cancelamento da reserva.
                     $gestor->notify(
                         new NotificationModel(
                             'Reserva cancelada',
-                            'O usuário ' . Auth::user()->name .
+                            'O usuário ' . $resultado .
                                 ' cancelou uma reserva.',
                             route('gestor.reservas.index')
                         )

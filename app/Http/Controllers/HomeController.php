@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Espaco;
 use App\Models\Reserva;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -14,9 +16,18 @@ class HomeController extends Controller
         $user = Auth::user();
         switch ($user->permission_type_id) {
             case 1: // Institucional
-                return Inertia::render('Dashboard/DashboardInstitucionalPage', compact('user'));
+                $users = User::all();
+                $espacos = Espaco::with(['agendas.horarios.reservas'])->get();
+                $reservas = Reserva::with(['horarios.agenda.espaco'])->get();
+                return Inertia::render('Dashboard/DashboardInstitucionalPage', compact('user', 'users', 'espacos', 'reservas'));
             case 2: // Gestor
-                return Inertia::render('Dashboard/DashboardGestorPage', compact('user'));
+                $espacos = Espaco::whereHas('agendas', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })->with(['agendas.horarios.reservas'])->get();
+                $reservas = Reserva::whereHas('horarios.agenda', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })->with(['horarios.agenda.espaco'])->get();
+                return Inertia::render('Dashboard/DashboardGestorPage', compact('user', 'espacos', 'reservas'));
             default: // Usuario Comum
                 $baseUserReservasQuery = Reserva::where('user_id', $user->id);
                 $reservas = (clone $baseUserReservasQuery)->get();

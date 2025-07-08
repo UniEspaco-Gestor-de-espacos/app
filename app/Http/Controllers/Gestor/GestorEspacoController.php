@@ -31,7 +31,7 @@ class GestorEspacoController extends Controller
         $user = Auth::user();
         $modulos = Modulo::all();
         $setores = Setor::all();
-        return Inertia::render('Espacos/EspacoPage', compact('espacos', 'user', 'modulos', 'setores'));
+        return Inertia::render('Espacos/EspacosPage', compact('espacos', 'user', 'modulos', 'setores'));
     }
 
     /**

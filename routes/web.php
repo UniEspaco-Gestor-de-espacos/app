@@ -5,11 +5,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\EspacoController;
-use App\Http\Controllers\Gestor\GestorAndarController;
-use App\Http\Controllers\Gestor\GestorEspacoController;
 use App\Http\Controllers\Gestor\GestorReservaController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\Institucional\InstitucionalAndarController;
 use App\Http\Controllers\Institucional\InstitucionalEspacoController;
 use App\Http\Controllers\Institucional\InstitucionalInstituicaoController;
 use App\Http\Controllers\Institucional\InstitucionalModuloController;
@@ -18,15 +15,9 @@ use App\Http\Controllers\Institucional\InstitucionalUnidadeController;
 use App\Http\Controllers\Institucional\InstitucionalUsuarioController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReservaController;
-use App\Http\Middleware\AtualizarUsuarioMiddleware;
-use App\Http\Middleware\AvaliarReservaMiddleware;
-use App\Http\Middleware\CadastrarUsuarioMiddleware;
-use App\Http\Middleware\CadastroEspacoMiddleware;
-use App\Http\Middleware\CadastroReservaMiddleware;
-use App\Http\Middleware\EditarEspacoMiddleware;
 use App\Http\Middleware\GestorMiddleware;
 use App\Http\Middleware\InstitucionalMiddleware;
-use Illuminate\Http\Request;
+
 
 // Página inicial: redireciona para dashboard se autenticado, senão para login
 Route::get('/', function () {
@@ -106,6 +97,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('setors', InstitucionalSetorController::class);
 
         // Espaços
+        Route::patch('espacos/{espaco}/alterar-gestores', [InstitucionalEspacoController::class, 'alterarGestores'])
+            ->name('espacos.alterarGestores');
+
         Route::resource('espacos', InstitucionalEspacoController::class);
     });
 });

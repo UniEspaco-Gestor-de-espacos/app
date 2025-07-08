@@ -23,7 +23,7 @@ interface UserSearchComboboxProps {
 export function UserSearchCombobox({ usuarios, value, onValueChange, placeholder = 'Buscar usuário...', disabled = false }: UserSearchComboboxProps) {
     const [open, setOpen] = useState(false);
     const [searchValue, setSearchValue] = useState('');
-
+    console.log(usuarios);
     const selectedUser = usuarios.find((user) => user.id === value);
 
     // Filtrar usuários baseado na busca
@@ -53,7 +53,7 @@ export function UserSearchCombobox({ usuarios, value, onValueChange, placeholder
         }
     };
     return (
-        <Popover open={open} onOpenChange={handleOpenChange} modal>
+        <Popover open={open} onOpenChange={handleOpenChange}>
             <PopoverTrigger asChild>
                 <Button variant="outline" role="combobox" className="w-full justify-between bg-transparent" disabled={disabled} type="button">
                     {selectedUser ? (
@@ -89,7 +89,7 @@ export function UserSearchCombobox({ usuarios, value, onValueChange, placeholder
                     </div>
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0" align="start" side="bottom" sideOffset={4}>
+            <PopoverContent className="w-full p-0" align="start" side="bottom" sideOffset={4} onCloseAutoFocus={(e) => e.preventDefault()}>
                 <div className="flex items-center border-b px-3 py-2">
                     <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
                     <Input

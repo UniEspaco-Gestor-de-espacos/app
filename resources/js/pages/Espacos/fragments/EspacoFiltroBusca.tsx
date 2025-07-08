@@ -24,14 +24,14 @@ type FiltroBuscaEspacosProps = {
 export default function EspacoFiltroBusca(props: FiltroBuscaEspacosProps) {
     const { route, filters, unidades, modulos, andares } = props;
     const [localFilters, setLocalFilters] = useState({
-        searchTerm: filters.search || '',
-        selectedUnidade: filters.unidade || 'all',
-        selectedModulo: filters.modulo || 'all',
-        selectedAndar: filters.andar || 'all',
-        selectedCapacidade: filters.capacidade || '',
+        search: filters.search || '',
+        unidade: filters.unidade || 'all',
+        modulo: filters.modulo || 'all',
+        andar: filters.andar || 'all',
+        capacidade: filters.capacidade || '',
     });
     const isInitialMount = useRef(true);
-    const [debouncedSearchTerm] = useDebounce(localFilters.searchTerm, 300);
+    const [debouncedSearchTerm] = useDebounce(localFilters.search, 300);
 
     useEffect(() => {
         if (isInitialMount.current) {
@@ -58,15 +58,16 @@ export default function EspacoFiltroBusca(props: FiltroBuscaEspacosProps) {
         });
     }, [debouncedSearchTerm, route, localFilters]);
     const handleFilterChange = (name: keyof typeof localFilters, value: string) => {
+        console.log(`Filtro alterado: ${name} = ${value}`);
         setLocalFilters((prevFilters) => {
             const newFilters = { ...prevFilters, [name]: value };
 
-            if (name === 'selectedUnidade') {
-                newFilters.selectedModulo = 'all';
-                newFilters.selectedAndar = 'all';
+            if (name === 'unidade') {
+                newFilters.modulo = 'all';
+                newFilters.andar = 'all';
             }
-            if (name === 'selectedModulo') {
-                newFilters.selectedAndar = 'all';
+            if (name === 'modulo') {
+                newFilters.andar = 'all';
             }
 
             return newFilters;
@@ -85,13 +86,13 @@ export default function EspacoFiltroBusca(props: FiltroBuscaEspacosProps) {
                             <Input
                                 placeholder="Buscar por nome do espaço, andar ou módulo..."
                                 className="pl-8"
-                                value={localFilters.searchTerm}
-                                onChange={(value) => handleFilterChange('searchTerm', value.target.value)}
+                                value={localFilters.search}
+                                onChange={(value) => handleFilterChange('search', value.target.value)}
                             />
                         </div>
 
                         {/* Filtro de Unidade */}
-                        <Select value={localFilters.selectedUnidade} onValueChange={(value) => handleFilterChange('selectedUnidade', value)}>
+                        <Select value={localFilters.unidade} onValueChange={(value) => handleFilterChange('unidade', value)}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Unidade" />
                             </SelectTrigger>
@@ -107,9 +108,9 @@ export default function EspacoFiltroBusca(props: FiltroBuscaEspacosProps) {
 
                         {/* Filtro de Módulo */}
                         <Select
-                            value={localFilters.selectedModulo}
-                            onValueChange={(value) => handleFilterChange('selectedModulo', value)}
-                            disabled={localFilters.selectedUnidade === 'all'}
+                            value={localFilters.modulo}
+                            onValueChange={(value) => handleFilterChange('modulo', value)}
+                            disabled={localFilters.unidade === 'all'}
                         >
                             <SelectTrigger>
                                 <SelectValue placeholder="Módulo" />
@@ -126,9 +127,9 @@ export default function EspacoFiltroBusca(props: FiltroBuscaEspacosProps) {
 
                         {/* Filtro de Andar */}
                         <Select
-                            value={localFilters.selectedAndar}
-                            onValueChange={(value) => handleFilterChange('selectedAndar', value)}
-                            disabled={localFilters.selectedModulo === 'all'}
+                            value={localFilters.andar}
+                            onValueChange={(value) => handleFilterChange('andar', value)}
+                            disabled={localFilters.modulo === 'all'}
                         >
                             <SelectTrigger>
                                 <SelectValue placeholder="Andar" />
@@ -144,7 +145,7 @@ export default function EspacoFiltroBusca(props: FiltroBuscaEspacosProps) {
                         </Select>
 
                         {/* Filtro de Capacidade */}
-                        <Select value={localFilters.selectedCapacidade} onValueChange={(value) => handleFilterChange('selectedCapacidade', value)}>
+                        <Select value={localFilters.capacidade} onValueChange={(value) => handleFilterChange('capacidade', value)}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Capacidade" />
                             </SelectTrigger>

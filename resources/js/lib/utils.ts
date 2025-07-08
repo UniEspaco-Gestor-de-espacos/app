@@ -60,6 +60,10 @@ export const getStatusReservaColor = (situacao: SituacaoReserva) => {
             return 'bg-green-500';
         case 'indeferida':
             return 'bg-red-500';
+        case 'parcialmente_deferida':
+            return 'bg-blue-500';
+        case 'inativa':
+            return 'bg-gray-300';
         default:
             return 'bg-gray-500';
     }
@@ -71,6 +75,8 @@ export const getStatusReservaText = (situacao: SituacaoReserva) => {
             return 'Em Analise';
         case 'deferida':
             return 'Deferida';
+        case 'parcialmente_deferida':
+            return 'Parcialmente Deferida';
         case 'indeferida':
             return 'Indeferida';
         default:
