@@ -247,7 +247,7 @@ export function ReservasList({ paginator, fallback, isGestor, user, reservaToSho
                                 <FileText className="h-5 w-5" />
                                 {selectedReserva.titulo}
                             </DialogTitle>
-                            <DialogDescription className="flex-col justify-between ">
+                            <DialogDescription className="flex-col justify-between">
                                 <div className="flex items-center gap-2 p-1">
                                     <User className="h-4 w-4" />
                                     Solicitado por: {selectedReserva.user?.name}
@@ -299,7 +299,7 @@ export function ReservasList({ paginator, fallback, isGestor, user, reservaToSho
                                                 </span>
                                                 {horario.pivot?.situacao && <SituacaoBadge situacao={horario.pivot.situacao} />}
                                             </div>
-                                            {horario.pivot?.justificativa && (
+                                            {horario.pivot?.justificativa && horario.pivot?.situacao === 'indeferida' && (
                                                 <div className="flex items-center justify-between bg-red-50 p-3">
                                                     <span className="font-medium text-red-900">Justificativa:</span>
                                                     <span className="text-red-700">
