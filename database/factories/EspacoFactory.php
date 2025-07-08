@@ -38,7 +38,9 @@ class EspacoFactory extends Factory
                 Agenda::factory()->create([
                     'espaco_id' => $espaco->id,
                     'turno' => $turno,
-                    'user_id' => User::pluck('id')->random(), // Inicia sem usuário responsável
+                    'user_id' => User::whereHas('setor.unidade', function ($unidadeQuery) use ($espaco) {
+                        $unidadeQuery->where('instituicao_id', $espaco->andar->modulo->unidade->instituicao_id);
+                    })->pluck('id')->random(), // Inicia sem usuário responsável
                 ]);
             }
         });

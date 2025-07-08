@@ -1,7 +1,7 @@
 import GenericHeader from '@/components/generic-header';
 import AppLayout from '@/layouts/app-layout';
 import { Andar, Espaco, FiltrosEspacosType, Modulo, Unidade, User } from '@/types';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { PlusCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { FiltrosEspacos } from './fragments/FiltrosEspacos';
@@ -38,7 +38,10 @@ export default function GerenciarEspacos() {
         capacidade: '',
     });
     const [espacoParaGerenciar, setEspacoParaGerenciar] = useState<Espaco | null>(null);
-
+    const { data, setData, patch, error } = useForm<{ espacoId: number | null; gestores: Record<string, number | null> }>({
+        espacoId: null,
+        gestores: {},
+    });
     // Estado para a paginação
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10; // Defina quantos itens por página
@@ -90,7 +93,7 @@ export default function GerenciarEspacos() {
     };
 
     const handleSalvarGestores = (espacoId: number, gestores: Record<string, number | null>) => {
-        console.log('Gestores salvos para espaço', espacoId, ':', gestores);
+        router.patch(route('institucional.espacos.alterarGestores', espacoId), { gestores: gestores });
     };
 
     return (
@@ -113,21 +116,23 @@ export default function GerenciarEspacos() {
                         <FiltrosEspacos filtros={filtros} setFiltros={setFiltros} unidades={unidades} modulos={modulos} andares={andares} />
 
                         {/* Tabela de Espaços */}
-                        <TabelaEspacos
-                            espacos={espacosPaginados}
-                            onGerenciarGestores={handleGerenciarGestores}
-                            totalFiltrado={espacosFiltrados.length}
-                        />
-
-                        {/* Dialog para gerenciar gestores */}
-                        <GerenciarGestoresDialog
-                            key={espacoParaGerenciar?.id}
-                            espaco={espacoParaGerenciar}
-                            usuarios={users}
-                            isOpen={!!espacoParaGerenciar}
-                            onClose={() => setEspacoParaGerenciar(null)}
-                            onSave={handleSalvarGestores}
-                        />
+                        {!espacoParaGerenciar ? (
+                            <TabelaEspacos
+                                key={currentPage} // Força a re-renderização da tabela ao mudar de página
+                                espacos={espacosPaginados}
+                                onGerenciarGestores={handleGerenciarGestores}
+                                totalFiltrado={espacosFiltrados.length}
+                            />
+                        ) : (
+                            <GerenciarGestoresDialog
+                                key={espacoParaGerenciar?.id}
+                                espaco={espacoParaGerenciar}
+                                usuarios={users}
+                                isOpen={!!espacoParaGerenciar}
+                                onClose={() => setEspacoParaGerenciar(null)}
+                                onSave={handleSalvarGestores}
+                            />
+                        )}
 
                         <Paginacao
                             totalItems={espacosFiltrados.length}

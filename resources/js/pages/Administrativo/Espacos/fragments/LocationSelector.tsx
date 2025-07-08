@@ -1,9 +1,7 @@
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { DialogTrigger } from '@/components/ui/dialog';
 import { SelectContent, SelectItem, SelectTrigger, Select as SelectUI, SelectValue } from '@/components/ui/select';
+import { nivelParaLabel, nomeParaNivel } from '@/lib/utils/andars/AndarHelpers';
 import { Andar, Modulo, Unidade } from '@/types';
-import { Plus } from 'lucide-react';
 
 interface LocationSelectorProps {
     unidades: Unidade[];
@@ -80,7 +78,7 @@ export function LocationSelector({
                         </SelectTrigger>
                         <SelectContent>
                             {modulos
-                                .filter((modulo) => modulo.unidade_id == unidadeSelecionada)
+                                .filter((modulo) => modulo.unidade?.id == unidadeSelecionada)
                                 .map((modulo) => (
                                     <SelectItem key={modulo.id.toString()} value={modulo.id.toString()}>
                                         {modulo.nome}
@@ -108,16 +106,11 @@ export function LocationSelector({
                                     .filter((andar) => andar.modulo?.id == moduloSelecionado)
                                     .map((andar) => (
                                         <SelectItem key={andar.id.toString()} value={andar.id.toString()}>
-                                            {andar.nome}
+                                            {nivelParaLabel(nomeParaNivel(andar.nome))}
                                         </SelectItem>
                                     ))}
                             </SelectContent>
                         </SelectUI>
-                        <DialogTrigger asChild>
-                            <Button type="button" variant="outline" size="icon" disabled={!moduloSelecionado || processing}>
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                        </DialogTrigger>
                     </div>
                     {errors.andar_id && <p className="mt-1 text-sm text-red-500">{errors.andar_id}</p>}
                 </div>

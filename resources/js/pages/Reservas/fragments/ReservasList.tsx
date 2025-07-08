@@ -3,19 +3,25 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { diasSemanaParser, formatDate, getTurnoText } from '@/lib/utils';
+import { diasSemanaParser, formatDate, getStatusReservaColor, getStatusReservaText, getTurnoText } from '@/lib/utils';
 import { Paginator, Reserva, SituacaoReserva, User as UserType } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { Separator } from '@radix-ui/react-separator';
 import { CalendarDays, CheckCircle, Clock, Edit, Eye, FileText, User, XCircle, XSquare } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import { SituacaoIndicator } from './ReservaCard';
 
 // Tipos baseados no modelo de dados fornecido
-
+export function SituacaoIndicator({ situacao }: { situacao: SituacaoReserva }) {
+    return (
+        <span className="flex items-center gap-2">
+            <span className={`h-3 w-3 rounded-full ${getStatusReservaColor(situacao)}`}></span>
+            <span className="text-sm font-medium">{getStatusReservaText(situacao)}</span>
+        </span>
+    );
+}
 // Componente para exibir o status da reserva com cores e ícones apropriados
-function SituacaoBadge({ situacao }: { situacao: SituacaoReserva }) {
+export function SituacaoBadge({ situacao }: { situacao: SituacaoReserva }) {
     switch (situacao) {
         case 'em_analise':
             return (
@@ -249,7 +255,6 @@ export function ReservasList({ paginator, fallback, isGestor, user }: ReservasLi
                         </div>
 
                         <Separator />
-
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="flex items-center gap-2">
                                 <CalendarDays className="h-4 w-4 text-gray-500" />
@@ -261,6 +266,7 @@ export function ReservasList({ paginator, fallback, isGestor, user }: ReservasLi
                                 </div>
                             </div>
                         </div>
+                        <Separator />
 
                         <Separator />
 
@@ -273,11 +279,24 @@ export function ReservasList({ paginator, fallback, isGestor, user }: ReservasLi
                                 {selectedReserva.horarios.map((horario) => {
                                     const dia = new Date(horario.data);
                                     return (
-                                        <div key={horario.id} className="flex items-center justify-between rounded-lg bg-blue-50 p-3">
-                                            <span className="font-medium text-blue-900">{diasSemanaParser[dia.getDay()]}</span>
-                                            <span className="text-blue-700">
-                                                {horario.horario_inicio} às {horario.horario_fim}
-                                            </span>
+                                        <div key={horario.id} className="rounded-lg bg-blue-50 p-3">
+                                            <div className="flex items-center justify-between rounded-lg p-3">
+                                                <span className="font-medium text-blue-900">{diasSemanaParser[dia.getDay()]}</span>
+                                                <span className="text-blue-700">
+                                                    {horario.horario_inicio} às {horario.horario_fim}
+                                                </span>
+                                                {horario.pivot?.situacao && <SituacaoBadge situacao={horario.pivot.situacao} />}
+                                            </div>
+                                            {horario.pivot?.justificativa && (
+                                                <div className="flex items-center justify-between bg-red-50 p-3">
+                                                    <span className="font-medium text-red-900">Justificativa:</span>
+                                                    <span className="text-red-700">
+                                                        {horario.pivot?.justificativa
+                                                            ? horario.pivot.justificativa
+                                                            : 'Nenhuma justificativa fornecida'}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })}
@@ -303,12 +322,12 @@ export function ReservasList({ paginator, fallback, isGestor, user }: ReservasLi
                             ) : (
                                 <div>
                                     {selectedReserva.situacao === 'em_analise' && (
-                                        <Button variant="outline">
+                                        <Button variant="outline" onClick={() => router.get(route('reservas.edit', selectedReserva.id))}>
                                             <Edit className="mr-1 h-4 w-4" />
                                             Editar
                                         </Button>
                                     )}
-                                    <Button variant="destructive">
+                                    <Button variant="destructive" onClick={() => setRemoverReserva(selectedReserva)}>
                                         <XCircle className="mr-1 h-4 w-4" />
                                         Cancelar
                                     </Button>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Institucional;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AlterarGestoresEspacoRequest;
 use App\Http\Requests\StoreEspacoRequest;
 use App\Http\Requests\UpdateEspacoRequest;
 use App\Models\Agenda;
@@ -11,7 +12,11 @@ use App\Models\Espaco;
 use App\Models\Modulo;
 use App\Models\Unidade;
 use App\Models\User;
+use App\Notifications\NotificationModel;
+use App\Rules\UsuarioDaMesmaInstituicaoDaAgenda;
+use App\Services\GestaoAgendaService;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +26,12 @@ use Illuminate\Support\Facades\Storage;
 class InstitucionalEspacoController extends Controller
 {
 
+    protected $gestaoAgendaService;
+
+    public function __construct(GestaoAgendaService $gestaoAgendaService)
+    {
+        $this->gestaoAgendaService = $gestaoAgendaService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -187,6 +198,7 @@ class InstitucionalEspacoController extends Controller
 
     public function update(UpdateEspacoRequest $request, Espaco $espaco)
     {
+
         $validated = $request->validated();
         try {
             DB::transaction(function () use ($validated, $request, $espaco) {
@@ -236,6 +248,13 @@ class InstitucionalEspacoController extends Controller
                     'main_image_index' => $mainImagePath, // Salva o path da imagem principal
                 ]);
             });
+            foreach ($espaco->agendas as $agenda) {
+                $agenda->user()->notify(new NotificationModel(
+                    'Gestão de Espaços',
+                    'O espaço ' . $espaco->nome . ' foi atualizado.',
+                    route('espacos.show', $espaco->id)
+                ));
+            }
 
             return redirect()->route('institucional.espacos.index')->with('success', 'Espaço atualizado com sucesso!');
         } catch (\Exception $e) {
@@ -253,8 +272,23 @@ class InstitucionalEspacoController extends Controller
             $espaco->delete();
             return redirect()->route('institucional.espacos.index')->with('success', 'Espaço excluído com sucesso!');
         } catch (Exception $error) {
-            dd($error->getMessage());
             return redirect()->back()->with('error', 'Erro ao excluir, favor tentar novamente');
+        }
+    }
+
+    /**
+     * Alterar gestores de um espaço
+     */
+    public function alterarGestores(AlterarGestoresEspacoRequest $request, Espaco $espaco)
+    {
+
+        $validated = $request->validated();
+        try {
+            $this->gestaoAgendaService->updateEspacoGestores($espaco, $validated);
+            return redirect()->route('institucional.espacos.index')->with('success', 'Gestores atualizados com sucesso!');
+        } catch (Exception $e) {
+            Log::error("Erro ao atualizar gestores do espaço: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocorreu um erro ao atualizar os gestores do espaço.');
         }
     }
 }

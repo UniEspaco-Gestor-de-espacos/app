@@ -23,6 +23,7 @@ class EspacoController extends Controller
         $filters = Request::only(['search', 'unidade', 'modulo', 'andar', 'capacidade']);
         $user = Auth::user();
         $instituicao_id = $user->setor->unidade->instituicao_id;
+
         $espacos = Espaco::query()
             // O join com 'andars' e 'modulos' é necessário para filtrar por eles
             ->join('andars', 'espacos.andar_id', '=', 'andars.id')

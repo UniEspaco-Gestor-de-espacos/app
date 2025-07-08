@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
+use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,5 +30,17 @@ class AppServiceProvider extends ServiceProvider
                 $query->time // O tempo de execução da consulta
             );
         });
+        Inertia::share([
+            'auth.user' => function () {
+                $user = Auth::user();
+                if ($user) {
+                    return array_merge($user->toArray(), [
+                        'unread_notifications_count' => $user->unreadNotifications->count(),
+                        // Você pode adicionar mais dados do usuário aqui se precisar
+                    ]);
+                }
+                return null;
+            },
+        ]);
     }
 }

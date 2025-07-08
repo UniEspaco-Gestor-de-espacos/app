@@ -19,7 +19,7 @@ class Horario extends Model
     public function reservas()
     {
         return $this->belongsToMany(Reserva::class, 'reserva_horario')
-            ->withPivot('situacao')
+            ->withPivot(['situacao', 'justificativa', 'user_id'])
             ->withTimestamps();
     }
     public function agenda()

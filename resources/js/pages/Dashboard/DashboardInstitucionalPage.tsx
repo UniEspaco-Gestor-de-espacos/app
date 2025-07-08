@@ -3,9 +3,10 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Espaco, Reserva, User, type BreadcrumbItem } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
 import { FileText, PieChart, Search, Settings, Users } from 'lucide-react';
+import { useState } from 'react';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: '🏠 Painel Inicial',
@@ -13,30 +14,15 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Dados de exemplo
-const userStats = {
-    total: 245,
-    professors: 180,
-    staff: 45,
-    admins: 20,
-};
-
-const spaceStats = {
-    total: 85,
-    available: 62,
-    reserved: 18,
-    unavailable: 5,
-};
-
-const reservationStats = {
-    total: 1250,
-    thisMonth: 320,
-    pending: 45,
-    approved: 1150,
-    rejected: 55,
-};
 export default function Dashboard() {
-    // const { props } = usePage<{ user: User}>();
+    const { users, reservas, espacos } = usePage<{ user: User; users: User[]; reservas: Reserva[]; espacos: Espaco[] }>().props;
+    const [institucional] = useState<User[]>(users.filter((u) => u.permission_type_id === 1));
+    const [gestores] = useState<User[]>(users.filter((u) => u.permission_type_id === 2));
+    const [comum] = useState<User[]>(users.filter((u) => u.permission_type_id === 3));
+    const [reservaEsseMes] = useState<Reserva[]>(reservas.filter((r) => new Date(r.data_inicial).getMonth() === new Date().getMonth()));
+    const [reservasPendenteAnalise] = useState<Reserva[]>(
+        reservas.filter((r) => r.horarios.filter((h) => h.pivot?.situacao === 'em_analise').length > 0),
+    );
     // const { user } = props;
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -52,30 +38,26 @@ export default function Dashboard() {
                             <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                                 <div className="space-y-1">
                                     <p className="text-muted-foreground text-xs">Total de Usuários</p>
-                                    <p className="text-xl font-bold md:text-2xl">{userStats.total}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-muted-foreground text-xs">Professores</p>
-                                    <p className="text-xl font-bold md:text-2xl">{userStats.professors}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-muted-foreground text-xs">Funcionários</p>
-                                    <p className="text-xl font-bold md:text-2xl">{userStats.staff}</p>
+                                    <p className="text-xl font-bold md:text-2xl">{users.length}</p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-muted-foreground text-xs">Administradores</p>
-                                    <p className="text-xl font-bold md:text-2xl">{userStats.admins}</p>
+                                    <p className="text-xl font-bold md:text-2xl">{institucional.length}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-muted-foreground text-xs">Gestores</p>
+                                    <p className="text-xl font-bold md:text-2xl">{gestores.length}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-muted-foreground text-xs">Comum</p>
+                                    <p className="text-xl font-bold md:text-2xl">{comum.length}</p>
                                 </div>
                             </div>
                         </CardContent>
                         <CardFooter className="flex flex-wrap justify-between gap-2">
-                            <Button variant="outline" size="sm">
-                                Gerenciar Professores
+                            <Button variant="outline" size="sm" onClick={() => router.get(route('institucional.usuarios.index'))}>
+                                Gerenciar usuarios
                             </Button>
-                            <Button variant="outline" size="sm">
-                                Gerenciar Setores
-                            </Button>
-                            <Button size="sm">Adicionar Usuário</Button>
                         </CardFooter>
                     </Card>
 
@@ -85,33 +67,29 @@ export default function Dashboard() {
                             <Settings className="text-muted-foreground h-4 w-4" />
                         </CardHeader>
                         <CardContent>
-                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            <div className="flex flex-wrap justify-between gap-2">
                                 <div className="space-y-1">
                                     <p className="text-muted-foreground text-xs">Total de Espaços</p>
-                                    <p className="text-xl font-bold md:text-2xl">{spaceStats.total}</p>
+                                    <p className="text-xl font-bold md:text-2xl">{espacos.length}</p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-muted-foreground text-xs">Disponíveis</p>
-                                    <p className="text-xl font-bold text-green-500 md:text-2xl">{spaceStats.available}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-muted-foreground text-xs">Reservados</p>
-                                    <p className="text-xl font-bold text-amber-500 md:text-2xl">{spaceStats.reserved}</p>
+                                    <p className="text-xl font-bold text-green-500 md:text-2xl">{espacos.length - 2} </p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-muted-foreground text-xs">Indisponíveis</p>
-                                    <p className="text-xl font-bold text-red-500 md:text-2xl">{spaceStats.unavailable}</p>
+                                    <p className="text-xl font-bold text-red-500 md:text-2xl">{2}</p>
                                 </div>
                             </div>
                         </CardContent>
                         <CardFooter className="flex flex-wrap justify-between gap-2">
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={() => router.get(route('institucional.espacos.index'))}>
                                 Gerenciar Espaços
                             </Button>
-                            <Button variant="outline" size="sm">
-                                Gerenciar Gestores
+
+                            <Button size="sm" onClick={() => router.get(route('institucional.espacos.create'))}>
+                                Adicionar Espaço
                             </Button>
-                            <Button size="sm">Adicionar Espaço</Button>
                         </CardFooter>
                     </Card>
 
@@ -125,21 +103,20 @@ export default function Dashboard() {
                                 <TabsList className="mb-4 flex flex-wrap">
                                     <TabsTrigger value="overview">Visão Geral</TabsTrigger>
                                     <TabsTrigger value="spaces">Por Espaço</TabsTrigger>
-                                    <TabsTrigger value="departments">Por Setor</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="overview" className="space-y-4">
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                         <div className="space-y-1">
                                             <p className="text-muted-foreground text-xs">Total de Reservas</p>
-                                            <p className="text-xl font-bold md:text-2xl">{reservationStats.total}</p>
+                                            <p className="text-xl font-bold md:text-2xl">{reservas.length}</p>
                                         </div>
                                         <div className="space-y-1">
                                             <p className="text-muted-foreground text-xs">Este Mês</p>
-                                            <p className="text-xl font-bold md:text-2xl">{reservationStats.thisMonth}</p>
+                                            <p className="text-xl font-bold md:text-2xl">{reservaEsseMes.length}</p>
                                         </div>
                                         <div className="space-y-1">
                                             <p className="text-muted-foreground text-xs">Pendentes</p>
-                                            <p className="text-xl font-bold md:text-2xl">{reservationStats.pending}</p>
+                                            <p className="text-xl font-bold md:text-2xl">{reservasPendenteAnalise.length}</p>
                                         </div>
                                     </div>
                                     <div className="bg-muted/50 h-[200px] rounded-md border p-4">
@@ -152,13 +129,6 @@ export default function Dashboard() {
                                     <div className="bg-muted/50 h-[250px] rounded-md border p-4">
                                         <div className="bg-muted/50 flex h-full w-full items-center justify-center rounded-md">
                                             Gráfico de Reservas por Espaço
-                                        </div>
-                                    </div>
-                                </TabsContent>
-                                <TabsContent value="departments">
-                                    <div className="bg-muted/50 h-[250px] rounded-md border p-4">
-                                        <div className="bg-muted/50 flex h-full w-full items-center justify-center rounded-md">
-                                            Gráfico de Reservas por Setor
                                         </div>
                                     </div>
                                 </TabsContent>

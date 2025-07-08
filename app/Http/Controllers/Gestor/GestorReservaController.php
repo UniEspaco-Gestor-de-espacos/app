@@ -15,6 +15,7 @@ use App\Models\Andar;
 use App\Models\Espaco;
 use App\Models\Modulo;
 use App\Models\User;
+use App\Notifications\NotificationModel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
@@ -150,6 +151,7 @@ class GestorReservaController extends Controller
     {
         $this->authorize('update', $reserva);
 
+
         $gestor = Auth::user();
         $novaSituacao = $request->input('situacao');
         // 2. Obter um array com os IDs de todas as agendas gerenciadas pelo gestor.
@@ -170,17 +172,27 @@ class GestorReservaController extends Controller
                 ->whereIn('agenda_id', $agendasDoGestorIds)
                 ->pluck('horarios.id');
 
-
             // 4. Atualiza a 'situacao' na tabela pivô APENAS para os horários encontrados.
             $reserva->horarios()->updateExistingPivot($horariosIdsParaAvaliar, [
                 'situacao' => $novaSituacao,
-                'user_id' => $gestor->id
+                'user_id' => $gestor->id,
+                'justificativa' => $request->input('motivo', null), // Justificativa opcional
             ]);
 
             // 5. Atualiza o status GERAL da reserva (para 'deferido', 'indeferido', 'parcialmente_deferido').
             $this->atualizarStatusGeralDaReserva($reserva);
 
             DB::commit(); // Confirma todas as alterações no banco.
+            // 6. Notifica o usuário que fez a reserva sobre a avaliação.
+
+            $partesDoNome = explode(' ', $gestor->name);
+            $doisPrimeirosNomesArray = array_slice($partesDoNome, 0, 2);
+            $resultado = implode(' ', $doisPrimeirosNomesArray);
+            $reserva->user->notify(new NotificationModel(
+                'Avaliação de Reserva',
+                "Sua reserva #{$reserva->id} foi avaliada como '{$novaSituacao}' por {$resultado}.",
+                route('reservas.show', $reserva->id)
+            ));
             return Redirect::route('gestor.reservas.index')->with('success', 'solicitação avaliada com sucesso!');
         } catch (Exception $e) {
             DB::rollBack(); // Em caso de erro, desfaz tudo.

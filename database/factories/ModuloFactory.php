@@ -19,7 +19,7 @@ class ModuloFactory extends Factory
     {
         return [
             'nome' => 'Módulo ' . $this->faker->randomElement(['Acadêmico', 'Administrativo', 'Laboratórios']),
-            'unidade_id' => Unidade::factory(),
+            'unidade_id' => Unidade::pluck('id')->random(),
         ];
     }
 }

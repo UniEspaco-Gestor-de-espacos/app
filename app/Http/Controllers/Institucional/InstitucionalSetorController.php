@@ -13,6 +13,7 @@ use App\Models\Modulo;
 use App\Models\Setor;
 use App\Models\Unidade;
 use App\Models\User;
+use App\Notifications\NotificationModel;
 use GuzzleHttp\Psr7\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -89,7 +90,15 @@ class InstitucionalSetorController extends Controller
                 'sigla' => $request->validated('sigla'),
                 'unidade_id' => $request->validated('unidade_id'),
             ]);
-
+            $setor->load(['users']);
+            // Notifica os usuários do setor sobre a atualização
+            foreach ($setor->users as $user) {
+                $user->notify(new NotificationModel(
+                    'Setor Atualizado',
+                    'O setor ' . $setor->nome . ' foi atualizado.',
+                    route('institucional.setors.show', $setor->id) // Redireciona para a página do setor atualizado
+                ));
+            }
             return redirect()
                 ->route('institucional.setors.index')
                 ->with('success', 'Setor atualizado com sucesso!');

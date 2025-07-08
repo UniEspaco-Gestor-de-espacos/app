@@ -42,6 +42,17 @@ export default function AvaliarReserva() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
+        // Inicializa o estado da decisão com a situação atual da reserva
+        setDecisao(reserva.situacao as SituacaoReserva);
+        // Se a reserva já tiver uma justificativa, define o motivo
+        if (reserva.horarios.length > 0 && reserva.horarios[0].pivot?.justificativa) {
+            setMotivo(reserva.horarios[0].pivot.justificativa);
+        } else {
+            setMotivo('');
+        }
+    }, [reserva.horarios, reserva.situacao]);
+
+    useEffect(() => {
         setData('situacao', decisao);
     }, [decisao, setData]);
 

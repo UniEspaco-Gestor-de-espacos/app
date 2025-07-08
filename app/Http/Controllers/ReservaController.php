@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreReservaRequest;
+use App\Models\Agenda;
 use App\Models\Horario;
 use App\Models\Reserva;
+use App\Notifications\NotificationModel;
+use App\Notifications\NovaSolicitacaoReservaNotification;
 use Exception;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -83,10 +86,11 @@ class ReservaController extends Controller
 
     public function store(StoreReservaRequest $request)
     {
+        $user = Auth::user();
         // A validação já foi executada pela Form Request.
         // Usamos uma transação para garantir que tudo seja salvo, ou nada.
         try {
-            DB::transaction(function () use ($request) {
+            DB::transaction(function () use ($request, $user) {
                 // 1. Cria a reserva com o status inicial 'em_analise'.
                 $reserva = Reserva::create([
                     'titulo' => $request->validated('titulo'),
@@ -100,17 +104,45 @@ class ReservaController extends Controller
 
                 $horariosData = $request->validated('horarios_solicitados');
                 // Prepara os dados para inserção em massa e os IDs para o anexo.
+                $gestores = [];
                 $horariosParaAnexar = [];
                 foreach ($horariosData as $horarioInfo) {
+                    $gestor = Agenda::whereId($horarioInfo['agenda_id'])
+                        ->with('user') // Carrega o gestor da agenda
+                        ->first()
+                        ->user;
+                    $gestores[] = $gestor; // Coleta os gestores para notificação
+
                     // Cria cada horário individualmente
                     $horario = Horario::create($horarioInfo);
                     // Prepara o array para anexar com o status 'em_analise' na tabela pivô
-                    $horariosParaAnexar[$horario->id] = ['situacao' => 'em_analise'];
+                    $horariosParaAnexar[$horario->id] = [
+                        'situacao' => $gestor->id === $user->id ? 'deferida' : 'em_analise'
+                    ];
                 }
+                $gestores = array_unique($gestores); // Remove gestores duplicados
+
+                if ($gestor->id === $user->id)
+                    $reserva->update([
+                        'situacao' => count($gestores) > 1 ? 'parcialmente_deferida' : 'deferida'
+                    ]);
 
                 // 3. Anexa TODOS os horários à reserva com o status pivô correto.
                 $reserva->horarios()->attach($horariosParaAnexar);
-
+                foreach ($gestores as $gestor) {
+                    // 4. Notifica cada gestor sobre a nova solicitação de reserva.
+                    $partesDoNome = explode(' ', Auth::user()->name);
+                    $doisPrimeirosNomesArray = array_slice($partesDoNome, 0, 2);
+                    $resultado = implode(' ', $doisPrimeirosNomesArray);
+                    $gestor->notify(
+                        new NotificationModel(
+                            'Nova solicitação de reserva',
+                            'O usuário ' . $resultado .
+                                ' solicitou uma reserva.',
+                            route('gestor.reservas.show', ['reserva' => $reserva->id])
+                        )
+                    );
+                }
                 return $reserva;
             });
 
@@ -153,15 +185,39 @@ class ReservaController extends Controller
                 // 5. Prepara e anexa os novos horários.
                 $horariosData = $request->validated('horarios_solicitados');
                 $horariosParaAnexar = [];
+                $gestores = [];
                 foreach ($horariosData as $horarioInfo) {
+                    $gestor = Agenda::whereId($horarioInfo['agenda_id'])
+                        ->with('user') // Carrega o gestor da agenda
+                        ->first()
+                        ->user;
+                    $gestores[] = $gestor; // Coleta os gestores para notificação
                     // Cria cada horário individualmente
                     $horario = Horario::create($horarioInfo);
                     // Prepara o array para anexar com o status 'em_analise' na tabela pivô
                     $horariosParaAnexar[$horario->id] = ['situacao' => 'em_analise'];
                 }
+                $gestores = array_unique($gestores); // Remove gestores duplicados
 
                 // 6. Anexa os novos horários à reserva.
                 $reserva->horarios()->attach($horariosParaAnexar);
+                foreach ($gestores as $gestor) {
+                    // 4. Notifica cada gestor sobre a nova solicitação de reserva.
+                    $partesDoNome = explode(' ', Auth::user()->name);
+                    $doisPrimeirosNomesArray = array_slice($partesDoNome, 0, 2);
+                    $resultado = implode(' ', $doisPrimeirosNomesArray);
+                    $gestor->notify(
+                        new NotificationModel(
+                            'Reserva atualizada',
+                            'O usuário ' . $resultado .
+                                ' atualizou uma reserva.',
+                            route(
+                                'gestor.reservas.show',
+                                ['reserva' => $reserva->id]
+                            )
+                        )
+                    );
+                }
             });
 
             return redirect()->route('reservas.index')->with('success', 'Reserva atualizada com sucesso! Aguarde nova avaliação.');
@@ -237,11 +293,31 @@ class ReservaController extends Controller
                 // 1. Itera sobre cada horário associado a esta reserva
                 // para atualizar a situação na tabela pivô (horario_reserva).
                 foreach ($reserva->horarios as $horario) {
+                    $gestor = Agenda::whereId($horario['agenda_id'])
+                        ->with('user') // Carrega o gestor da agenda
+                        ->first()
+                        ->user;
+                    $gestores[] = $gestor; // Coleta os gestores para notificação
                     $reserva->horarios()->updateExistingPivot($horario->id, [
                         'situacao' => 'inativa'
                     ]);
                 }
+                $gestores = array_unique($gestores); // Remove gestores duplicados
 
+                foreach ($gestores as $gestor) {
+                    $partesDoNome = explode(' ', Auth::user()->name);
+                    $doisPrimeirosNomesArray = array_slice($partesDoNome, 0, 2);
+                    $resultado = implode(' ', $doisPrimeirosNomesArray);
+                    // 3. Notifica cada gestor sobre o cancelamento da reserva.
+                    $gestor->notify(
+                        new NotificationModel(
+                            'Reserva cancelada',
+                            'O usuário ' . $resultado .
+                                ' cancelou uma reserva.',
+                            route('gestor.reservas.index')
+                        )
+                    );
+                }
                 // 2. Atualiza a situação da própria reserva para 'inativa'
                 $reserva->update(['situacao' => 'inativa']);
             });

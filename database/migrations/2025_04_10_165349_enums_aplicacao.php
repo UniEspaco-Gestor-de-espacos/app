@@ -10,10 +10,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Enum types (Laravel doesn't support enums nativamente em SQLite, mas em MySQL/PostgreSQL sim)
-        DB::statement("CREATE TYPE turno AS ENUM ('manha', 'tarde', 'noite')");
-        DB::statement("CREATE TYPE situacao AS ENUM ('em_analise', 'deferida', 'indeferida')");
-        DB::statement("CREATE TYPE dia_semana AS ENUM ('seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom')");
+        // Check if we're using PostgreSQL before creating enums
+        if (DB::getDriverName() === 'pgsql') {
+            // Check if enum types exist before creating them
+            $enumExists = DB::select("SELECT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'turno')")[0]->exists;
+            if (!$enumExists) {
+                DB::statement("CREATE TYPE turno AS ENUM ('manha', 'tarde', 'noite')");
+            }
+
+            $enumExists = DB::select("SELECT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'situacao')")[0]->exists;
+            if (!$enumExists) {
+                DB::statement("CREATE TYPE situacao AS ENUM ('em_analise', 'deferida', 'indeferida')");
+            }
+
+            $enumExists = DB::select("SELECT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'dia_semana')")[0]->exists;
+            if (!$enumExists) {
+                DB::statement("CREATE TYPE dia_semana AS ENUM ('seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom')");
+            }
+        }
     }
 
     /**
